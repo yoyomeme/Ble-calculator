@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+target/
+crates/native/target/
+crates/native/*.node
+crates/native/index.d.ts
+crates/native/index.js
+index.*.node
+index.d.ts
+index.js

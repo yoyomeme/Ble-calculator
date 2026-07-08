@@ -1,0 +1,1046 @@
+[
+  {
+    "name": "desktop-closed",
+    "width": 1180,
+    "height": 760,
+    "action": "closed",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/desktop-closed.png",
+    "metrics": {
+      "viewport": {
+        "width": 1180,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 1180,
+        "scrollHeight": 772
+      },
+      "rects": {
+        "left": {
+          "x": 314,
+          "y": 30,
+          "width": 52,
+          "height": 620,
+          "right": 366,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 166,
+          "clientWidth": 50
+        },
+        "center": {
+          "x": 380,
+          "y": 30,
+          "width": 420,
+          "height": 620,
+          "right": 800,
+          "bottom": 650,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 814,
+          "y": 30,
+          "width": 52,
+          "height": 620,
+          "right": 866,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "display": {
+          "x": 399,
+          "y": 113,
+          "width": 382,
+          "height": 148,
+          "right": 781,
+          "bottom": 261,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 399,
+          "y": 337,
+          "width": 382,
+          "height": 294,
+          "right": 781,
+          "bottom": 631,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 815,
+          "y": 291,
+          "width": 50,
+          "height": 358,
+          "right": 865,
+          "bottom": 649,
+          "scrollHeight": 358,
+          "clientHeight": 358,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "peerList": {
+          "x": 815,
+          "y": 78,
+          "width": 50,
+          "height": 150,
+          "right": 865,
+          "bottom": 228,
+          "scrollHeight": 222,
+          "clientHeight": 150,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "statusRail": {
+          "x": 380,
+          "y": 666,
+          "width": 420,
+          "height": 76,
+          "right": 800,
+          "bottom": 742,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "desktop-left-open",
+    "width": 1180,
+    "height": 760,
+    "action": "left",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/desktop-left-open.png",
+    "metrics": {
+      "viewport": {
+        "width": 1180,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 1180,
+        "scrollHeight": 772
+      },
+      "rects": {
+        "left": {
+          "x": 190,
+          "y": 30,
+          "width": 300,
+          "height": 620,
+          "right": 490,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 298,
+          "clientWidth": 298
+        },
+        "center": {
+          "x": 504,
+          "y": 30,
+          "width": 420,
+          "height": 620,
+          "right": 924,
+          "bottom": 650,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 938,
+          "y": 30,
+          "width": 52,
+          "height": 620,
+          "right": 990,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "display": {
+          "x": 523,
+          "y": 113,
+          "width": 382,
+          "height": 148,
+          "right": 905,
+          "bottom": 261,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 523,
+          "y": 337,
+          "width": 382,
+          "height": 294,
+          "right": 905,
+          "bottom": 631,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 939,
+          "y": 291,
+          "width": 50,
+          "height": 358,
+          "right": 989,
+          "bottom": 649,
+          "scrollHeight": 358,
+          "clientHeight": 358,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "peerList": {
+          "x": 939,
+          "y": 78,
+          "width": 50,
+          "height": 150,
+          "right": 989,
+          "bottom": 228,
+          "scrollHeight": 222,
+          "clientHeight": 150,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "statusRail": {
+          "x": 380,
+          "y": 666,
+          "width": 420,
+          "height": 76,
+          "right": 800,
+          "bottom": 742,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "desktop-right-open",
+    "width": 1180,
+    "height": 760,
+    "action": "right",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/desktop-right-open.png",
+    "metrics": {
+      "viewport": {
+        "width": 1180,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 1180,
+        "scrollHeight": 772
+      },
+      "rects": {
+        "left": {
+          "x": 175,
+          "y": 30,
+          "width": 52,
+          "height": 620,
+          "right": 227,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 166,
+          "clientWidth": 50
+        },
+        "center": {
+          "x": 241,
+          "y": 30,
+          "width": 420,
+          "height": 620,
+          "right": 661,
+          "bottom": 650,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 675,
+          "y": 30,
+          "width": 330,
+          "height": 620,
+          "right": 1005,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 328,
+          "clientWidth": 328
+        },
+        "display": {
+          "x": 260,
+          "y": 113,
+          "width": 382,
+          "height": 148,
+          "right": 642,
+          "bottom": 261,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 260,
+          "y": 337,
+          "width": 382,
+          "height": 294,
+          "right": 642,
+          "bottom": 631,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 692,
+          "y": 203,
+          "width": 296,
+          "height": 430,
+          "right": 988,
+          "bottom": 633,
+          "scrollHeight": 430,
+          "clientHeight": 430,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "peerList": {
+          "x": 692,
+          "y": 94,
+          "width": 296,
+          "height": 46,
+          "right": 988,
+          "bottom": 140,
+          "scrollHeight": 46,
+          "clientHeight": 46,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "statusRail": {
+          "x": 380,
+          "y": 666,
+          "width": 420,
+          "height": 76,
+          "right": 800,
+          "bottom": 742,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "desktop-both-open",
+    "width": 1180,
+    "height": 760,
+    "action": "both",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/desktop-both-open.png",
+    "metrics": {
+      "viewport": {
+        "width": 1180,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 1180,
+        "scrollHeight": 772
+      },
+      "rects": {
+        "left": {
+          "x": 51,
+          "y": 30,
+          "width": 300,
+          "height": 620,
+          "right": 351,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 298,
+          "clientWidth": 298
+        },
+        "center": {
+          "x": 365,
+          "y": 30,
+          "width": 420,
+          "height": 620,
+          "right": 785,
+          "bottom": 650,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 799,
+          "y": 30,
+          "width": 330,
+          "height": 620,
+          "right": 1129,
+          "bottom": 650,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 328,
+          "clientWidth": 328
+        },
+        "display": {
+          "x": 384,
+          "y": 113,
+          "width": 382,
+          "height": 148,
+          "right": 766,
+          "bottom": 261,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 384,
+          "y": 337,
+          "width": 382,
+          "height": 294,
+          "right": 766,
+          "bottom": 631,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 816,
+          "y": 203,
+          "width": 296,
+          "height": 430,
+          "right": 1112,
+          "bottom": 633,
+          "scrollHeight": 430,
+          "clientHeight": 430,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "peerList": {
+          "x": 816,
+          "y": 94,
+          "width": 296,
+          "height": 46,
+          "right": 1112,
+          "bottom": 140,
+          "scrollHeight": 46,
+          "clientHeight": 46,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "statusRail": {
+          "x": 380,
+          "y": 666,
+          "width": 420,
+          "height": 76,
+          "right": 800,
+          "bottom": 742,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "compact-closed",
+    "width": 520,
+    "height": 760,
+    "action": "closed",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/compact-closed.png",
+    "metrics": {
+      "viewport": {
+        "width": 520,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 552,
+        "scrollHeight": 760
+      },
+      "rects": {
+        "left": {
+          "x": 0,
+          "y": 21,
+          "width": 52,
+          "height": 620,
+          "right": 52,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 166,
+          "clientWidth": 50
+        },
+        "center": {
+          "x": 66,
+          "y": 21,
+          "width": 420,
+          "height": 620,
+          "right": 486,
+          "bottom": 641,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 500,
+          "y": 21,
+          "width": 52,
+          "height": 620,
+          "right": 552,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "display": {
+          "x": 85,
+          "y": 104,
+          "width": 382,
+          "height": 148,
+          "right": 467,
+          "bottom": 252,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 85,
+          "y": 328,
+          "width": 382,
+          "height": 294,
+          "right": 467,
+          "bottom": 622,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 501,
+          "y": 282,
+          "width": 50,
+          "height": 358,
+          "right": 551,
+          "bottom": 640,
+          "scrollHeight": 358,
+          "clientHeight": 358,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "peerList": {
+          "x": 501,
+          "y": 69,
+          "width": 50,
+          "height": 150,
+          "right": 551,
+          "bottom": 219,
+          "scrollHeight": 222,
+          "clientHeight": 150,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "statusRail": {
+          "x": 66,
+          "y": 663,
+          "width": 420,
+          "height": 76,
+          "right": 486,
+          "bottom": 739,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "compact-left-open",
+    "width": 520,
+    "height": 760,
+    "action": "left",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/compact-left-open.png",
+    "metrics": {
+      "viewport": {
+        "width": 520,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 800,
+        "scrollHeight": 760
+      },
+      "rects": {
+        "left": {
+          "x": 0,
+          "y": 21,
+          "width": 300,
+          "height": 620,
+          "right": 300,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 298,
+          "clientWidth": 298
+        },
+        "center": {
+          "x": 314,
+          "y": 21,
+          "width": 420,
+          "height": 620,
+          "right": 734,
+          "bottom": 641,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 748,
+          "y": 21,
+          "width": 52,
+          "height": 620,
+          "right": 800,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "display": {
+          "x": 333,
+          "y": 104,
+          "width": 382,
+          "height": 148,
+          "right": 715,
+          "bottom": 252,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 333,
+          "y": 328,
+          "width": 382,
+          "height": 294,
+          "right": 715,
+          "bottom": 622,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 749,
+          "y": 282,
+          "width": 50,
+          "height": 358,
+          "right": 799,
+          "bottom": 640,
+          "scrollHeight": 358,
+          "clientHeight": 358,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "peerList": {
+          "x": 749,
+          "y": 69,
+          "width": 50,
+          "height": 150,
+          "right": 799,
+          "bottom": 219,
+          "scrollHeight": 222,
+          "clientHeight": 150,
+          "scrollWidth": 50,
+          "clientWidth": 50
+        },
+        "statusRail": {
+          "x": 190,
+          "y": 663,
+          "width": 420,
+          "height": 76,
+          "right": 610,
+          "bottom": 739,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "compact-right-open",
+    "width": 520,
+    "height": 760,
+    "action": "right",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/compact-right-open.png",
+    "metrics": {
+      "viewport": {
+        "width": 520,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 830,
+        "scrollHeight": 760
+      },
+      "rects": {
+        "left": {
+          "x": 0,
+          "y": 21,
+          "width": 52,
+          "height": 620,
+          "right": 52,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 166,
+          "clientWidth": 50
+        },
+        "center": {
+          "x": 66,
+          "y": 21,
+          "width": 420,
+          "height": 620,
+          "right": 486,
+          "bottom": 641,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 500,
+          "y": 21,
+          "width": 330,
+          "height": 620,
+          "right": 830,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 328,
+          "clientWidth": 328
+        },
+        "display": {
+          "x": 85,
+          "y": 104,
+          "width": 382,
+          "height": 148,
+          "right": 467,
+          "bottom": 252,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 85,
+          "y": 328,
+          "width": 382,
+          "height": 294,
+          "right": 467,
+          "bottom": 622,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 517,
+          "y": 194,
+          "width": 296,
+          "height": 430,
+          "right": 813,
+          "bottom": 624,
+          "scrollHeight": 430,
+          "clientHeight": 430,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "peerList": {
+          "x": 517,
+          "y": 85,
+          "width": 296,
+          "height": 46,
+          "right": 813,
+          "bottom": 131,
+          "scrollHeight": 46,
+          "clientHeight": 46,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "statusRail": {
+          "x": 205,
+          "y": 663,
+          "width": 420,
+          "height": 76,
+          "right": 625,
+          "bottom": 739,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "compact-both-attempt",
+    "width": 520,
+    "height": 760,
+    "action": "both",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/compact-both-attempt.png",
+    "metrics": {
+      "viewport": {
+        "width": 520,
+        "height": 760
+      },
+      "document": {
+        "scrollWidth": 830,
+        "scrollHeight": 760
+      },
+      "rects": {
+        "left": {
+          "x": 0,
+          "y": 21,
+          "width": 52,
+          "height": 620,
+          "right": 52,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 166,
+          "clientWidth": 50
+        },
+        "center": {
+          "x": 66,
+          "y": 21,
+          "width": 420,
+          "height": 620,
+          "right": 486,
+          "bottom": 641,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 500,
+          "y": 21,
+          "width": 330,
+          "height": 620,
+          "right": 830,
+          "bottom": 641,
+          "scrollHeight": 618,
+          "clientHeight": 618,
+          "scrollWidth": 328,
+          "clientWidth": 328
+        },
+        "display": {
+          "x": 85,
+          "y": 104,
+          "width": 382,
+          "height": 148,
+          "right": 467,
+          "bottom": 252,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 85,
+          "y": 328,
+          "width": 382,
+          "height": 294,
+          "right": 467,
+          "bottom": 622,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 517,
+          "y": 194,
+          "width": 296,
+          "height": 430,
+          "right": 813,
+          "bottom": 624,
+          "scrollHeight": 430,
+          "clientHeight": 430,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "peerList": {
+          "x": 517,
+          "y": 85,
+          "width": 296,
+          "height": 46,
+          "right": 813,
+          "bottom": 131,
+          "scrollHeight": 46,
+          "clientHeight": 46,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "statusRail": {
+          "x": 205,
+          "y": 663,
+          "width": 420,
+          "height": 76,
+          "right": 625,
+          "bottom": 739,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  },
+  {
+    "name": "short-height-right-open",
+    "width": 850,
+    "height": 560,
+    "action": "right",
+    "imagePath": "/Users/mellon/GIthubLocal/testValidator/artifacts/browser-visual-ui-pass/short-height-right-open.png",
+    "metrics": {
+      "viewport": {
+        "width": 850,
+        "height": 560
+      },
+      "document": {
+        "scrollWidth": 850,
+        "scrollHeight": 736
+      },
+      "rects": {
+        "left": {
+          "x": 10,
+          "y": 24,
+          "width": 52,
+          "height": 536,
+          "right": 62,
+          "bottom": 560,
+          "scrollHeight": 534,
+          "clientHeight": 534,
+          "scrollWidth": 166,
+          "clientWidth": 50
+        },
+        "center": {
+          "x": 76,
+          "y": 12,
+          "width": 420,
+          "height": 620,
+          "right": 496,
+          "bottom": 632,
+          "scrollHeight": 626,
+          "clientHeight": 618,
+          "scrollWidth": 418,
+          "clientWidth": 418
+        },
+        "right": {
+          "x": 510,
+          "y": 24,
+          "width": 330,
+          "height": 536,
+          "right": 840,
+          "bottom": 560,
+          "scrollHeight": 534,
+          "clientHeight": 534,
+          "scrollWidth": 328,
+          "clientWidth": 328
+        },
+        "display": {
+          "x": 95,
+          "y": 95,
+          "width": 382,
+          "height": 148,
+          "right": 477,
+          "bottom": 243,
+          "scrollHeight": 148,
+          "clientHeight": 148,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "keypad": {
+          "x": 95,
+          "y": 319,
+          "width": 382,
+          "height": 294,
+          "right": 477,
+          "bottom": 613,
+          "scrollHeight": 320,
+          "clientHeight": 294,
+          "scrollWidth": 382,
+          "clientWidth": 382
+        },
+        "historyList": {
+          "x": 527,
+          "y": 197,
+          "width": 296,
+          "height": 346,
+          "right": 823,
+          "bottom": 543,
+          "scrollHeight": 346,
+          "clientHeight": 346,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "peerList": {
+          "x": 527,
+          "y": 88,
+          "width": 296,
+          "height": 46,
+          "right": 823,
+          "bottom": 134,
+          "scrollHeight": 46,
+          "clientHeight": 46,
+          "scrollWidth": 296,
+          "clientWidth": 296
+        },
+        "statusRail": {
+          "x": 215,
+          "y": 648,
+          "width": 420,
+          "height": 76,
+          "right": 635,
+          "bottom": 724,
+          "scrollHeight": 76,
+          "clientHeight": 76,
+          "scrollWidth": 420,
+          "clientWidth": 420
+        }
+      }
+    },
+    "overlaps": []
+  }
+]
