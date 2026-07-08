@@ -4,6 +4,7 @@ import { calculatorChannels } from "../shared/calculator-api";
 import type {
   ConnectGuestRequest,
   CreateRoomRequest,
+  JoinRoomRequest,
   StartAdvertisingRequest,
   SubmitCalculationRequest
 } from "../shared/calculator-api";
@@ -22,10 +23,15 @@ function registerCalculatorIpc(): void {
   ipcMain.handle(calculatorChannels.connectGuest, (_event, request: ConnectGuestRequest) =>
     api.connectGuest(request)
   );
+  ipcMain.handle(calculatorChannels.scanRooms, () => api.scanRooms());
+  ipcMain.handle(calculatorChannels.joinRoom, (_event, request: JoinRoomRequest) =>
+    api.joinRoom(request)
+  );
   ipcMain.handle(calculatorChannels.startAdvertising, (_event, request: StartAdvertisingRequest) =>
     api.startAdvertising(request)
   );
   ipcMain.handle(calculatorChannels.acceptHostConnection, () => api.acceptHostConnection());
+  ipcMain.handle(calculatorChannels.resetBleSession, () => api.resetBleSession());
   ipcMain.handle(calculatorChannels.submitCalculation, (_event, request: SubmitCalculationRequest) =>
     api.submitCalculation(request)
   );

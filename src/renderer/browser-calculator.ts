@@ -1,6 +1,7 @@
 import type {
   ConnectGuestRequest,
   CreateRoomRequest,
+  JoinRoomRequest,
   NativeCalculatorApi,
   RoomState,
   StartAdvertisingRequest,
@@ -19,6 +20,7 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
     scanning: false,
     advertising: false,
     peers: [],
+    rooms: [],
     history: []
   };
 
@@ -32,9 +34,13 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
       state.sessionRole = "host";
       state.bleRole = "central";
       state.advertising = false;
+      state.scanning = false;
+      state.rooms = [];
       return cloneState(state);
     },
     async startScanning() {
+      state.sessionRole = "host";
+      state.bleRole = "central";
       state.scanning = true;
       if (state.peers.length === 0) {
         state.peers.push({
@@ -53,6 +59,46 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
       state.peers = state.peers.map((peer) =>
         peer.id === request.peerId ? { ...peer, connected: true, trustStatus: "trusted" } : peer
       );
+      return cloneState(state);
+    },
+    async scanRooms() {
+      state.sessionRole = "guest";
+      state.bleRole = "central";
+      state.scanning = true;
+      state.advertising = false;
+      if (!state.rooms || state.rooms.length === 0) {
+        state.rooms = [
+          {
+            id: "room-browser-desk",
+            name: "Desk Calculator",
+            hostDeviceId: "browser-host-mac",
+            trustStatus: "pending",
+            joinable: true,
+            lastSeenIso: new Date().toISOString()
+          }
+        ];
+      }
+      return cloneState(state);
+    },
+    async joinRoom(request: JoinRoomRequest) {
+      const room = state.rooms?.find((candidate) => candidate.id === request.roomId);
+      state.roomId = request.roomId;
+      state.roomName = room?.name ?? `Join ${request.roomId}`;
+      state.sessionRole = "guest";
+      state.bleRole = "peripheral";
+      state.advertising = true;
+      state.scanning = false;
+      state.peers = [
+        {
+          id: room?.hostDeviceId ?? "host-browser-pending",
+          label: room?.name ?? "Host pending",
+          sessionRole: "host",
+          bleRole: "central",
+          trustStatus: "pending",
+          connected: false,
+          lastSeenIso: new Date().toISOString()
+        }
+      ];
       return cloneState(state);
     },
     async startAdvertising(request: StartAdvertisingRequest) {
@@ -77,6 +123,17 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
           lastSeenIso: new Date().toISOString()
         }
       ];
+      return cloneState(state);
+    },
+    async resetBleSession() {
+      state.roomId = null;
+      state.roomName = null;
+      state.sessionRole = null;
+      state.bleRole = null;
+      state.scanning = false;
+      state.advertising = false;
+      state.peers = [];
+      state.rooms = [];
       return cloneState(state);
     },
     async submitCalculation(request: SubmitCalculationRequest) {

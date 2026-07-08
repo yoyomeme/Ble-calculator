@@ -1,6 +1,7 @@
 import type {
   ConnectGuestRequest,
   CreateRoomRequest,
+  JoinRoomRequest,
   NativeCalculatorApi,
   RoomState,
   StartAdvertisingRequest,
@@ -55,8 +56,11 @@ function isNativeCalculatorApi(value: Partial<NativeModule>): value is NativeCal
     typeof value.createRoom === "function" &&
     typeof value.startScanning === "function" &&
     typeof value.connectGuest === "function" &&
+    typeof value.scanRooms === "function" &&
+    typeof value.joinRoom === "function" &&
     typeof value.startAdvertising === "function" &&
     typeof value.acceptHostConnection === "function" &&
+    typeof value.resetBleSession === "function" &&
     typeof value.submitCalculation === "function"
   );
 }
@@ -80,6 +84,7 @@ function createMockCalculatorApi(): NativeCalculatorApi {
     scanning: false,
     advertising: false,
     peers: [],
+    rooms: [],
     history: []
   };
 
@@ -93,9 +98,13 @@ function createMockCalculatorApi(): NativeCalculatorApi {
       state.sessionRole = "host";
       state.bleRole = "central";
       state.advertising = false;
+      state.scanning = false;
+      state.rooms = [];
       return cloneState(state);
     },
     async startScanning() {
+      state.sessionRole = "host";
+      state.bleRole = "central";
       state.scanning = true;
       if (state.peers.length === 0) {
         state.peers.push({
@@ -114,6 +123,46 @@ function createMockCalculatorApi(): NativeCalculatorApi {
       state.peers = state.peers.map((peer) =>
         peer.id === request.peerId ? { ...peer, connected: true, trustStatus: "trusted" } : peer
       );
+      return cloneState(state);
+    },
+    async scanRooms() {
+      state.sessionRole = "guest";
+      state.bleRole = "central";
+      state.scanning = true;
+      state.advertising = false;
+      if (!state.rooms || state.rooms.length === 0) {
+        state.rooms = [
+          {
+            id: "room-mock-desk",
+            name: "Desk Calculator",
+            hostDeviceId: "mock-host-mac",
+            trustStatus: "pending",
+            joinable: true,
+            lastSeenIso: new Date().toISOString()
+          }
+        ];
+      }
+      return cloneState(state);
+    },
+    async joinRoom(request: JoinRoomRequest) {
+      const room = state.rooms?.find((candidate) => candidate.id === request.roomId);
+      state.roomId = request.roomId;
+      state.roomName = room?.name ?? `Join ${request.roomId}`;
+      state.sessionRole = "guest";
+      state.bleRole = "peripheral";
+      state.advertising = true;
+      state.scanning = false;
+      state.peers = [
+        {
+          id: room?.hostDeviceId ?? "host-mock-pending",
+          label: room?.name ?? "Host pending",
+          sessionRole: "host",
+          bleRole: "central",
+          trustStatus: "pending",
+          connected: false,
+          lastSeenIso: new Date().toISOString()
+        }
+      ];
       return cloneState(state);
     },
     async startAdvertising(request: StartAdvertisingRequest) {
@@ -138,6 +187,17 @@ function createMockCalculatorApi(): NativeCalculatorApi {
           lastSeenIso: new Date().toISOString()
         }
       ];
+      return cloneState(state);
+    },
+    async resetBleSession() {
+      state.roomId = null;
+      state.roomName = null;
+      state.sessionRole = null;
+      state.bleRole = null;
+      state.scanning = false;
+      state.advertising = false;
+      state.peers = [];
+      state.rooms = [];
       return cloneState(state);
     },
     async submitCalculation(request: SubmitCalculationRequest) {

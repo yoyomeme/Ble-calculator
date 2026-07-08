@@ -1,6 +1,6 @@
 export type SessionRole = "host" | "guest";
 
-export type BleRole = "central" | "peripheral";
+export type BleRole = "central" | "peripheral" | "dual";
 
 export type TrustStatus = "trusted" | "untrusted" | "pending";
 
@@ -11,6 +11,15 @@ export interface PeerSummary {
   bleRole: BleRole;
   trustStatus: TrustStatus;
   connected: boolean;
+  lastSeenIso: string;
+}
+
+export interface RoomSummary {
+  id: string;
+  name: string;
+  hostDeviceId: string;
+  trustStatus: TrustStatus;
+  joinable: boolean;
   lastSeenIso: string;
 }
 
@@ -50,6 +59,7 @@ export interface NativeRuntimeStatus {
   publicKeyFingerprint: string;
   lastBleError: string | null;
   lastValidation: ValidationSummary | null;
+  pendingOutboxEvents?: number;
 }
 
 export interface RoomState {
@@ -61,6 +71,7 @@ export interface RoomState {
   scanning: boolean;
   advertising: boolean;
   peers: PeerSummary[];
+  rooms?: RoomSummary[];
   history: CalculationEntry[];
   nativeCapabilities?: NativeCapabilities;
   nativeStatus?: NativeRuntimeStatus;
@@ -79,6 +90,10 @@ export interface ConnectGuestRequest {
   peerId: string;
 }
 
+export interface JoinRoomRequest {
+  roomId: string;
+}
+
 export interface SubmitCalculationRequest {
   expression: string;
 }
@@ -88,8 +103,11 @@ export interface NativeCalculatorApi {
   createRoom(request: CreateRoomRequest): Promise<RoomState>;
   startScanning(): Promise<RoomState>;
   connectGuest(request: ConnectGuestRequest): Promise<RoomState>;
+  scanRooms(): Promise<RoomState>;
+  joinRoom(request: JoinRoomRequest): Promise<RoomState>;
   startAdvertising(request: StartAdvertisingRequest): Promise<RoomState>;
   acceptHostConnection(): Promise<RoomState>;
+  resetBleSession(): Promise<RoomState>;
   submitCalculation(request: SubmitCalculationRequest): Promise<RoomState>;
 }
 
@@ -98,7 +116,10 @@ export const calculatorChannels = {
   createRoom: "calculator:create-room",
   startScanning: "calculator:start-scanning",
   connectGuest: "calculator:connect-guest",
+  scanRooms: "calculator:scan-rooms",
+  joinRoom: "calculator:join-room",
   startAdvertising: "calculator:start-advertising",
   acceptHostConnection: "calculator:accept-host-connection",
+  resetBleSession: "calculator:reset-ble-session",
   submitCalculation: "calculator:submit-calculation"
 } as const;

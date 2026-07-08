@@ -642,18 +642,20 @@ Implemented now:
 - Ed25519 signing for local calculation events.
 - Holder key binding for local signed calculation events.
 - Host central scan attempts through `btleplug`.
+- Host scanning filters for Evolve Calc room/join advertisement metadata rather than showing every nearby BLE peripheral.
+- Guest room discovery, room join request state, and BLE reset commands are part of the shared native API.
+- BLE chunk framing and reassembly helpers for signed event payloads.
 - Native runtime status and warnings on `RoomState`.
 - Fail-closed credential validation placeholder through `validate_credential_bundle()`.
 
 Still pending:
 
-- Full BLE guest connection transport.
-- Guest peripheral advertising/GATT server backend.
-- BLE chunking and reassembly.
+- Full BLE guest connection transport over GATT write/notify.
+- Guest peripheral advertising/GATT server backend. This needs platform-specific BLE server code; the current `btleplug` dependency covers central/client behavior but not a cross-platform peripheral server.
+- Marking SQLite outbox rows delivered after real cross-device transport succeeds.
 - JWE decryption.
 - JWT/JWS/SD-JWT issuer/key resolution and verification.
 - Issuer trust policy and revocation checks.
-- Cross-device sync consumption from the SQLite outbox.
 
 ### Planned Rust Responsibilities
 
@@ -765,30 +767,51 @@ The UI should never parse this protocol directly.
    - `roomName`
 6. Full `RoomState` returns to UI.
 
-### Host Scans and Connects Guest
+### Host Finds and Approves Guest
 
-1. User clicks `Scan`.
+1. User clicks `Find`.
 2. Renderer calls `startScanning()`.
-3. Mock inserts a fake guest peer.
-4. User clicks `Connect`.
+3. Native host scanning uses `btleplug` as central and filters for Evolve Calc join-request advertisements for the active room.
+4. Browser/mock adapters insert one deterministic guest request for UI review.
+5. User clicks `Approve`.
 5. Renderer calls `connectGuest({ peerId })`.
-6. Mock marks peer connected/trusted.
-7. Status rail updates connected count and trust label.
+6. Native attempts to connect to the discovered BLE peripheral and discover services.
+7. If connect succeeds, the peer is marked connected/trusted in the local session state.
+8. Status rail updates connected count and trust label.
 
-Real native implementation will replace fake peer insertion with BLE advertisements and connection state.
+The current native code does not yet write or subscribe to a calculator GATT characteristic after connection.
 
-### Guest Advertises
+### Guest Finds and Joins Room
 
-1. User enters room code.
-2. User clicks `Signal`.
-3. Renderer calls `startAdvertising({ roomCode })`.
-4. Mock sets:
+1. User clicks `Rooms`.
+2. Renderer calls `scanRooms()`.
+3. Native guest room discovery uses the same central scan machinery and filters for Evolve Calc room advertisements.
+4. Browser/mock adapters insert one deterministic room for UI review.
+5. User clicks `Join` on a room, or enters a manual room id and clicks `Join`.
+6. Renderer calls `joinRoom({ roomId })`.
+7. Native/mock sets:
    - `sessionRole = "guest"`
    - `bleRole = "peripheral"`
    - `advertising = true`
-5. UI reflects guest/peripheral state.
+   - `roomId`
+8. UI reflects guest/peripheral request state.
 
-Real native implementation will start platform-specific BLE advertising/GATT server behavior.
+Real native implementation still needs a platform-specific peripheral advertiser/GATT server so the host Mac can actually discover and connect to the guest Mac.
+
+### Reset BLE Session
+
+1. User clicks `Reset` in the host or guest section.
+2. Renderer calls `resetBleSession()`.
+3. Native/mock clears:
+   - `roomId`
+   - `roomName`
+   - `sessionRole`
+   - `bleRole`
+   - `scanning`
+   - `advertising`
+   - `peers`
+   - `rooms`
+4. Calculation history remains intact.
 
 ### Submit Calculation
 

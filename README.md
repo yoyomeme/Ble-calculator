@@ -16,9 +16,9 @@ Current state:
 - Rust `napi-rs` native module scaffold in `crates/native`.
 - Development fallback adapter so the UI runs before the Rust module is built.
 - Browser-only mock adapter for visual UI review at `http://127.0.0.1:5173`.
-- Mock host/guest flow for the planned BLE model:
-  - host desktop: session host, BLE central, scans/connects to guests
-  - guest desktop: session guest, BLE peripheral/advertiser
+- Host/guest flow for the planned BLE model:
+  - host desktop: session host, BLE central, creates a room, scans for guest join requests, approves peers
+  - guest desktop: session guest, scans for rooms, requests to join one room as the planned BLE peripheral
 
 ## Commands
 
@@ -64,11 +64,14 @@ The native build scripts also try `rustup which cargo` and prepend the discovere
 
 Native core status:
 
-- BLE central scanning is attempted through `btleplug`; full guest connection flow is still in progress.
-- BLE peripheral advertising/GATT server flow still needs platform-specific backend work.
-- BLE chunk reassembly is still pending.
+- BLE central scanning is attempted through `btleplug` and filters for Evolve Calc room/join advertisements instead of listing arbitrary nearby BLE devices.
+- Host approval attempts a native BLE connect to a discovered join request.
+- Guest room scanning is represented in the native API; browser/mock adapters provide deterministic room lists for UI review.
+- Guest peripheral advertising/GATT server flow still needs platform-specific backend work. `btleplug` does not expose a cross-platform peripheral server API.
+- BLE chunk framing and reassembly helpers are implemented and covered by Rust tests; real GATT write/notify transport still needs the platform BLE backend.
 - OS keychain-backed local signing key storage is implemented where supported by the `keyring` crate.
 - SQLite local calculation history and sync outbox persistence are implemented.
 - Local calculation events are signed and verified with holder binding before being trusted.
+- Signed outbox events are staged into BLE-sized chunks when connected peers exist, but are retained until real BLE event transport exists.
 - JWE decrypt and JWS/JWT/SD-JWT verification are fail-closed placeholders until issuer trust configuration is added.
 - Issuer trust validation and real cross-device sync are still pending.

@@ -166,8 +166,12 @@ Current native implementation status:
 - Device signing keys are loaded or created through OS keychain when available.
 - Local calculation events are signed as Ed25519 envelopes before being persisted.
 - Holder binding is checked for local signed calculation events.
-- Host central scanning attempts to use `btleplug` and reports BLE errors in `nativeStatus.lastBleError`.
-- Guest peripheral advertising is represented in native state, but still needs a platform-specific BLE peripheral/GATT backend.
+- Host central scanning attempts to use `btleplug`, filters Evolve Calc room/join advertisements, and reports BLE errors in `nativeStatus.lastBleError`.
+- Host approval attempts to connect to the selected discovered BLE peripheral and discover services.
+- Guest room scanning and join-request state are represented in native state.
+- Guest peripheral advertising is represented in native state, but still needs a platform-specific BLE peripheral/GATT backend. The current `btleplug` dependency does not provide a cross-platform GATT server/peripheral advertiser API.
+- BLE chunk framing and reassembly helpers exist for signed outbox payloads; real GATT write/notify transport is still pending.
+- `nativeStatus.pendingOutboxEvents` reports signed events still waiting for real transport.
 - JWE/JWT/SD-JWT validation is fail-closed through `validate_credential_bundle()` until issuer trust and key resolution are configured.
 
 ## Native Build
