@@ -28,12 +28,29 @@ napi-build = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 keyring = { version = "3.6.3", default-features = false, features = ["apple-native"] }
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSArray", "NSDictionary", "NSString", "NSData", "NSError", "NSObject", "NSEnumerator"] }
+objc2-core-bluetooth = { version = "0.3", features = ["CBPeripheralManager", "CBPeripheralManagerConstants", "CBService", "CBCharacteristic", "CBAttribute", "CBUUID", "CBATTRequest", "CBAdvertisementData", "CBCentral", "CBManager", "CBPeer", "CBError", "alloc", "bitflags"] }
+dispatch2 = "0.3"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 keyring = { version = "3.6.3", default-features = false, features = ["windows-native"] }
+# Guest BLE peripheral (GATT server + advertising) via WinRT GattServiceProvider.
+windows = { version = "0.58", features = [
+  "Foundation",
+  "Foundation_Collections",
+  "Devices_Bluetooth",
+  "Devices_Bluetooth_GenericAttributeProfile",
+  "Storage_Streams",
+] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 keyring = { version = "3.6.3", default-features = false, features = ["crypto-rust", "linux-native-sync-persistent"] }
+# Guest BLE peripheral (GATT server + advertising) via BlueZ/D-Bus.
+bluer = { version = "0.17", features = ["bluetoothd"] }
+# Extra tokio features the Linux peripheral thread needs (unified with the base dep).
+tokio = { version = "1", features = ["rt", "time", "sync", "net", "macros"] }
+futures = "0.3"
 
 [profile.release]
 lto = true
