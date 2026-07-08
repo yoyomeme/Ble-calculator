@@ -59,12 +59,13 @@ npm run build:native
 
 The native build scripts also try `rustup which cargo` and prepend the discovered toolchain bin directory to `PATH`, because this machine has `rustup` available even when `cargo` is not on the default shell path.
 
-Planned Rust responsibilities:
+Native core status:
 
-- BLE central scanning and guest connection flow.
-- BLE peripheral advertising/GATT server flow.
-- BLE chunk reassembly.
-- OS keychain-backed private key storage.
-- SQLite event/session persistence.
-- JWE decrypt and JWS/JWT/SD-JWT verification.
-- Issuer trust and holder key binding validation.
+- BLE central scanning is attempted through `btleplug`; full guest connection flow is still in progress.
+- BLE peripheral advertising/GATT server flow still needs platform-specific backend work.
+- BLE chunk reassembly is still pending.
+- OS keychain-backed local signing key storage is implemented where supported by the `keyring` crate.
+- SQLite local calculation history and sync outbox persistence are implemented.
+- Local calculation events are signed and verified with holder binding before being trusted.
+- JWE decrypt and JWS/JWT/SD-JWT verification are fail-closed placeholders until issuer trust configuration is added.
+- Issuer trust validation and real cross-device sync are still pending.

@@ -23,6 +23,35 @@ export interface CalculationEntry {
   createdAtIso: string;
 }
 
+export interface NativeCapabilities {
+  bleCentralScanning: boolean;
+  blePeripheralAdvertising: boolean;
+  sqlitePersistence: boolean;
+  keychainStorage: boolean;
+  localJwsSigning: boolean;
+  jweDecryption: boolean;
+  jwtSdJwtVerification: boolean;
+  issuerTrustValidation: boolean;
+  holderKeyBinding: boolean;
+  crossDeviceSync: boolean;
+}
+
+export interface ValidationSummary {
+  valid: boolean;
+  kind: string;
+  issuerTrusted: boolean;
+  holderBound: boolean;
+  reason: string;
+}
+
+export interface NativeRuntimeStatus {
+  sqlitePath: string | null;
+  keychainBacked: boolean;
+  publicKeyFingerprint: string;
+  lastBleError: string | null;
+  lastValidation: ValidationSummary | null;
+}
+
 export interface RoomState {
   localDeviceId: string;
   roomId: string | null;
@@ -33,6 +62,9 @@ export interface RoomState {
   advertising: boolean;
   peers: PeerSummary[];
   history: CalculationEntry[];
+  nativeCapabilities?: NativeCapabilities;
+  nativeStatus?: NativeRuntimeStatus;
+  nativeWarnings?: string[];
 }
 
 export interface CreateRoomRequest {

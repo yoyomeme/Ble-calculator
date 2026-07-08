@@ -124,12 +124,20 @@ Important files:
 
 Current dependencies:
 
+- `base64`
+- `btleplug`
+- `ed25519-dalek`
+- `keyring`
 - `napi`
 - `napi-derive`
 - `once_cell`
+- `rand_core`
+- `rusqlite`
 - `serde`
 - `serde_json`
+- `sha2`
 - `time`
+- `tokio`
 - `uuid`
 
 Current state:
@@ -147,8 +155,20 @@ Current exported command names:
 - `start_advertising`
 - `accept_host_connection`
 - `submit_calculation`
+- `get_native_runtime_status`
+- `validate_credential_bundle`
 
 Rust structs use `#[serde(rename_all = "camelCase")]`, so returned objects match TypeScript field names such as `localDeviceId`, `roomId`, and `createdAtIso`.
+
+Current native implementation status:
+
+- SQLite is initialized through `rusqlite` and stores calculation history plus a sync outbox.
+- Device signing keys are loaded or created through OS keychain when available.
+- Local calculation events are signed as Ed25519 envelopes before being persisted.
+- Holder binding is checked for local signed calculation events.
+- Host central scanning attempts to use `btleplug` and reports BLE errors in `nativeStatus.lastBleError`.
+- Guest peripheral advertising is represented in native state, but still needs a platform-specific BLE peripheral/GATT backend.
+- JWE/JWT/SD-JWT validation is fail-closed through `validate_credential_bundle()` until issuer trust and key resolution are configured.
 
 ## Native Build
 
@@ -190,7 +210,7 @@ These files are generated build artifacts. ESLint and Git ignore them, and the E
 
 ## Planned Native Architecture
 
-The Rust core should grow from the current in-memory scaffold into the owner of session-critical work:
+The Rust core is now the owner of local identity, SQLite-backed event history, local event signing, holder binding for local events, and host central scan attempts. It should continue growing into the owner of the remaining session-critical work:
 
 ```text
 Rust core

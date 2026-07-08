@@ -591,8 +591,10 @@ Current exported functions mirror the TypeScript API:
 - `start_advertising`
 - `accept_host_connection`
 - `submit_calculation`
+- `get_native_runtime_status`
+- `validate_credential_bundle`
 
-Current Rust state is in-memory:
+Current Rust UI/session state is held in memory, while calculation history and sync outbox records are persisted to SQLite:
 
 ```rust
 static APP_STATE: Lazy<Mutex<RoomState>> = Lazy::new(|| Mutex::new(RoomState::new()));
@@ -615,7 +617,7 @@ Every exported command calls `with_state_json()`, which:
 1. Locks the global `RoomState`.
 2. Runs the command closure.
 3. Serializes the returned value with `serde_json`.
-4. Wraps it as a `napi::bindgen_prelude::Object`.
+4. Returns `serde_json::Value`, which `napi-rs` converts into a JavaScript value.
 
 The Rust structs use `#[serde(rename_all = "camelCase")]` so the JSON shape matches TypeScript's `RoomState`, `PeerSummary`, and `CalculationEntry`.
 
@@ -630,9 +632,32 @@ Rust expression evaluation is similar to the TypeScript evaluator but implemente
 
 Rust currently has unit tests for operator precedence, invalid expressions, and modulo.
 
+### Native Implementation Status
+
+Implemented now:
+
+- SQLite local calculation history.
+- SQLite sync outbox for signed calculation events.
+- OS keychain-backed local signing key loading/creation where supported by the `keyring` crate.
+- Ed25519 signing for local calculation events.
+- Holder key binding for local signed calculation events.
+- Host central scan attempts through `btleplug`.
+- Native runtime status and warnings on `RoomState`.
+- Fail-closed credential validation placeholder through `validate_credential_bundle()`.
+
+Still pending:
+
+- Full BLE guest connection transport.
+- Guest peripheral advertising/GATT server backend.
+- BLE chunking and reassembly.
+- JWE decryption.
+- JWT/JWS/SD-JWT issuer/key resolution and verification.
+- Issuer trust policy and revocation checks.
+- Cross-device sync consumption from the SQLite outbox.
+
 ### Planned Rust Responsibilities
 
-The Rust core should eventually own:
+The Rust core should continue growing to own:
 
 - BLE session lifecycle.
 - Host central scanning and guest connection flow.
