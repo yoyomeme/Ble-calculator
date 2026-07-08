@@ -644,14 +644,18 @@ Implemented now:
 - Host central scan attempts through `btleplug`.
 - Host scanning filters for Evolve Calc room/join advertisement metadata rather than showing every nearby BLE peripheral.
 - Guest room discovery, room join request state, and BLE reset commands are part of the shared native API.
+- Guest peripheral advertising via a per-OS backend behind the `ble::BlePeripheral` trait; macOS uses CoreBluetooth `CBPeripheralManager`, Linux uses BlueZ via `bluer`, and Windows uses WinRT `GattServiceProvider` (each advertising the calculator GATT service). See `docs/runtime-native-and-security.md` → "Cross-Platform BLE Peripheral Backends".
 - BLE chunk framing and reassembly helpers for signed event payloads.
 - Native runtime status and warnings on `RoomState`.
 - Fail-closed credential validation placeholder through `validate_credential_bundle()`.
 
-Still pending:
+Still pending (the authoritative, consolidated roadmap lives in
+`docs/runtime-native-and-security.md` → "Outstanding Work (TODO)"; the summary
+below mirrors it):
 
-- Full BLE guest connection transport over GATT write/notify.
-- Guest peripheral advertising/GATT server backend. This needs platform-specific BLE server code; the current `btleplug` dependency covers central/client behavior but not a cross-platform peripheral server.
+- Windows guest advertising carries only the service UUID: WinRT `GattServiceProvider` cannot set the custom `EvolveCalc:JOIN:<room>:<label>` local name, so a Windows guest is connectable but not fully self-describing until a `BluetoothLEAdvertisementPublisher` (or a host-side service-UUID-only rule) is added.
+- Full receive-side GATT transport: the macOS/Linux/Windows peripherals buffer inbound host writes, but reassembly + signature/holder verification of received events and TX notify delivery are not wired end-to-end yet.
+- On-device validation of all three peripheral backends: macOS CoreBluetooth (two machines + Bluetooth permission), Linux `bluer` (a Linux host with `bluetoothd`), and Windows `GattServiceProvider` (a Windows host). None can be compiled on the other OSes.
 - Marking SQLite outbox rows delivered after real cross-device transport succeeds.
 - JWE decryption.
 - JWT/JWS/SD-JWT issuer/key resolution and verification.

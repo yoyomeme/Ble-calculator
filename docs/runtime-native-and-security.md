@@ -140,6 +140,23 @@ Current dependencies:
 - `tokio`
 - `uuid`
 
+macOS-only dependencies for the CoreBluetooth peripheral backend:
+
+- `objc2`
+- `objc2-foundation`
+- `objc2-core-bluetooth`
+- `dispatch2`
+
+Linux-only dependencies for the BlueZ peripheral backend:
+
+- `bluer` (feature `bluetoothd`)
+- `futures`
+- extra `tokio` features (`sync`, `net`, `macros`)
+
+Windows-only dependency for the WinRT peripheral backend:
+
+- `windows` (features `Foundation`, `Foundation_Collections`, `Devices_Bluetooth`, `Devices_Bluetooth_GenericAttributeProfile`, `Storage_Streams`)
+
 Current state:
 
 ```rust
@@ -169,10 +186,102 @@ Current native implementation status:
 - Host central scanning attempts to use `btleplug`, filters Evolve Calc room/join advertisements, and reports BLE errors in `nativeStatus.lastBleError`.
 - Host approval attempts to connect to the selected discovered BLE peripheral and discover services.
 - Guest room scanning and join-request state are represented in native state.
-- Guest peripheral advertising is represented in native state, but still needs a platform-specific BLE peripheral/GATT backend. The current `btleplug` dependency does not provide a cross-platform GATT server/peripheral advertiser API.
-- BLE chunk framing and reassembly helpers exist for signed outbox payloads; real GATT write/notify transport is still pending.
+- Guest peripheral advertising now runs through a real per-OS backend behind the `ble::BlePeripheral` trait. macOS uses CoreBluetooth `CBPeripheralManager`, Linux uses BlueZ via `bluer`, and Windows uses WinRT `GattServiceProvider` — each exposing a calculator GATT service with RX write and TX notify characteristics. Only other operating systems fall back to the fail-loud stub (see "Cross-Platform BLE Peripheral Backends").
+- BLE chunk framing and reassembly helpers exist for signed outbox payloads; the macOS peripheral can receive host GATT writes into an inbound buffer, but full receive-side verification/notify transport is still pending.
 - `nativeStatus.pendingOutboxEvents` reports signed events still waiting for real transport.
 - JWE/JWT/SD-JWT validation is fail-closed through `validate_credential_bundle()` until issuer trust and key resolution are configured.
+
+## Cross-Platform BLE Peripheral Backends
+
+`btleplug` implements only the BLE **central** role (scan + connect). It has no
+GATT server or advertiser and cannot be configured into one, so the guest
+(peripheral) role cannot be built on `btleplug`. The design therefore keeps
+`btleplug` for the cross-platform central role and adds a peripheral abstraction
+with one native backend per OS. All backends implement the single
+`ble::BlePeripheral` trait, so calculator code stays platform-neutral:
+
+```text
+crates/native/src/ble/
+  mod.rs                 trait BlePeripheral, PeripheralConfig, factory, protocol builders
+  peripheral_macos.rs    CoreBluetooth CBPeripheralManager (objc2)   [implemented]
+  peripheral_linux.rs    BlueZ GATT app + advertisement (bluer)      [implemented, needs on-device verify]
+  peripheral_windows.rs  WinRT GattServiceProvider (windows crate)   [implemented, needs on-device verify]
+  peripheral_stub.rs     other OSes, fail-loud stub                  [n/a]
+```
+
+| Role | Library | Status |
+| --- | --- | --- |
+| Central (host: scan/connect) | `btleplug` | works on macOS/Linux/Windows |
+| Peripheral, macOS | `objc2-core-bluetooth` `CBPeripheralManager` | implemented |
+| Peripheral, Linux | `bluer` (BlueZ/D-Bus) GATT app + advertisement | implemented (unverified in CI) |
+| Peripheral, Windows | `windows` crate `GattServiceProvider` | implemented (unverified in CI; see local-name limitation) |
+
+The **wire contract is identical on every platform** — the calculator service
+UUID (`7c14f94a-…a601`), the `EvolveCalc:JOIN:<room>:<label>` advertisement
+`local_name`, and the chunk framing. That is what lets a Linux guest be
+discovered by a macOS host and vice versa. The macOS backend advertises the
+exact `local_name` format that the existing host scan parser
+(`parse_local_name_advertisement`) already understands.
+
+`NativeCapabilities.blePeripheralAdvertising` is now `true` on macOS, Linux, and
+Windows and `false` on other targets (the stub returns a typed "not implemented
+on this operating system" error instead of silently pretending to advertise).
+`get_native_runtime_status()` additionally reports a `peripheral` block
+(`platform`, `supported`, `advertising`) for diagnostics.
+
+### macOS CoreBluetooth Backend Notes
+
+- CoreBluetooth objects are not `Send`; the backend confines all
+  manager/service access to one dedicated **serial dispatch queue** and
+  marshals commands onto it. Delegate callbacks arrive on that same queue.
+- The `CBPeripheralManager` is created lazily on first `startAdvertising` so the
+  Bluetooth permission prompt only appears when a user chooses to join/advertise.
+- Advertising starts only after the GATT service is registered
+  (`didAddService`), following Apple's recommended ordering.
+- **Runtime requirements** (cannot be exercised in CI): the packaged app needs
+  `NSBluetoothAlwaysUsageDescription` in `Info.plist` (added via
+  `electron-builder.yml` `mac.extendInfo`), the user must grant Bluetooth
+  permission, and a notarized hardened-runtime build additionally needs the
+  `com.apple.security.device.bluetooth` entitlement. Guest-to-host discovery
+  requires two physical machines.
+
+### Linux BlueZ Backend Notes
+
+- `bluer` is async (tokio) and its `ApplicationHandle` / `AdvertisementHandle`
+  must stay alive for advertising to continue. The backend owns a dedicated
+  thread running a current-thread tokio runtime that holds those handles and is
+  driven by an unbounded command channel; `start_advertising` waits up to 10s
+  for BlueZ setup so real failures surface in `lastBleError`.
+- The RX characteristic uses a `CharacteristicWriteMethod::Fun` callback that
+  pushes each host write into the shared inbound buffer (same receive semantics
+  as the macOS backend). TX notify delivery is the pending next step on both.
+- **Cannot be built or tested on macOS:** `bluer` links `libdbus-1` (via
+  `dbus-tokio`/`dbus-crossroads`), so the module is `cfg`-gated to
+  `target_os = "linux"` and is validated on a Linux host with a running
+  `bluetoothd`. On Linux the app user typically needs D-Bus permission to
+  register a GATT application / advertisement (BlueZ policy).
+
+### Windows GattServiceProvider Backend Notes
+
+- Built on WinRT `GattServiceProvider`. WinRT objects are agile (`Send + Sync`
+  in windows-rs) and its GATT async operations are `.get()`-blocked, so unlike
+  the Linux backend it needs no dedicated runtime thread.
+- The RX characteristic registers a `WriteRequested` `TypedEventHandler` that
+  reads each write's `IBuffer` (via `DataReader`) into the shared inbound buffer
+  and responds when the write requires a response. TX notify delivery is the
+  pending next step (parity with macOS/Linux).
+- **Cannot be built or tested on macOS/Linux:** the `windows` crate is
+  Windows-only, so the module is `cfg`-gated to `target_os = "windows"` and is
+  validated on a Windows host separately.
+- **Local-name limitation (important):** `GattServiceProviderAdvertisingParameters`
+  only controls `IsConnectable` / `IsDiscoverable`. It advertises the calculator
+  **service UUID** but cannot set the custom `EvolveCalc:JOIN:<room>:<label>`
+  local name that the host scan parser reads for room/label metadata. So a
+  Windows guest is connectable and matches a service-UUID scan, but is not fully
+  self-describing. Carrying the JOIN metadata needs a separate
+  `BluetoothLEAdvertisementPublisher`, or a host-side rule that treats a bare
+  calculator-service-UUID match as a discoverable guest. This is a genuine WinRT
+  API constraint, tracked as follow-up rather than hidden.
 
 ## Native Build
 
@@ -369,3 +478,75 @@ The current UI can display a command error, but native work should define struct
 - Backend validation unavailable.
 
 Prefer returning typed error codes from Rust and mapping them to concise UI messages in Electron or the renderer.
+
+## Outstanding Work (TODO)
+
+Consolidated roadmap of what is done vs. still pending. Status legend:
+`[x]` implemented and verified here, `[~]` implemented but **not verified in this
+environment** (needs specific OS/hardware), `[ ]` not started.
+
+### BLE peripheral backends
+
+- `[x]` Peripheral abstraction (`ble::BlePeripheral` trait, `PeripheralConfig`,
+  platform factory, `EvolveCalc:JOIN:...` advertisement builder). Unit-tested.
+- `[~]` macOS CoreBluetooth `CBPeripheralManager` backend — compiles on macOS;
+  runtime needs two Macs, granted Bluetooth permission, and the
+  `NSBluetoothAlwaysUsageDescription` Info.plist key (added). A notarized
+  hardened-runtime build also needs the `com.apple.security.device.bluetooth`
+  entitlement (not yet added — see below).
+- `[~]` Linux BlueZ (`bluer`) backend — **never compiled here**; `bluer` links
+  `libdbus-1`, so it builds/runs only on a Linux host with `bluetoothd`.
+- `[~]` Windows WinRT `GattServiceProvider` backend — **never compiled here**;
+  the `windows` crate is Windows-only. Builds/runs only on a Windows host.
+- `[ ]` **Windows local-name limitation:** `GattServiceProvider` advertises the
+  service UUID but cannot set the custom `EvolveCalc:JOIN:<room>:<label>` local
+  name the host parser reads. Add a `BluetoothLEAdvertisementPublisher` to carry
+  the JOIN payload, or add a host-side rule that treats a bare
+  calculator-service-UUID match as a discoverable guest. See "Windows
+  GattServiceProvider Backend Notes".
+
+### Receive-side GATT transport (shared across all three backends)
+
+Every backend currently only **buffers** inbound host writes (`take_inbound()`);
+the received bytes are not yet processed. Still pending:
+
+- `[ ]` Reassemble BLE chunks on receive (the framing/`reassemble_chunks`
+  helper exists and is unit-tested, but is not wired to the inbound buffer).
+- `[ ]` Verify received `SignedEnvelope` events (JWS signature + holder binding)
+  before appending them to history.
+- `[ ]` TX notify delivery (guest -> host) — the TX characteristic is created on
+  all three backends but no notify is ever sent; wire it to the signed outbox.
+- `[ ]` Mark SQLite `sync_outbox` rows delivered once real transport succeeds
+  (today `consume_sync_outbox` only stages chunks and reports them pending).
+
+### Credential trust (still fail-closed)
+
+`validate_credential_bundle()` and the `NativeCapabilities` flags
+`jweDecryption`, `jwtSdJwtVerification`, and `issuerTrustValidation` are all
+`false` / fail-closed. The `trusted_issuers` SQLite table exists but is unused.
+Pending (see "Credential and Trust Plan"):
+
+- `[ ]` Populate/read `trusted_issuers` (register issuer -> public key).
+- `[ ]` Resolve issuer keys and verify JWS/JWT/SD-JWT signatures.
+- `[ ]` JWE decryption.
+- `[ ]` Issuer trust policy + revocation checks, then flip the capability flags.
+
+Unlike the peripheral backends, this work is fully unit-testable in this
+environment (real crypto round-trips), so it is the highest-verifiable-value
+next step.
+
+### Build / packaging / CI
+
+- `[ ]` CI matrix to actually compile-verify all three peripheral backends:
+  `macos-latest` (default), `ubuntu-latest` with `libdbus-1-dev` installed, and
+  `windows-latest`. Today only the macOS build is exercised locally.
+- `[ ]` Add the `com.apple.security.device.bluetooth` entitlement + a signing
+  config for notarized macOS builds (Info.plist usage strings are already added
+  via `electron-builder.yml` `mac.extendInfo`).
+
+### Boundary hardening (pre-production)
+
+- `[ ]` Runtime request validation at the IPC/native boundary — see
+  "Request Validation Needed".
+- `[ ]` Structured, typed failure codes from Rust mapped to concise UI messages
+  — see "Failure Handling Needed".

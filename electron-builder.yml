@@ -22,6 +22,13 @@ asarUnpack:
 
 mac:
   category: public.app-category.productivity
+  # CoreBluetooth refuses to start without these Info.plist usage strings.
+  # Required for both the central scan and the guest peripheral/GATT server.
+  extendInfo:
+    NSBluetoothAlwaysUsageDescription: "Evolve Calc uses Bluetooth to discover, host, and join nearby calculator sessions."
+    NSBluetoothPeripheralUsageDescription: "Evolve Calc advertises this device over Bluetooth so a host can find and connect to it as a calculator guest."
+  # NOTE: a notarized hardened-runtime build additionally needs the
+  # `com.apple.security.device.bluetooth` entitlement (see docs).
   target:
     - dmg
 

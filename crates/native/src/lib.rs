@@ -19,6 +19,8 @@ use std::{
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use uuid::Uuid;
 
+mod ble;
+
 const DEFAULT_HISTORY_LIMIT: usize = 100;
 const KEYCHAIN_SERVICE: &str = "io.evolve.ble-calculator";
 const KEYCHAIN_USER: &str = "device-signing-key-v1";
@@ -29,6 +31,12 @@ const ROOM_ADVERTISEMENT_KIND: &str = "ROOM";
 const BLE_CHUNK_PAYLOAD_SIZE: usize = 180;
 
 static APP_STATE: Lazy<Mutex<RoomState>> = Lazy::new(|| Mutex::new(RoomState::new()));
+
+/// The platform BLE peripheral backend (guest advertising / GATT server).
+/// `btleplug` cannot fill the peripheral role, so this is a per-OS native
+/// implementation behind the [`ble::BlePeripheral`] trait.
+static PERIPHERAL: Lazy<Mutex<Box<dyn ble::BlePeripheral>>> =
+    Lazy::new(|| Mutex::new(ble::new_peripheral()));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -83,7 +91,15 @@ impl NativeCapabilities {
     fn current() -> Self {
         Self {
             ble_central_scanning: true,
-            ble_peripheral_advertising: false,
+            // A native peripheral/GATT-server backend exists on macOS
+            // (CoreBluetooth), Linux (BlueZ/bluer), and Windows
+            // (GattServiceProvider); other platforms fall back to the fail-loud
+            // stub (see `ble`).
+            ble_peripheral_advertising: cfg!(any(
+                target_os = "macos",
+                target_os = "linux",
+                target_os = "windows"
+            )),
             sqlite_persistence: true,
             keychain_storage: true,
             local_jws_signing: true,
@@ -429,13 +445,47 @@ pub fn join_room(request: JoinRoomRequest) -> Result<Value> {
             last_seen_iso: now_iso(),
         }];
 
-        push_warning_once(
-      &mut state.native_warnings,
-      "Guest join request is represented in native state, but real BLE peripheral advertising requires a platform-specific GATT server backend.",
-    );
+        let label = guest_advertising_label(state);
+        match start_guest_advertising(&room_id, &label) {
+            Ok(()) => {
+                state.native_status.last_ble_error = None;
+            }
+            Err(error) => {
+                state.advertising = false;
+                state.native_status.last_ble_error = Some(error.clone());
+                push_warning_once(
+                    &mut state.native_warnings,
+                    format!("Guest BLE advertising could not start: {error}"),
+                );
+            }
+        }
 
         Ok(state.clone())
     })
+}
+
+fn guest_advertising_label(state: &RoomState) -> String {
+    let fingerprint = &state.native_status.public_key_fingerprint;
+    let suffix = fingerprint.get(..6).unwrap_or(fingerprint);
+    if suffix.is_empty() {
+        "Evolve Guest".to_string()
+    } else {
+        format!("Evolve Guest {suffix}")
+    }
+}
+
+fn start_guest_advertising(room_id: &str, label: &str) -> std::result::Result<(), String> {
+    let config = ble::PeripheralConfig::join(room_id, label);
+    let mut peripheral = PERIPHERAL
+        .lock()
+        .map_err(|_| "BLE peripheral backend lock was poisoned".to_string())?;
+    peripheral.start_advertising(&config)
+}
+
+fn stop_guest_advertising() {
+    if let Ok(mut peripheral) = PERIPHERAL.lock() {
+        let _ = peripheral.stop();
+    }
 }
 
 #[napi]
@@ -448,10 +498,29 @@ pub fn start_advertising(request: StartAdvertisingRequest) -> Result<Value> {
 #[napi]
 pub fn accept_host_connection() -> Result<Value> {
     with_state_json(|state| {
-        state.advertising = false;
+        let backend_supported = peripheral_backend_supported();
+
+        // On a guest peripheral the host initiates the GATT connection, so
+        // "accept" keeps advertising active and reports the current backend
+        // rather than fabricating a connected host.
+        let (label, warning) = if backend_supported {
+            (
+                "Advertising for host connection".to_string(),
+                None,
+            )
+        } else {
+            (
+                "Host connection pending native peripheral backend".to_string(),
+                Some(
+                    "Host acceptance needs this platform's BLE peripheral/GATT server backend, which is not implemented yet."
+                        .to_string(),
+                ),
+            )
+        };
+
         state.peers = vec![PeerSummary {
             id: "host-native-pending".to_string(),
-            label: "Host connection pending native peripheral backend".to_string(),
+            label,
             session_role: "host".to_string(),
             ble_role: "central".to_string(),
             trust_status: "pending".to_string(),
@@ -459,17 +528,52 @@ pub fn accept_host_connection() -> Result<Value> {
             last_seen_iso: now_iso(),
         }];
 
-        push_warning_once(
-      &mut state.native_warnings,
-      "Host acceptance is waiting for the platform-specific BLE peripheral/GATT server implementation.",
-    );
+        if let Some(warning) = warning {
+            state.advertising = false;
+            push_warning_once(&mut state.native_warnings, warning);
+        }
 
         Ok(state.clone())
     })
 }
 
+fn peripheral_backend_supported() -> bool {
+    PERIPHERAL
+        .lock()
+        .map(|peripheral| peripheral.is_supported())
+        .unwrap_or(false)
+}
+
+/// Diagnostic snapshot of the guest peripheral backend for the runtime status.
+fn peripheral_status_json() -> Value {
+    match PERIPHERAL.lock() {
+        Ok(peripheral) => json!({
+            "platform": peripheral.platform(),
+            "supported": peripheral.is_supported(),
+            "advertising": peripheral.is_advertising(),
+        }),
+        Err(_) => json!({
+            "platform": "unavailable",
+            "supported": false,
+            "advertising": false,
+        }),
+    }
+}
+
+/// Discard any calculation-event frames a host wrote over GATT that have not
+/// been consumed. Full receive-side verification is a later step; draining here
+/// keeps the inbound buffer from growing across sessions.
+fn drain_peripheral_inbound() -> usize {
+    match PERIPHERAL.lock() {
+        Ok(mut peripheral) => peripheral.take_inbound().len(),
+        Err(_) => 0,
+    }
+}
+
 #[napi]
 pub fn reset_ble_session() -> Result<Value> {
+    stop_guest_advertising();
+    let _drained = drain_peripheral_inbound();
     with_state_json(|state| {
         state.room_id = None;
         state.room_name = None;
@@ -535,6 +639,7 @@ pub fn get_native_runtime_status() -> Result<Value> {
           "capabilities": state.native_capabilities,
           "status": state.native_status,
           "warnings": state.native_warnings,
+          "peripheral": peripheral_status_json(),
         });
         Ok(status)
     })
