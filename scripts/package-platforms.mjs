@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, renameSync, rmSync } from "node:fs";
 import path from "node:path";
 
 const rootDir = path.resolve(import.meta.dirname, "..");
@@ -70,26 +70,32 @@ if (dryRun) {
   process.exit(0);
 }
 
-run("npm", ["run", "typecheck"], { env });
-run("npm", ["run", "lint"], { env });
-run("npm", ["run", "test"], { env });
+const stashedNativeArtifacts = skipNative ? stashNativeArtifacts() : [];
 
-if (!skipNative) {
-  for (const key of requestedTargets) {
-    ensureRustTargetInstalled(key, env);
-    buildNativeForTarget(key, env);
+try {
+  run("npm", ["run", "typecheck"], { env });
+  run("npm", ["run", "lint"], { env });
+  run("npm", ["run", "test"], { env });
+
+  if (!skipNative) {
+    for (const key of requestedTargets) {
+      ensureRustTargetInstalled(key, env);
+      buildNativeForTarget(key, env);
+    }
+  } else {
+    console.warn("Skipping native module builds. Packaged apps will use the TypeScript mock if no compatible .node artifact is included.");
   }
-} else {
-  console.warn("Skipping native module builds. Packaged apps will use the TypeScript mock if no compatible .node artifact is included.");
-}
 
-run("npm", ["run", "build"], { env });
+  run("npm", ["run", skipNative ? "build:app" : "build"], { env });
 
-const builderArgs = ["electron-builder", "--config", "electron-builder.yml"];
-for (const [platform, arches] of electronBuilderTargets.entries()) {
-  builderArgs.push(`--${platform}`, ...[...arches].map((arch) => `--${arch}`));
+  const builderArgs = ["electron-builder", "--config", "electron-builder.yml"];
+  for (const [platform, arches] of electronBuilderTargets.entries()) {
+    builderArgs.push(`--${platform}`, ...[...arches].map((arch) => `--${arch}`));
+  }
+  run("npx", builderArgs, { env });
+} finally {
+  restoreNativeArtifacts(stashedNativeArtifacts);
 }
-run("npx", builderArgs, { env });
 
 function buildNativeForTarget(key, env) {
   const target = targetMatrix[key];
@@ -229,8 +235,41 @@ function run(command, args, { env }) {
   }
 
   if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+    throw new Error(`Command failed with exit code ${result.status ?? 1}: ${command} ${args.join(" ")}`);
   }
+}
+
+function stashNativeArtifacts() {
+  const stashDir = path.join(rootDir, ".native-artifact-stash");
+  rmSync(stashDir, { recursive: true, force: true });
+  mkdirSync(stashDir, { recursive: true });
+
+  const artifacts = readdirSync(rootDir)
+    .filter((name) => /^index\..+\.node$/.test(name))
+    .map((name) => ({
+      name,
+      from: path.join(rootDir, name),
+      to: path.join(stashDir, name)
+    }));
+
+  for (const artifact of artifacts) {
+    renameSync(artifact.from, artifact.to);
+  }
+
+  if (artifacts.length > 0) {
+    console.warn(`Temporarily stashed ${artifacts.length} native artifact(s) for --skip-native packaging.`);
+  }
+
+  return artifacts;
+}
+
+function restoreNativeArtifacts(artifacts) {
+  for (const artifact of artifacts) {
+    if (existsSync(artifact.to)) {
+      renameSync(artifact.to, artifact.from);
+    }
+  }
+  rmSync(path.join(rootDir, ".native-artifact-stash"), { recursive: true, force: true });
 }
 
 function printPlan(targets, grouped, skipNativeBuild) {

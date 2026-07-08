@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "description": "Cross-platform Electron calculator sync app backed by a Rust napi-rs core.",
   "private": true,
+  "author": {
+    "name": "Zheng Qing Sia",
+    "email": "yoyoinane@gmail.com"
+  },
   "main": "dist/src/electron/main.js",
   "scripts": {
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
-    "build": "npm run build:native:optional && tsc -p tsconfig.json && vite build",
+    "build": "npm run build:native:optional && npm run build:app",
+    "build:app": "tsc -p tsconfig.json && vite build",
     "build:native": "node scripts/build-native.mjs",
     "build:native:optional": "node scripts/build-native-optional.mjs",
     "package": "node scripts/package-platforms.mjs",
