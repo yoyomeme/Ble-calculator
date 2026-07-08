@@ -208,6 +208,52 @@ index.darwin-arm64.node
 
 These files are generated build artifacts. ESLint and Git ignore them, and the Electron native adapter tries the generated `index.js` wrapper first.
 
+## Desktop Packaging
+
+Release packages are built with `electron-builder` through:
+
+```sh
+npm run package
+```
+
+On macOS, `npm run package` builds both `mac-arm64` and `mac-x64` packages when the Rust targets are available.
+
+The package script is `scripts/package-platforms.mjs`. It runs typecheck, lint, tests, native module builds for requested targets, the renderer/Electron build, and finally `electron-builder`.
+
+Supported target aliases:
+
+```text
+current
+mac | mac-arm64 | mac-x64
+win | win-x64 | win-arm64
+linux | linux-x64 | linux-arm64
+all
+```
+
+Examples:
+
+```sh
+npm run package -- current
+npm run package -- mac
+npm run package -- linux-x64
+npm run package -- all
+```
+
+Outputs are written to:
+
+```text
+release/
+```
+
+Cross-platform packaging has native constraints:
+
+- The Rust `napi-rs` module must be built for each target architecture.
+- The package script attempts `rustup target add` for missing Rust targets.
+- macOS packaging works best from macOS.
+- Windows installers may require Windows signing/tooling for production.
+- Linux packages may require Linux or containerized packaging for production-grade artifacts.
+- `--skip-native` can produce a mock-adapter package, but it is not the real native BLE/security app.
+
 ## Planned Native Architecture
 
 The Rust core is now the owner of local identity, SQLite-backed event history, local event signing, holder binding for local events, and host central scan attempts. It should continue growing into the owner of the remaining session-critical work:

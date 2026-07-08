@@ -1,0 +1,36 @@
+appId: io.evolve.ble-calculator
+productName: Evolve Calc
+copyright: Copyright © 2026 Evolve Calc
+
+directories:
+  output: release
+
+files:
+  - dist/src/electron/**
+  - dist/src/shared/**
+  - dist/renderer/**
+  - package.json
+  - index.js
+  - index.d.ts
+  - index.*.node
+  - "!**/*.map"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
+
+asarUnpack:
+  - index.*.node
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+
+win:
+  target:
+    - nsis
+
+linux:
+  category: Utility
+  target:
+    - AppImage
+    - deb

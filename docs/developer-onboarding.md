@@ -78,6 +78,7 @@ npm run typecheck
 npm run lint
 npm run test
 npm run build
+npm run package
 ```
 
 For native work:
@@ -85,6 +86,17 @@ For native work:
 ```sh
 npm run build:native
 ```
+
+For desktop release packages:
+
+```sh
+npm run package
+npm run package -- mac-arm64
+npm run package -- linux-x64
+npm run package:all
+```
+
+Packages are written to `release/`. Cross-platform targets require compatible Rust native artifacts and the platform packaging toolchain.
 
 For UI layout work, also run:
 

@@ -30,9 +30,12 @@ npm run lint
 npm run test
 npm run build
 npm run build:native
+npm run package
 ```
 
 `npm run build` skips the native module when `cargo` is unavailable and uses the mock adapter. `npm run build:native` is strict and fails if the Rust native module cannot compile.
+
+`npm run package` builds the current host executable/installer into `release/`. On macOS it builds both Apple Silicon and Intel DMGs when the Rust targets are available. Use `npm run package -- mac`, `npm run package -- win`, `npm run package -- linux`, or `npm run package:all` for a broader matrix when the required native Rust targets and platform packaging tools are installed.
 
 ## Visual UI Pass
 
