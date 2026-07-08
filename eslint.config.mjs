@@ -5,6 +5,8 @@ import reactHooks from "eslint-plugin-react-hooks";
 
 const browserGlobals = {
   document: "readonly",
+  navigator: "readonly",
+  performance: "readonly",
   window: "readonly",
   structuredClone: "readonly"
 };

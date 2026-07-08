@@ -940,6 +940,182 @@ button.active {
   white-space: nowrap;
 }
 
+.log-console {
+  position: relative;
+  z-index: 1;
+  justify-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--calc-border);
+  border-radius: var(--calc-radius);
+  background: rgba(26, 22, 20, 0.86);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.log-console.is-open {
+  border-color: rgba(242, 180, 65, 0.34);
+}
+
+.log-console-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px;
+}
+
+.log-console-toggle {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 34px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--calc-text);
+}
+
+.log-console-toggle:hover:not(:disabled) {
+  background: rgba(240, 220, 200, 0.08);
+}
+
+.log-console-label {
+  font-family: var(--font-control);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.log-console-count {
+  min-width: 22px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(240, 220, 200, 0.14);
+  color: var(--calc-muted);
+  font-family: var(--font-control);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  text-align: center;
+}
+
+.log-console-chevron {
+  margin-left: auto;
+  color: var(--calc-muted);
+}
+
+.log-badge {
+  min-width: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-control);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  text-align: center;
+}
+
+.log-badge--error {
+  background: rgba(200, 64, 26, 0.26);
+  color: #ffd7c6;
+}
+
+.log-badge--warn {
+  background: rgba(242, 180, 65, 0.22);
+  color: var(--evolve-yolk);
+}
+
+.log-console-tools {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.log-console-tools button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 0.7rem;
+}
+
+.log-console-body {
+  max-height: 240px;
+  overflow: auto;
+  border-top: 1px solid var(--calc-border);
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.22);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.log-line {
+  display: grid;
+  grid-template-columns: 96px 62px minmax(0, 1fr);
+  gap: 8px;
+  padding: 2px 0;
+  border-top: 1px solid rgba(240, 220, 200, 0.06);
+}
+
+.log-line:first-child {
+  border-top: 0;
+}
+
+.log-time {
+  color: var(--calc-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-scope {
+  align-self: center;
+  overflow: hidden;
+  color: var(--evolve-orange);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.log-message {
+  color: var(--calc-text);
+  overflow-wrap: anywhere;
+}
+
+.log-line--success .log-message {
+  color: #cfe3ad;
+}
+
+.log-line--warn .log-message {
+  color: var(--evolve-yolk);
+}
+
+.log-line--error .log-message {
+  color: #ffb4a0;
+}
+
+.log-detail {
+  grid-column: 3 / -1;
+  margin: 4px 0 3px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.32);
+  color: var(--calc-muted);
+  font-family: inherit;
+  font-size: 0.7rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.log-empty {
+  padding: 6px 2px;
+  color: var(--calc-muted);
+  font-size: 0.8rem;
+}
+
 @media (max-width: 1100px) {
   .app-shell {
     align-items: center;

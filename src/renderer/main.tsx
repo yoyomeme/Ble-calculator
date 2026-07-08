@@ -1,12 +1,22 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   Bluetooth,
   Calculator,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   CircleDot,
+  Copy,
   Delete,
   DoorOpen,
   Radio,
@@ -14,11 +24,15 @@ import {
   Search,
   ShieldCheck,
   ShieldQuestion,
+  Terminal,
+  Trash2,
   Users
 } from "lucide-react";
 import type { PeerSummary, RoomState, RoomSummary, SessionRole } from "../shared/calculator-api";
 import { calculateExpression } from "../shared/expression";
 import { createBrowserCalculatorApi } from "./browser-calculator";
+import { logStore } from "./log-store";
+import { createLoggingCalculatorApi, logStartupEnvironment } from "./logging-calculator-api";
 import "./styles.css";
 
 const emptyState: RoomState = {
@@ -76,8 +90,12 @@ function canFitBothDrawers(): boolean {
 }
 
 function App() {
-  const calculatorApi = useMemo(() => window.calculator ?? createBrowserCalculatorApi(), []);
+  const calculatorApi = useMemo(
+    () => createLoggingCalculatorApi(window.calculator ?? createBrowserCalculatorApi()),
+    []
+  );
   const [state, setState] = useState<RoomState>(emptyState);
+  const [logOpen, setLogOpen] = useState(false);
   const [roomName, setRoomName] = useState("Desk Calculator");
   const [roomCode, setRoomCode] = useState("DESK-01");
   const [expression, setExpression] = useState("7 + 5 * 2");
@@ -104,8 +122,11 @@ function App() {
   );
 
   useEffect(() => {
+    logStartupEnvironment(Boolean(window.calculator));
     void runAction("Loading", () => calculatorApi.getState());
   }, [calculatorApi, runAction]);
+
+  const toggleLog = useCallback(() => setLogOpen((open) => !open), []);
 
   useEffect(() => {
     const updateDrawerCapacity = () => {
@@ -519,7 +540,118 @@ function App() {
           label={connectedPeers > 0 ? "trusted session" : "trust pending"}
         />
       </section>
+
+      <LogConsole open={logOpen} onToggle={toggleLog} />
     </main>
+  );
+}
+
+function LogConsole({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const entries = useSyncExternalStore(logStore.subscribe, logStore.getSnapshot);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const counts = useMemo(() => {
+    let warn = 0;
+    let error = 0;
+    for (const entry of entries) {
+      if (entry.level === "warn") {
+        warn += 1;
+      } else if (entry.level === "error") {
+        error += 1;
+      }
+    }
+    return { warn, error };
+  }, [entries]);
+
+  // Keep the newest lines in view while the console is open.
+  useEffect(() => {
+    if (open && bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
+  }, [entries, open]);
+
+  const handleCopy = useCallback(async () => {
+    const text = logStore.toText();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for contexts where the async clipboard API is unavailable.
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  }, []);
+
+  return (
+    <section className={`log-console ${open ? "is-open" : ""}`} aria-label="Real-time activity log">
+      <header className="log-console-bar">
+        <button
+          type="button"
+          className="log-console-toggle"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-controls="log-console-body"
+        >
+          <Terminal size={16} aria-hidden="true" />
+          <span className="log-console-label">Activity Log</span>
+          <span className="log-console-count">{entries.length}</span>
+          {counts.error > 0 ? (
+            <span className="log-badge log-badge--error">{counts.error}</span>
+          ) : null}
+          {counts.warn > 0 ? (
+            <span className="log-badge log-badge--warn">{counts.warn}</span>
+          ) : null}
+          {open ? (
+            <ChevronDown size={16} aria-hidden="true" className="log-console-chevron" />
+          ) : (
+            <ChevronUp size={16} aria-hidden="true" className="log-console-chevron" />
+          )}
+        </button>
+        <div className="log-console-tools">
+          <button type="button" onClick={() => void handleCopy()} disabled={entries.length === 0}>
+            <Copy size={15} aria-hidden="true" />
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button
+            type="button"
+            className="danger-outline"
+            onClick={() => logStore.clear()}
+            disabled={entries.length === 0}
+          >
+            <Trash2 size={15} aria-hidden="true" />
+            Clear
+          </button>
+        </div>
+      </header>
+
+      {open ? (
+        <div className="log-console-body" id="log-console-body" ref={bodyRef}>
+          {entries.length === 0 ? (
+            <p className="log-empty">No activity yet. Interact with the app to record logs.</p>
+          ) : (
+            entries.map((entry) => (
+              <div key={entry.id} className={`log-line log-line--${entry.level}`}>
+                <span className="log-time">{entry.timestamp.slice(11, 23)}</span>
+                <span className="log-scope">{entry.scope}</span>
+                <span className="log-message">{entry.message}</span>
+                {entry.detail ? <pre className="log-detail">{entry.detail}</pre> : null}
+              </div>
+            ))
+          )}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
