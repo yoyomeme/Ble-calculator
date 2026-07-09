@@ -88,7 +88,10 @@ try {
 
   run("npm", ["run", skipNative ? "build:app" : "build"], { env });
 
-  const builderArgs = ["electron-builder", "--config", "electron-builder.yml"];
+  // Never let electron-builder publish. On CI it otherwise auto-publishes and
+  // requires GH_TOKEN; publishing to a GitHub Release is handled separately by
+  // the release workflow. Locally this just keeps it to building artifacts.
+  const builderArgs = ["electron-builder", "--config", "electron-builder.yml", "--publish", "never"];
   for (const [platform, arches] of electronBuilderTargets.entries()) {
     builderArgs.push(`--${platform}`, ...[...arches].map((arch) => `--${arch}`));
   }
@@ -214,7 +217,11 @@ function buildEnvWithRustupCargo() {
   if (cargo.status === 0) {
     const cargoPath = cargo.stdout.trim();
     if (cargoPath) {
-      env.PATH = `${path.dirname(cargoPath)}${path.delimiter}${env.PATH ?? ""}`;
+      // On Windows the PATH variable is usually keyed "Path"; writing "PATH"
+      // would create a second, truncated variable that shadows the real one and
+      // breaks tool resolution (npm/npx). Prepend to the existing key's case.
+      const pathKey = Object.keys(env).find((key) => key.toLowerCase() === "path") ?? "PATH";
+      env[pathKey] = `${path.dirname(cargoPath)}${path.delimiter}${env[pathKey] ?? ""}`;
     }
   }
 
