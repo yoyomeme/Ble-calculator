@@ -1,0 +1,110 @@
+name: Release
+
+# Builds real, native installers for every desktop platform, each on its own
+# native runner (this is the only way to produce genuine Windows/Linux/macOS
+# native modules — a single machine cannot cross-build them). Trigger it with
+# the "Run workflow" button, `gh workflow run release.yml`, the
+# `scripts/release-all.command` double-click launcher, or by pushing a `v*` tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to publish (e.g. v0.1.0). Leave blank to build installers as artifacts without creating a Release."
+        required: false
+        default: ""
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (arm64 + x64)
+            os: macos-latest
+            target: mac
+          - name: Linux (x64)
+            os: ubuntu-latest
+            target: linux-x64
+          - name: Windows (x64)
+            os: windows-latest
+            target: win-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates/native
+
+      - name: Install Linux BLE build dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Package installers
+        # Do not attempt macOS code signing in CI; produce unsigned installers.
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run package -- ${{ matrix.target }}
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.target }}
+          if-no-files-found: warn
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.deb
+            release/*.rpm
+            release/*.exe
+            release/*.yml
+            release/*.blockmap
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Only publish a Release for a pushed tag or when a version was supplied.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.version != ''
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: installers
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          name: ${{ github.event.inputs.version || github.ref_name }}
+          generate_release_notes: true
+          files: installers/**/*

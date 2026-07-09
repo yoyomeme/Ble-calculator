@@ -367,6 +367,40 @@ Cross-platform packaging has native constraints:
 - Linux packages may require Linux or containerized packaging for production-grade artifacts.
 - `--skip-native` can produce a mock-adapter package, but it is not the real native BLE/security app.
 
+### One-Click All-Platform Release
+
+Because a single machine cannot cross-build the platform-specific native BLE
+core (Windows needs MSVC, Linux needs `libdbus`, macOS needs CoreBluetooth),
+real all-platform releases are produced by the `Release` GitHub Actions workflow
+(`.github/workflows/release.yml`), which builds each OS on its own native runner
+and can publish a GitHub Release with all installers.
+
+Trigger it any of these ways:
+
+- **Double-click** `scripts/release-all.command` (macOS) or
+  `scripts/release-all.bat` (Windows). It reads the tags already on GitHub and
+  **auto-increments the version** (default: next patch), while still letting you
+  type `minor`/`major` to bump those, a specific `vX.Y.Z`, or `none` to build
+  installers without publishing a Release. It then triggers the workflow via the
+  GitHub CLI and watches the run.
+- `npm run release:all`
+- `gh workflow run release.yml -f version=v0.1.0`
+- Push a `v*` tag, or use the "Run workflow" button on the Actions tab.
+
+Version auto-increment is computed by `scripts/next-version.mjs`, which reads
+existing tags via `gh` and bumps the highest one (seeding from `package.json`
+for the very first release). CI then creates that tag when it publishes the
+Release, so each run advances the version with no manual bookkeeping.
+
+The double-click launchers require the GitHub CLI (`gh`) installed and
+authenticated (`gh auth login`). Because of a GitHub constraint,
+`workflow_dispatch` only works once `release.yml` exists on the repository's
+**default branch (`main`)** — merge it first, then the button/launchers work.
+
+The workflow matrix builds `mac` (arm64 + x64), `linux-x64`, and `win-x64`.
+macOS installers are built unsigned in CI (`CSC_IDENTITY_AUTO_DISCOVERY=false`);
+production distribution still needs real signing/notarization credentials.
+
 ## Planned Native Architecture
 
 The Rust core is now the owner of local identity, SQLite-backed event history, local event signing, holder binding for local events, and host central scan attempts. It should continue growing into the owner of the remaining session-critical work:

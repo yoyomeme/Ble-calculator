@@ -17,6 +17,7 @@
     "package": "node scripts/package-platforms.mjs",
     "package:current": "node scripts/package-platforms.mjs current",
     "package:all": "node scripts/package-platforms.mjs all",
+    "release:all": "gh workflow run release.yml",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run --config vitest.config.mts"
