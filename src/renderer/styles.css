@@ -158,11 +158,11 @@ p {
 }
 
 .workspace.history-open {
-  grid-template-columns: 52px 420px 330px;
+  grid-template-columns: 52px 420px 360px;
 }
 
 .workspace.host-open.history-open {
-  grid-template-columns: 300px 420px 330px;
+  grid-template-columns: 300px 420px 360px;
 }
 
 .left-panel,
@@ -521,7 +521,7 @@ p {
 
 .segmented {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 6px;
   border: 1px solid var(--calc-border);
@@ -720,14 +720,9 @@ button.active {
   overflow: hidden;
 }
 
-.right-panel .panel-section:first-of-type {
-  flex: 0 1 auto;
-  max-height: 228px;
-  overflow: hidden;
-}
-
-.history-section {
+.network-section {
   flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -915,6 +910,248 @@ button.active {
   padding: 6px 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Room panel: role fields */
+.role-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.primary-action {
+  width: 100%;
+  min-height: 42px;
+  border-color: transparent;
+  background: var(--evolve-orange);
+  color: var(--calc-text-dark);
+}
+
+.primary-action:hover:not(:disabled) {
+  background: var(--calc-primary-hover);
+}
+
+.control-group--secondary label {
+  font-size: 0.64rem;
+  color: rgba(240, 220, 200, 0.5);
+}
+
+/* Network panel: tabs */
+.network-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  border: 1px solid var(--calc-border);
+  border-radius: var(--calc-radius);
+  background: rgba(26, 22, 20, 0.54);
+  padding: 5px;
+}
+
+.network-tabs button {
+  min-height: 34px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--calc-muted);
+  text-transform: uppercase;
+}
+
+.network-tabs button.selected {
+  background: var(--evolve-orange);
+  color: var(--calc-text-dark);
+}
+
+.tab-content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.discovery-list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.discovery-empty {
+  margin: 0;
+}
+
+/* Discovery rows are themselves the connect/join button. */
+.discovery-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px;
+  border-color: var(--calc-border);
+  border-radius: var(--calc-radius);
+  background: rgba(26, 22, 20, 0.44);
+  text-align: left;
+}
+
+.discovery-row:hover:not(:disabled) {
+  border-color: rgba(242, 180, 65, 0.6);
+  background: rgba(42, 35, 32, 0.7);
+}
+
+.discovery-row .peer-main {
+  text-align: left;
+}
+
+/* Connection card (replaces the discovery list while connected) */
+.connection-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(107, 142, 61, 0.4);
+  border-radius: var(--calc-radius);
+  background: rgba(26, 22, 20, 0.5);
+  padding: 14px;
+}
+
+.connection-peer {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.connection-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.connection-disconnect {
+  width: 100%;
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-family: var(--font-control);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.trust-badge--trusted {
+  background: rgba(107, 142, 61, 0.24);
+  color: #cfe3ad;
+}
+
+.trust-badge--pending {
+  background: rgba(242, 180, 65, 0.2);
+  color: var(--evolve-yolk);
+}
+
+.trust-badge--untrusted {
+  background: rgba(200, 64, 26, 0.2);
+  color: #ffd7c6;
+}
+
+/* RSSI indicator */
+.rssi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--calc-muted);
+  font-family: var(--font-control);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.rssi--empty {
+  color: rgba(240, 220, 200, 0.42);
+}
+
+.rssi-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.rssi-bars span {
+  width: 3px;
+  height: 5px;
+  border-radius: 1px;
+  background: rgba(240, 220, 200, 0.24);
+}
+
+.rssi-bars span:nth-child(2) {
+  height: 8px;
+}
+
+.rssi-bars span:nth-child(3) {
+  height: 11px;
+}
+
+.rssi-bars span:nth-child(4) {
+  height: 14px;
+}
+
+.rssi-bars span.on {
+  background: var(--evolve-leaf);
+}
+
+/* Role-switch confirmation modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(19, 15, 13, 0.68);
+  backdrop-filter: blur(6px);
+}
+
+.modal {
+  display: grid;
+  gap: 12px;
+  width: min(360px, 100%);
+  border: 1px solid rgba(242, 180, 65, 0.34);
+  border-radius: var(--calc-radius);
+  background: rgba(42, 35, 32, 0.98);
+  padding: 20px;
+  box-shadow: var(--calc-shadow);
+}
+
+.modal h3 {
+  color: var(--calc-text);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.modal p {
+  color: var(--calc-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.modal-actions button {
+  min-height: 42px;
 }
 
 .status-rail {

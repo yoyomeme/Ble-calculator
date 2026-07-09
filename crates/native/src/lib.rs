@@ -376,6 +376,12 @@ pub fn connect_guest(request: ConnectGuestRequest) -> Result<Value> {
             peer.last_seen_iso = now_iso();
         }
 
+        // A successful connection ends discovery: the UI swaps the Discovery
+        // list for the Connection Card, so scanning must stop here too.
+        if connect_result.is_ok() {
+            state.scanning = false;
+        }
+
         Ok(state.clone())
     })
 }

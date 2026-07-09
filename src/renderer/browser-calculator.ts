@@ -50,7 +50,8 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
           bleRole: "peripheral",
           trustStatus: "pending",
           connected: false,
-          lastSeenIso: new Date().toISOString()
+          lastSeenIso: new Date().toISOString(),
+          rssi: null
         });
       }
       return cloneState(state);
@@ -59,6 +60,9 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
       state.peers = state.peers.map((peer) =>
         peer.id === request.peerId ? { ...peer, connected: true, trustStatus: "trusted" } : peer
       );
+      // A successful connection stops the scan — the Discovery tab switches to
+      // the Connection Card, so scanning must not linger.
+      state.scanning = false;
       return cloneState(state);
     },
     async scanRooms() {
@@ -74,7 +78,8 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
             hostDeviceId: "browser-host-mac",
             trustStatus: "pending",
             joinable: true,
-            lastSeenIso: new Date().toISOString()
+            lastSeenIso: new Date().toISOString(),
+            rssi: null
           }
         ];
       }
@@ -96,7 +101,8 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
           bleRole: "central",
           trustStatus: "pending",
           connected: false,
-          lastSeenIso: new Date().toISOString()
+          lastSeenIso: new Date().toISOString(),
+          rssi: null
         }
       ];
       return cloneState(state);

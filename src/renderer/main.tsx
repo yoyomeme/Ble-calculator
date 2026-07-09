@@ -15,20 +15,25 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  CircleDot,
   Copy,
   Delete,
   DoorOpen,
   Radio,
-  RotateCcw,
   Search,
   ShieldCheck,
   ShieldQuestion,
   Terminal,
   Trash2,
+  Unplug,
   Users
 } from "lucide-react";
-import type { PeerSummary, RoomState, RoomSummary, SessionRole } from "../shared/calculator-api";
+import type {
+  PeerSummary,
+  RoomState,
+  RoomSummary,
+  SessionRole,
+  TrustStatus
+} from "../shared/calculator-api";
 import { calculateExpression } from "../shared/expression";
 import { createBrowserCalculatorApi } from "./browser-calculator";
 import { logStore } from "./log-store";
@@ -46,6 +51,8 @@ const emptyState: RoomState = {
   peers: [],
   history: []
 };
+
+type NetworkTab = "discovery" | "history";
 
 type CalculatorKey =
   | {
@@ -106,6 +113,12 @@ function App() {
   const [canOpenBothDrawers, setCanOpenBothDrawers] = useState(canFitBothDrawers);
   const [lastOpenedDrawer, setLastOpenedDrawer] = useState<"host" | "history" | null>(null);
 
+  // Local UI role: which set of Room-panel fields to show. This is separate from
+  // the backend `state.sessionRole`, which only becomes set once an action runs.
+  const [uiRole, setUiRole] = useState<SessionRole>("host");
+  const [networkTab, setNetworkTab] = useState<NetworkTab>("discovery");
+  const [roleSwitchTarget, setRoleSwitchTarget] = useState<SessionRole | null>(null);
+
   const runAction = useCallback(
     async (label: string, action: () => Promise<RoomState>) => {
       setPendingAction(label);
@@ -153,19 +166,48 @@ function App() {
     }
   }, [canOpenBothDrawers, historyOpen, hostOpen, lastOpenedDrawer]);
 
+  const connectedPeer = useMemo(
+    () => state.peers.find((peer) => peer.connected) ?? null,
+    [state.peers]
+  );
   const connectedPeers = useMemo(
     () => state.peers.filter((peer) => peer.connected).length,
     [state.peers]
   );
-  const hostJoinRequests = useMemo(
-    () => state.peers.filter((peer) => peer.sessionRole === "guest"),
-    [state.peers]
-  );
-  const availableRooms = state.rooms ?? [];
+  const isConnected = connectedPeer !== null;
+  // A session is "active" once anything BLE-related is in flight or established.
+  const sessionActive =
+    state.roomId !== null || state.advertising || state.scanning || isConnected;
 
-  const currentRole = state.sessionRole ?? "host";
   const previewResult = useMemo(() => calculateExpression(expression), [expression]);
   const hasValidPreview = previewResult !== "Invalid expression";
+
+  const requestRoleSwitch = useCallback(
+    (role: SessionRole) => {
+      if (pendingAction !== null || uiRole === role) {
+        return;
+      }
+      if (sessionActive) {
+        setRoleSwitchTarget(role);
+        return;
+      }
+      setUiRole(role);
+    },
+    [pendingAction, sessionActive, uiRole]
+  );
+
+  const confirmRoleSwitch = useCallback(async () => {
+    const target = roleSwitchTarget;
+    if (!target) {
+      return;
+    }
+    await runAction("Ending session", () => calculatorApi.resetBleSession());
+    setUiRole(target);
+    setRoleSwitchTarget(null);
+    setNetworkTab("discovery");
+  }, [calculatorApi, roleSwitchTarget, runAction]);
+
+  const cancelRoleSwitch = useCallback(() => setRoleSwitchTarget(null), []);
 
   const handleKeyPress = useCallback(
     (key: CalculatorKey) => {
@@ -217,6 +259,16 @@ function App() {
     });
   }, [canOpenBothDrawers]);
 
+  const pending = pendingAction !== null;
+  const roomCreated = state.roomId !== null;
+  const networkStatus = state.scanning
+    ? "Scanning"
+    : state.advertising
+      ? "Signal"
+      : isConnected
+        ? "Connected"
+        : "Idle";
+
   return (
     <main className="app-shell">
       <div className="app-backdrop" aria-hidden="true" />
@@ -226,167 +278,53 @@ function App() {
       >
         <aside
           className={`left-panel drawer drawer--left ${hostOpen ? "is-open" : ""}`}
-          aria-label="Session setup"
+          aria-label="Room setup"
         >
           <button
             type="button"
             className="drawer-toggle drawer-toggle--left"
             onClick={toggleHostBench}
-            aria-label={hostOpen ? "Collapse host bench" : "Expand host bench"}
+            aria-label={hostOpen ? "Collapse room panel" : "Expand room panel"}
             aria-expanded={hostOpen}
           >
             <ChevronRight size={18} aria-hidden="true" />
           </button>
           <PanelHeader eyebrow="Room" title="Connection" />
-          <SegmentedRole
-            value={currentRole}
-            actualRole={state.sessionRole}
-            disabled={pendingAction !== null}
-            onHostSelected={() =>
-              void runAction("Creating room", () => calculatorApi.createRoom({ roomName }))
-            }
-            onGuestSelected={() =>
-              void runAction("Finding rooms", () => calculatorApi.scanRooms())
-            }
-          />
 
-          <section className="role-pane" aria-label="Host room admission">
-            <div className="role-pane-title">
-              <div>
-                <span>Host</span>
-                <h3>Room Admission</h3>
-              </div>
-              <StatusBeacon status={state.sessionRole === "host" && state.scanning ? "Scanning" : "Ready"} />
-            </div>
+          <RoleSwitcher value={uiRole} disabled={pending} onSelect={requestRoleSwitch} />
 
-            <div className="control-group">
-              <label htmlFor="room-name">Host room</label>
-              <div className="input-row">
-                <input
-                  id="room-name"
-                  value={roomName}
-                  onChange={(event) => setRoomName(event.target.value)}
-                  spellCheck={false}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    void runAction("Creating room", () => calculatorApi.createRoom({ roomName }))
-                  }
-                  disabled={pendingAction !== null}
-                >
-                  <Radio size={17} aria-hidden="true" />
-                  Start
-                </button>
-              </div>
-            </div>
-
-            <div className="button-grid">
-              <button
-                type="button"
-                className={state.sessionRole === "host" && state.scanning ? "active" : ""}
-                onClick={() =>
-                  void runAction("Finding requests", () => calculatorApi.startScanning())
-                }
-                disabled={pendingAction !== null || state.sessionRole === "guest"}
-                title="Find guest join requests for this room"
-              >
-                <Search size={18} aria-hidden="true" />
-                Find
-              </button>
-              <button
-                type="button"
-                className="danger-outline"
-                onClick={() =>
-                  void runAction("Resetting BLE", () => calculatorApi.resetBleSession())
-                }
-                disabled={pendingAction !== null}
-                title="Clear host BLE room state"
-              >
-                <RotateCcw size={18} aria-hidden="true" />
-                Reset
-              </button>
-            </div>
-
-            <JoinRequestList
-              peers={hostJoinRequests}
-              disabled={pendingAction !== null || state.sessionRole !== "host"}
-              onApprove={(peerId) =>
-                void runAction("Approving guest", () =>
-                  calculatorApi.connectGuest({ peerId })
+          {uiRole === "host" ? (
+            <HostFields
+              roomName={roomName}
+              onRoomNameChange={setRoomName}
+              roomCreated={roomCreated}
+              scanning={state.scanning}
+              isConnected={isConnected}
+              pending={pending}
+              onCreateRoom={() =>
+                void runAction("Creating room", () => calculatorApi.createRoom({ roomName }))
+              }
+              onFindGuests={() =>
+                void runAction("Finding guests", () => calculatorApi.startScanning())
+              }
+            />
+          ) : (
+            <GuestFields
+              roomCode={roomCode}
+              onRoomCodeChange={setRoomCode}
+              scanning={state.scanning}
+              isConnected={isConnected}
+              pending={pending}
+              onFindHosts={() =>
+                void runAction("Finding hosts", () => calculatorApi.scanRooms())
+              }
+              onJoinByCode={() =>
+                void runAction("Joining by code", () =>
+                  calculatorApi.startAdvertising({ roomCode })
                 )
               }
             />
-          </section>
-
-          <section className="role-pane" aria-label="Guest room discovery">
-            <div className="role-pane-title">
-              <div>
-                <span>Guest</span>
-                <h3>Available Rooms</h3>
-              </div>
-              <StatusBeacon status={state.advertising ? "Requesting" : "Idle"} />
-            </div>
-
-            <div className="button-grid">
-              <button
-                type="button"
-                className={state.sessionRole === "guest" && state.scanning ? "active" : ""}
-                onClick={() =>
-                  void runAction("Finding rooms", () => calculatorApi.scanRooms())
-                }
-                disabled={pendingAction !== null || state.sessionRole === "host"}
-                title="Find available calculator rooms"
-              >
-                <CircleDot size={18} aria-hidden="true" />
-                Rooms
-              </button>
-              <button
-                type="button"
-                className="danger-outline"
-                onClick={() =>
-                  void runAction("Resetting BLE", () => calculatorApi.resetBleSession())
-                }
-                disabled={pendingAction !== null}
-                title="Clear guest BLE room state"
-              >
-                <RotateCcw size={18} aria-hidden="true" />
-                Reset
-              </button>
-            </div>
-
-            <RoomList
-              rooms={availableRooms}
-              disabled={pendingAction !== null || state.sessionRole === "host"}
-              onJoin={(roomId) =>
-                void runAction("Joining room", () => calculatorApi.joinRoom({ roomId }))
-              }
-            />
-
-            <div className="control-group">
-              <label htmlFor="room-code">Manual room</label>
-              <div className="input-row">
-                <input
-                  id="room-code"
-                  value={roomCode}
-                  onChange={(event) => setRoomCode(event.target.value)}
-                  spellCheck={false}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    void runAction("Requesting room", () =>
-                      calculatorApi.joinRoom({ roomId: roomCode })
-                    )
-                  }
-                  disabled={pendingAction !== null || state.sessionRole === "host"}
-                >
-                  <DoorOpen size={17} aria-hidden="true" />
-                  Join
-                </button>
-              </div>
-            </div>
-          </section>
+          )}
 
           <SessionFacts state={state} pendingAction={pendingAction} />
           {error ? <div className="error-box">{error}</div> : null}
@@ -433,7 +371,7 @@ function App() {
                   calculatorApi.submitCalculation({ expression })
                 )
               }
-              disabled={pendingAction !== null}
+              disabled={pending}
             >
               <Check size={18} aria-hidden="true" />
               Sync
@@ -451,7 +389,7 @@ function App() {
                   className={`key key--${role}`}
                   onClick={() => handleKeyPress(key)}
                   aria-label={key.ariaLabel ?? key.label}
-                  disabled={pendingAction !== null && "action" in key && key.action === "equals"}
+                  disabled={pending && "action" in key && key.action === "equals"}
                 >
                   {key.label === "DEL" ? <Delete size={18} aria-hidden="true" /> : key.label}
                 </button>
@@ -462,69 +400,51 @@ function App() {
 
         <aside
           className={`right-panel drawer drawer--right ${historyOpen ? "is-open" : ""}`}
-          aria-label="Peers and history"
+          aria-label="Network and history"
         >
           <button
             type="button"
             className="drawer-toggle drawer-toggle--right"
             onClick={toggleHistory}
-            aria-label={historyOpen ? "Collapse history" : "Expand history"}
+            aria-label={historyOpen ? "Collapse network panel" : "Expand network panel"}
             aria-expanded={historyOpen}
           >
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
-          <section className="panel-section">
+          <section className="panel-section network-section">
             <div className="section-title">
               <div>
                 <span>Network</span>
-                <h2>Peers</h2>
+                <h2>Session</h2>
               </div>
-              <StatusBeacon status={state.scanning ? "Scanning" : state.advertising ? "Signal" : "Idle"} />
+              <StatusBeacon status={networkStatus} />
             </div>
-            <div className="peer-list">
-              {state.peers.length === 0 ? (
-                <p className="muted">No peers discovered yet.</p>
-              ) : (
-                state.peers.map((peer) => (
-                  <PeerRow
-                    key={peer.id}
-                    peer={peer}
-                    disabled={pendingAction !== null || state.sessionRole !== "host"}
-                    actionLabel="Approve"
-                    onConnect={() =>
-                      void runAction("Approving guest", () =>
-                        calculatorApi.connectGuest({ peerId: peer.id })
-                      )
-                    }
-                  />
-                ))
-              )}
-            </div>
-          </section>
 
-          <section className="panel-section history-section">
-            <div className="section-title">
-              <div>
-                <span>Ledger</span>
-                <h2>History</h2>
-              </div>
-              <span>{state.history.length} events</span>
-            </div>
-            <div className="history-list">
-              {state.history.length === 0 ? (
-                <p className="muted">Submitted calculations appear here.</p>
-              ) : (
-                state.history.map((entry) => (
-                  <article className="history-item" key={entry.id}>
-                    <div>
-                      <strong>{entry.expression}</strong>
-                      <span>{entry.originDeviceId}</span>
-                    </div>
-                    <output>{entry.result}</output>
-                  </article>
-                ))
-              )}
-            </div>
+            <NetworkTabs value={networkTab} onChange={setNetworkTab} />
+
+            {networkTab === "discovery" ? (
+              <DiscoveryPane
+                uiRole={uiRole}
+                scanning={state.scanning}
+                rooms={state.rooms ?? []}
+                peers={state.peers}
+                connectedPeer={connectedPeer}
+                pending={pending}
+                onConnectGuest={(peerId) =>
+                  void runAction("Connecting guest", () =>
+                    calculatorApi.connectGuest({ peerId })
+                  )
+                }
+                onJoinRoom={(roomId) =>
+                  void runAction("Joining room", () => calculatorApi.joinRoom({ roomId }))
+                }
+                onDisconnect={() =>
+                  void runAction("Disconnecting", () => calculatorApi.resetBleSession())
+                }
+              />
+            ) : (
+              <HistoryPane history={state.history} />
+            )}
           </section>
         </aside>
       </section>
@@ -540,6 +460,15 @@ function App() {
           label={connectedPeers > 0 ? "trusted session" : "trust pending"}
         />
       </section>
+
+      {roleSwitchTarget ? (
+        <RoleSwitchModal
+          target={roleSwitchTarget}
+          pending={pending}
+          onConfirm={() => void confirmRoleSwitch()}
+          onCancel={cancelRoleSwitch}
+        />
+      ) : null}
 
       <LogConsole open={logOpen} onToggle={toggleLog} />
     </main>
@@ -673,38 +602,430 @@ function StatusPill({ icon, label }: { icon: React.ReactNode; label: string }) {
   );
 }
 
-function SegmentedRole({
+function RoleSwitcher({
   value,
-  actualRole,
   disabled,
-  onHostSelected,
-  onGuestSelected
+  onSelect
 }: {
   value: SessionRole;
-  actualRole: SessionRole | null;
   disabled: boolean;
-  onHostSelected: () => void;
-  onGuestSelected: () => void;
+  onSelect: (role: SessionRole) => void;
 }) {
   return (
     <div className="segmented" aria-label="Session role">
       <button
         type="button"
         className={value === "host" ? "selected" : ""}
-        onClick={onHostSelected}
+        onClick={() => onSelect("host")}
         disabled={disabled}
+        aria-pressed={value === "host"}
       >
         Host
       </button>
       <button
         type="button"
         className={value === "guest" ? "selected" : ""}
-        onClick={onGuestSelected}
+        onClick={() => onSelect("guest")}
         disabled={disabled}
+        aria-pressed={value === "guest"}
       >
         Guest
       </button>
-      <span>{actualRole ? "Active" : "Ready"}</span>
+    </div>
+  );
+}
+
+function HostFields({
+  roomName,
+  onRoomNameChange,
+  roomCreated,
+  scanning,
+  isConnected,
+  pending,
+  onCreateRoom,
+  onFindGuests
+}: {
+  roomName: string;
+  onRoomNameChange: (value: string) => void;
+  roomCreated: boolean;
+  scanning: boolean;
+  isConnected: boolean;
+  pending: boolean;
+  onCreateRoom: () => void;
+  onFindGuests: () => void;
+}) {
+  return (
+    <section className="role-fields" aria-label="Host controls">
+      <div className="control-group">
+        <label htmlFor="room-name">Room name</label>
+        <input
+          id="room-name"
+          value={roomName}
+          onChange={(event) => onRoomNameChange(event.target.value)}
+          disabled={roomCreated}
+          readOnly={roomCreated}
+          spellCheck={false}
+        />
+      </div>
+      <button
+        type="button"
+        className="primary-action"
+        onClick={onCreateRoom}
+        disabled={roomName.trim() === "" || pending || roomCreated}
+      >
+        <Radio size={17} aria-hidden="true" />
+        {roomCreated ? "Room Created" : "Create Room"}
+      </button>
+      <button
+        type="button"
+        className="primary-action"
+        onClick={onFindGuests}
+        disabled={!roomCreated || isConnected || scanning || pending}
+      >
+        <Search size={17} aria-hidden="true" />
+        {scanning ? "Scanning…" : "Find Guests"}
+      </button>
+    </section>
+  );
+}
+
+function GuestFields({
+  roomCode,
+  onRoomCodeChange,
+  scanning,
+  isConnected,
+  pending,
+  onFindHosts,
+  onJoinByCode
+}: {
+  roomCode: string;
+  onRoomCodeChange: (value: string) => void;
+  scanning: boolean;
+  isConnected: boolean;
+  pending: boolean;
+  onFindHosts: () => void;
+  onJoinByCode: () => void;
+}) {
+  return (
+    <section className="role-fields" aria-label="Guest controls">
+      <button
+        type="button"
+        className="primary-action"
+        onClick={onFindHosts}
+        disabled={isConnected || scanning || pending}
+      >
+        <Search size={17} aria-hidden="true" />
+        {scanning ? "Searching…" : "Find Hosts"}
+      </button>
+
+      <div className="control-group control-group--secondary">
+        <label htmlFor="room-code">Or join by code</label>
+        <div className="input-row">
+          <input
+            id="room-code"
+            value={roomCode}
+            onChange={(event) => onRoomCodeChange(event.target.value)}
+            spellCheck={false}
+          />
+          <button
+            type="button"
+            onClick={onJoinByCode}
+            disabled={roomCode.trim() === "" || pending || isConnected}
+          >
+            <DoorOpen size={17} aria-hidden="true" />
+            Join
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NetworkTabs({
+  value,
+  onChange
+}: {
+  value: NetworkTab;
+  onChange: (tab: NetworkTab) => void;
+}) {
+  return (
+    <div className="network-tabs" role="tablist" aria-label="Network view">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={value === "discovery"}
+        className={value === "discovery" ? "selected" : ""}
+        onClick={() => onChange("discovery")}
+      >
+        Discovery
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={value === "history"}
+        className={value === "history" ? "selected" : ""}
+        onClick={() => onChange("history")}
+      >
+        History
+      </button>
+    </div>
+  );
+}
+
+function DiscoveryPane({
+  uiRole,
+  scanning,
+  rooms,
+  peers,
+  connectedPeer,
+  pending,
+  onConnectGuest,
+  onJoinRoom,
+  onDisconnect
+}: {
+  uiRole: SessionRole;
+  scanning: boolean;
+  rooms: RoomSummary[];
+  peers: PeerSummary[];
+  connectedPeer: PeerSummary | null;
+  pending: boolean;
+  onConnectGuest: (peerId: string) => void;
+  onJoinRoom: (roomId: string) => void;
+  onDisconnect: () => void;
+}) {
+  if (connectedPeer) {
+    return (
+      <ConnectionCard peer={connectedPeer} pending={pending} onDisconnect={onDisconnect} />
+    );
+  }
+
+  if (scanning && uiRole === "host") {
+    const guests = peers.filter((peer) => peer.sessionRole === "guest" && !peer.connected);
+    return (
+      <div className="tab-content">
+        <div className="discovery-list" aria-label="Nearby guests">
+          {guests.length === 0 ? (
+            <p className="muted">Searching for guests…</p>
+          ) : (
+            guests.map((guest) => (
+              <DiscoveryRow
+                key={guest.id}
+                icon={<ShieldQuestion size={20} aria-hidden="true" />}
+                title={guest.label}
+                subtitle={`${guest.sessionRole} / ${guest.bleRole}`}
+                rssi={guest.rssi}
+                disabled={pending}
+                onClick={() => onConnectGuest(guest.id)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (scanning && uiRole === "guest") {
+    return (
+      <div className="tab-content">
+        <div className="discovery-list" aria-label="Available hosts">
+          {rooms.length === 0 ? (
+            <p className="muted">Searching for hosts…</p>
+          ) : (
+            rooms.map((room) => (
+              <DiscoveryRow
+                key={room.id}
+                icon={<DoorOpen size={20} aria-hidden="true" />}
+                title={room.name}
+                subtitle={shortId(room.id)}
+                rssi={room.rssi}
+                disabled={pending || !room.joinable}
+                onClick={() => onJoinRoom(room.id)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="tab-content">
+      <p className="muted discovery-empty">
+        Not searching. Use Find Guests / Find Hosts in the Room panel to begin.
+      </p>
+    </div>
+  );
+}
+
+function DiscoveryRow({
+  icon,
+  title,
+  subtitle,
+  rssi,
+  disabled,
+  onClick
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  rssi?: number | null;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className="discovery-row" onClick={onClick} disabled={disabled}>
+      <span className="peer-icon">{icon}</span>
+      <span className="peer-main">
+        <strong>{title}</strong>
+        <span>{subtitle}</span>
+      </span>
+      <RssiIndicator rssi={rssi} />
+    </button>
+  );
+}
+
+function ConnectionCard({
+  peer,
+  pending,
+  onDisconnect
+}: {
+  peer: PeerSummary;
+  pending: boolean;
+  onDisconnect: () => void;
+}) {
+  return (
+    <div className="tab-content">
+      <article className="connection-card" aria-label="Connected peer">
+        <div className="connection-peer">
+          <span className="peer-icon">
+            {peer.trustStatus === "trusted" ? (
+              <ShieldCheck size={20} aria-hidden="true" />
+            ) : (
+              <ShieldQuestion size={20} aria-hidden="true" />
+            )}
+          </span>
+          <span className="peer-main">
+            <strong>{peer.label}</strong>
+            <span>
+              {peer.sessionRole} / {peer.bleRole}
+            </span>
+          </span>
+        </div>
+        <div className="connection-meta">
+          <TrustBadge status={peer.trustStatus} />
+          <RssiIndicator rssi={peer.rssi} />
+        </div>
+        <button
+          type="button"
+          className="danger-outline connection-disconnect"
+          onClick={onDisconnect}
+          disabled={pending}
+        >
+          <Unplug size={17} aria-hidden="true" />
+          Disconnect
+        </button>
+      </article>
+    </div>
+  );
+}
+
+function TrustBadge({ status }: { status: TrustStatus }) {
+  return <span className={`trust-badge trust-badge--${status}`}>{status}</span>;
+}
+
+function RssiIndicator({ rssi }: { rssi?: number | null }) {
+  // Native BLE does not report RSSI yet: render a placeholder, never a fake number.
+  if (typeof rssi !== "number") {
+    return (
+      <span className="rssi rssi--empty" aria-label="Signal strength unavailable">
+        —
+      </span>
+    );
+  }
+
+  const bars = rssiToBars(rssi);
+  return (
+    <span className="rssi" aria-label={`${rssi} dBm`}>
+      <span className="rssi-value">{rssi}</span>
+      <span className="rssi-bars" aria-hidden="true">
+        {[1, 2, 3, 4].map((level) => (
+          <span key={level} className={level <= bars ? "on" : ""} />
+        ))}
+      </span>
+    </span>
+  );
+}
+
+function rssiToBars(rssi: number): number {
+  if (rssi >= -55) {
+    return 4;
+  }
+  if (rssi >= -65) {
+    return 3;
+  }
+  if (rssi >= -75) {
+    return 2;
+  }
+  return 1;
+}
+
+function HistoryPane({ history }: { history: RoomState["history"] }) {
+  return (
+    <div className="tab-content">
+      <div className="history-list">
+        {history.length === 0 ? (
+          <p className="muted">Submitted calculations appear here.</p>
+        ) : (
+          history.map((entry) => (
+            <article className="history-item" key={entry.id}>
+              <div>
+                <strong>{entry.expression}</strong>
+                <span>{entry.originDeviceId}</span>
+              </div>
+              <output>{entry.result}</output>
+            </article>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RoleSwitchModal({
+  target,
+  pending,
+  onConfirm,
+  onCancel
+}: {
+  target: SessionRole;
+  pending: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Switch role">
+      <div className="modal">
+        <h3>Switch to {target === "host" ? "Host" : "Guest"}?</h3>
+        <p>Switching roles will end your current room session. Continue?</p>
+        <div className="modal-actions">
+          <button
+            type="button"
+            className="primary-action"
+            onClick={onConfirm}
+            disabled={pending}
+          >
+            Continue
+          </button>
+          <button
+            type="button"
+            className="danger-outline"
+            onClick={onCancel}
+            disabled={pending}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -744,104 +1065,6 @@ function StatusBeacon({ status }: { status: string }) {
       <span />
       {status}
     </span>
-  );
-}
-
-function JoinRequestList({
-  peers,
-  disabled,
-  onApprove
-}: {
-  peers: PeerSummary[];
-  disabled: boolean;
-  onApprove: (peerId: string) => void;
-}) {
-  return (
-    <div className="mini-list" aria-label="Guest join requests">
-      {peers.length === 0 ? (
-        <p className="muted compact-muted">No join requests.</p>
-      ) : (
-        peers.map((peer) => (
-          <PeerRow
-            key={peer.id}
-            peer={peer}
-            disabled={disabled}
-            actionLabel="Approve"
-            onConnect={() => onApprove(peer.id)}
-          />
-        ))
-      )}
-    </div>
-  );
-}
-
-function RoomList({
-  rooms,
-  disabled,
-  onJoin
-}: {
-  rooms: RoomSummary[];
-  disabled: boolean;
-  onJoin: (roomId: string) => void;
-}) {
-  return (
-    <div className="mini-list" aria-label="Available rooms">
-      {rooms.length === 0 ? (
-        <p className="muted compact-muted">No rooms found.</p>
-      ) : (
-        rooms.map((room) => (
-          <article className="room-row" key={room.id}>
-            <div className="peer-icon">
-              <DoorOpen size={20} aria-hidden="true" />
-            </div>
-            <div className="peer-main">
-              <strong>{room.name}</strong>
-              <span>{shortId(room.id)}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onJoin(room.id)}
-              disabled={disabled || !room.joinable}
-            >
-              Join
-            </button>
-          </article>
-        ))
-      )}
-    </div>
-  );
-}
-
-function PeerRow({
-  peer,
-  disabled,
-  actionLabel = "Connect",
-  onConnect
-}: {
-  peer: PeerSummary;
-  disabled: boolean;
-  actionLabel?: string;
-  onConnect: () => void;
-}) {
-  return (
-    <article className="peer-row">
-      <div className="peer-icon">
-        {peer.trustStatus === "trusted" ? (
-          <ShieldCheck size={20} aria-hidden="true" />
-        ) : (
-          <ShieldQuestion size={20} aria-hidden="true" />
-        )}
-      </div>
-      <div className="peer-main">
-        <strong>{peer.label}</strong>
-        <span>
-          {peer.sessionRole} / {peer.bleRole}
-        </span>
-      </div>
-      <button type="button" onClick={onConnect} disabled={disabled || peer.connected}>
-        {peer.connected ? "Connected" : actionLabel}
-      </button>
-    </article>
   );
 }
 
