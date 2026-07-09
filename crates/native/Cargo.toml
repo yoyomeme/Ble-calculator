@@ -11,6 +11,8 @@ crate-type = ["cdylib"]
 base64 = "0.22"
 btleplug = "0.11.8"
 ed25519-dalek = { version = "2", features = ["rand_core"] }
+# Stream/Future combinators for draining the central's GATT notification stream.
+futures = "0.3"
 napi = { version = "2", default-features = false, features = ["napi8", "serde-json"] }
 napi-derive = "2"
 once_cell = "1"
@@ -50,7 +52,6 @@ keyring = { version = "3.6.3", default-features = false, features = ["crypto-rus
 bluer = { version = "0.17", features = ["bluetoothd"] }
 # Extra tokio features the Linux peripheral thread needs (unified with the base dep).
 tokio = { version = "1", features = ["rt", "time", "sync", "net", "macros"] }
-futures = "0.3"
 
 [profile.release]
 lto = true

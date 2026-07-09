@@ -34,7 +34,7 @@ use windows::Devices::Bluetooth::GenericAttributeProfile::{
     GattWriteOption, GattWriteRequestedEventArgs,
 };
 use windows::Foundation::{EventRegistrationToken, TypedEventHandler};
-use windows::Storage::Streams::{DataReader, IBuffer};
+use windows::Storage::Streams::{DataReader, DataWriter, IBuffer};
 
 use super::{BlePeripheral, PeripheralConfig};
 
@@ -49,7 +49,9 @@ struct ActiveSession {
     provider: GattServiceProvider,
     rx: GattLocalCharacteristic,
     write_token: EventRegistrationToken,
-    _tx: GattLocalCharacteristic,
+    /// TX notify characteristic (guest -> host). Retained so `notify` can push
+    /// events and `has_subscriber` can read the subscribed-client list.
+    tx: GattLocalCharacteristic,
 }
 
 impl Drop for ActiveSession {
@@ -116,6 +118,26 @@ impl BlePeripheral for WindowsPeripheral {
             Ok(mut inbound) => std::mem::take(&mut *inbound),
             Err(_) => Vec::new(),
         }
+    }
+
+    fn notify(&mut self, frames: &[Vec<u8>]) -> Result<usize, String> {
+        let Some(active) = self.active.as_ref() else {
+            return Err("Windows GATT peripheral is not advertising".to_string());
+        };
+        let mut sent = 0usize;
+        for frame in frames {
+            notify_frame(&active.tx, frame)
+                .map_err(|error| format!("Windows GATT notify failed: {error}"))?;
+            sent += 1;
+        }
+        Ok(sent)
+    }
+
+    fn has_subscriber(&self) -> bool {
+        self.active
+            .as_ref()
+            .map(|active| subscribed_count(&active.tx) > 0)
+            .unwrap_or(false)
     }
 }
 
@@ -194,8 +216,25 @@ fn build_session(
         provider,
         rx,
         write_token,
-        _tx: tx,
+        tx,
     })
+}
+
+/// Notify one frame to every subscribed client over the TX characteristic.
+fn notify_frame(tx: &GattLocalCharacteristic, frame: &[u8]) -> windows::core::Result<()> {
+    let writer = DataWriter::new()?;
+    writer.WriteBytes(frame)?;
+    let buffer = writer.DetachBuffer()?;
+    // Blocks until WinRT accepts the value for delivery to subscribed clients.
+    tx.NotifyValueAsync(&buffer)?.get()?;
+    Ok(())
+}
+
+/// Number of centrals currently subscribed to the TX characteristic.
+fn subscribed_count(tx: &GattLocalCharacteristic) -> u32 {
+    tx.SubscribedClients()
+        .and_then(|clients| clients.Size())
+        .unwrap_or(0)
 }
 
 fn read_buffer(buffer: &IBuffer) -> windows::core::Result<Vec<u8>> {

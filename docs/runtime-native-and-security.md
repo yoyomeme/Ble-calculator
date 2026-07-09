@@ -187,7 +187,7 @@ Current native implementation status:
 - Host approval attempts to connect to the selected discovered BLE peripheral and discover services.
 - Guest room scanning and join-request state are represented in native state.
 - Guest peripheral advertising now runs through a real per-OS backend behind the `ble::BlePeripheral` trait. macOS uses CoreBluetooth `CBPeripheralManager`, Linux uses BlueZ via `bluer`, and Windows uses WinRT `GattServiceProvider` — each exposing a calculator GATT service with RX write and TX notify characteristics. Only other operating systems fall back to the fail-loud stub (see "Cross-Platform BLE Peripheral Backends").
-- BLE chunk framing and reassembly helpers exist for signed outbox payloads; the macOS peripheral can receive host GATT writes into an inbound buffer, but full receive-side verification/notify transport is still pending.
+- BLE transport is now wired end-to-end in both directions. Host -> guest: the host writes signed, chunked events to the guest RX characteristic; the guest reassembles, verifies (Ed25519 signature + holder binding via a public key embedded in the JWS `jwk` header), and appends them to history. Guest -> host: a guest notifies signed events on the TX characteristic and the host subscribes on connect and drains the notification stream through the same reassemble/verify/append path. Received-event verification and framing are unit-tested; on-device notify/write transport is exercised structurally on macOS and still needs two-machine hardware verification (and on-device verification on Linux/Windows).
 - `nativeStatus.pendingOutboxEvents` reports signed events still waiting for real transport.
 - JWE/JWT/SD-JWT validation is fail-closed through `validate_credential_bundle()` until issuer trust and key resolution are configured.
 
@@ -254,7 +254,10 @@ on this operating system" error instead of silently pretending to advertise).
   for BlueZ setup so real failures surface in `lastBleError`.
 - The RX characteristic uses a `CharacteristicWriteMethod::Fun` callback that
   pushes each host write into the shared inbound buffer (same receive semantics
-  as the macOS backend). TX notify delivery is the pending next step on both.
+  as the macOS backend). TX notify delivery is implemented: the
+  `CharacteristicNotifyMethod::Fun` callback captures the `CharacteristicNotifier`
+  when a host subscribes, and a `Notify` worker command pushes signed events
+  through it (unverified on-device).
 - **Cannot be built or tested on macOS:** `bluer` links `libdbus-1` (via
   `dbus-tokio`/`dbus-crossroads`), so the module is `cfg`-gated to
   `target_os = "linux"` and is validated on a Linux host with a running
@@ -268,8 +271,9 @@ on this operating system" error instead of silently pretending to advertise).
   the Linux backend it needs no dedicated runtime thread.
 - The RX characteristic registers a `WriteRequested` `TypedEventHandler` that
   reads each write's `IBuffer` (via `DataReader`) into the shared inbound buffer
-  and responds when the write requires a response. TX notify delivery is the
-  pending next step (parity with macOS/Linux).
+  and responds when the write requires a response. TX notify delivery is
+  implemented via `GattLocalCharacteristic::NotifyValueAsync`, with
+  `SubscribedClients` driving `has_subscriber` (unverified on-device).
 - **Cannot be built or tested on macOS/Linux:** the `windows` crate is
   Windows-only, so the module is `cfg`-gated to `target_os = "windows"` and is
   validated on a Windows host separately.
@@ -442,6 +446,13 @@ Host is the BLE central.
 
 Keep that model intact when replacing the mock with real BLE code.
 
+For the data link the host is always the central. On top of that, `create_room`
+also advertises a lightweight **ROOM discovery beacon**
+(`EvolveCalc:ROOM:<room>:<name>`, best-effort) so a guest running `scan_rooms`
+can find the host by name before switching to the canonical JOIN flow (guest
+advertises `EvolveCalc:JOIN:...`, host scans and connects). Without that beacon
+the ROOM scan path had no producer and could never return a result.
+
 ## Secure Storage Plan
 
 Private keys should be created or loaded by Rust and stored using OS-backed secure storage:
@@ -541,17 +552,27 @@ environment** (needs specific OS/hardware), `[ ]` not started.
 
 ### Receive-side GATT transport (shared across all three backends)
 
-Every backend currently only **buffers** inbound host writes (`take_inbound()`);
-the received bytes are not yet processed. Still pending:
+Inbound frames are now processed end-to-end. `process_incoming_ble` (invoked on
+each `get_state` poll) drains the guest inbound buffer (`take_inbound`) and the
+host notification stream (`ble_central::take_notifications`), reassembles chunks
+per `message_id`, verifies each `SignedEnvelope`, and appends verified events.
 
-- `[ ]` Reassemble BLE chunks on receive (the framing/`reassemble_chunks`
-  helper exists and is unit-tested, but is not wired to the inbound buffer).
-- `[ ]` Verify received `SignedEnvelope` events (JWS signature + holder binding)
-  before appending them to history.
-- `[ ]` TX notify delivery (guest -> host) — the TX characteristic is created on
-  all three backends but no notify is ever sent; wire it to the signed outbox.
+- `[x]` Reassemble BLE chunks on receive (`ingest_ble_frames`, bounded by
+  `BLE_MAX_INFLIGHT_MESSAGES`). Unit-tested.
+- `[x]` Verify received `SignedEnvelope` events before appending: signature is
+  checked against a public key embedded in the JWS `jwk` header, and holder
+  binding requires `origin_device_id == native-<fingerprint(embedded key)>`
+  (`verify_received_calculation_event`). Unit-tested (round-trip, tampered
+  payload, spoofed origin).
+- `[~]` TX notify delivery (guest -> host): implemented on all three backends
+  (`BlePeripheral::notify`). macOS uses `updateValue:onSubscribedCentrals:` with
+  an outbound queue drained under `isReadyToUpdateSubscribers` backpressure;
+  Linux captures the `CharacteristicNotifier`; Windows uses `NotifyValueAsync`.
+  Compiles + structurally exercised on macOS; needs on-device verification
+  (two machines; Linux/Windows unbuilt here).
 - `[ ]` Mark SQLite `sync_outbox` rows delivered once real transport succeeds
-  (today `consume_sync_outbox` only stages chunks and reports them pending).
+  (today `consume_sync_outbox` only stages chunks and reports them pending). The
+  live path no longer depends on the outbox, but reconnect-replay still will.
 
 ### Credential trust (still fail-closed)
 
