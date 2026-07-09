@@ -179,11 +179,12 @@ async fn start_session(
     let tx_uuid = parse_uuid(&config.tx_characteristic_uuid)?;
 
     // RX: host writes calculation events; push each into the inbound buffer.
-    let inbound = shared.inbound.clone();
+    // Clone the Arc (not the inner Mutex) so the write callback can reach it.
+    let write_shared = shared.clone();
     let write_fun: bluer::gatt::local::CharacteristicWriteFun = Box::new(move |value, _req| {
-        let inbound = inbound.clone();
+        let write_shared = write_shared.clone();
         async move {
-            if let Ok(mut buffer) = inbound.lock() {
+            if let Ok(mut buffer) = write_shared.inbound.lock() {
                 buffer.push(value);
             }
             Ok(())

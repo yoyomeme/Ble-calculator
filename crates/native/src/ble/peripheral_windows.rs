@@ -148,14 +148,15 @@ fn build_session(
         .get()?
         .Characteristic()?;
 
-    let inbound = shared.inbound.clone();
+    // Clone the Arc (not the inner Mutex) so the write handler can reach it.
+    let handler_shared = shared.clone();
     let handler = TypedEventHandler::<GattLocalCharacteristic, GattWriteRequestedEventArgs>::new(
         move |_sender, args| {
             if let Some(args) = args.as_ref() {
                 if let Ok(request) = args.GetRequestAsync().and_then(|op| op.get()) {
                     if let Ok(buffer) = request.Value() {
                         if let Ok(bytes) = read_buffer(&buffer) {
-                            if let Ok(mut buffer) = inbound.lock() {
+                            if let Ok(mut buffer) = handler_shared.inbound.lock() {
                                 buffer.push(bytes);
                             }
                         }
