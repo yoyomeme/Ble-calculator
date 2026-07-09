@@ -161,14 +161,23 @@ impl BlePeripheral for MacosPeripheral {
             self.dispatch_apply();
         }
 
-        // Advertising is asynchronous; report the current known error (if any).
-        match self.shared.last_error.lock() {
-            Ok(slot) => match slot.as_ref() {
-                Some(error) => Err(error.clone()),
-                None => Ok(()),
-            },
-            Err(_) => Ok(()),
+        // Advertising is asynchronous (service add -> start -> didStartAdvertising).
+        // Wait briefly for the delegate to confirm so we return an accurate result
+        // instead of an optimistic Ok (review gap #7). If neither confirmation nor
+        // error arrives within the window (e.g. Bluetooth still powering on), treat
+        // it as pending Ok — the runtime status surfaces the eventual outcome.
+        for _ in 0..30 {
+            if self.shared.advertising.load(Ordering::SeqCst) {
+                return Ok(());
+            }
+            if let Ok(slot) = self.shared.last_error.lock() {
+                if let Some(error) = slot.as_ref() {
+                    return Err(error.clone());
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
         }
+        Ok(())
     }
 
     fn stop(&mut self) -> Result<(), String> {
@@ -335,10 +344,24 @@ define_class!(
                 apply_pending(shared);
             } else {
                 shared.advertising.store(false, Ordering::SeqCst);
-                shared.set_error(format!(
-                    "Bluetooth peripheral is not available (CBManagerState = {}).",
-                    state.0
-                ));
+                // Distinguish terminal permission/support failures from a
+                // transient powered-off/resetting state (review gap #8).
+                let message = if state == CBManagerState::Unauthorized {
+                    "Bluetooth permission denied. Allow Bluetooth for Evolve Calc in System Settings > Privacy & Security > Bluetooth."
+                        .to_string()
+                } else if state == CBManagerState::Unsupported {
+                    "This device does not support acting as a Bluetooth LE peripheral.".to_string()
+                } else if state == CBManagerState::PoweredOff {
+                    "Bluetooth is turned off. Turn Bluetooth on to host or join a session.".to_string()
+                } else if state == CBManagerState::Resetting {
+                    "Bluetooth is resetting; try again in a moment.".to_string()
+                } else {
+                    format!(
+                        "Bluetooth peripheral is not available (CBManagerState = {}).",
+                        state.0
+                    )
+                };
+                shared.set_error(message);
             }
         }
 
