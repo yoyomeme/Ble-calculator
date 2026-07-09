@@ -12,6 +12,9 @@ export interface PeerSummary {
   trustStatus: TrustStatus;
   connected: boolean;
   lastSeenIso: string;
+  // Signal strength in dBm. Native BLE does not report RSSI yet, so this is
+  // absent/null today and the UI renders a placeholder rather than a fake value.
+  rssi?: number | null;
 }
 
 export interface RoomSummary {
@@ -21,6 +24,8 @@ export interface RoomSummary {
   trustStatus: TrustStatus;
   joinable: boolean;
   lastSeenIso: string;
+  // See PeerSummary.rssi — null today, placeholder rendered in the UI.
+  rssi?: number | null;
 }
 
 export interface CalculationEntry {

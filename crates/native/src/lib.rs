@@ -1,6 +1,5 @@
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-use btleplug::api::{Central, Manager as _, Peripheral as _, PeripheralProperties, ScanFilter};
-use btleplug::platform::Manager;
+use btleplug::api::PeripheralProperties;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
@@ -14,12 +13,12 @@ use std::{
     env, fs,
     path::{Path, PathBuf},
     sync::Mutex,
-    time::Duration,
 };
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use uuid::Uuid;
 
 mod ble;
+mod ble_central;
 
 const DEFAULT_HISTORY_LIMIT: usize = 100;
 const KEYCHAIN_SERVICE: &str = "io.evolve.ble-calculator";
@@ -48,6 +47,10 @@ struct PeerSummary {
     trust_status: String,
     connected: bool,
     last_seen_iso: String,
+    /// Most recent RSSI in dBm from the discovery scan, or `None` when the
+    /// backend did not report one. Serialized as `rssi` for the renderer.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rssi: Option<i16>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +62,9 @@ struct RoomSummary {
     trust_status: String,
     joinable: bool,
     last_seen_iso: String,
+    /// See [`PeerSummary::rssi`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rssi: Option<i16>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -226,6 +232,10 @@ struct NativeStorage {
     path: PathBuf,
 }
 
+// Retained for the reconnect-replay follow-up: `persist_calculation` still fills
+// the outbox table, and `load_pending_outbox` reads it. Live delivery currently
+// goes through the GATT write path in `deliver_event_to_guest`.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct OutboxRecord {
     event_id: String,
@@ -261,8 +271,36 @@ pub struct SubmitCalculationRequest {
 pub fn get_state() -> Result<Value> {
     with_state_json(|state| {
         refresh_persisted_history(state);
+        refresh_connection_state(state);
         Ok(state.clone())
     })
+}
+
+/// Poll-based liveness for the host's retained central connection. If the state
+/// shows a connected guest but the BLE link has dropped, reflect the drop so the
+/// UI stops showing a stale Connection Card (review gap #3). Only applies to the
+/// host (central) — a guest's link is owned by the peripheral backend, not here.
+fn refresh_connection_state(state: &mut RoomState) {
+    if state.session_role.as_deref() != Some("host") {
+        return;
+    }
+    if !state.peers.iter().any(|peer| peer.connected) {
+        return;
+    }
+    if ble_central::is_connected() {
+        return;
+    }
+
+    for peer in &mut state.peers {
+        if peer.connected {
+            peer.connected = false;
+            if peer.trust_status == "trusted" {
+                peer.trust_status = "pending".to_string();
+            }
+        }
+    }
+    state.scanning = false;
+    state.native_status.last_ble_error = Some("Guest peer disconnected.".to_string());
 }
 
 #[napi]
@@ -376,6 +414,12 @@ pub fn connect_guest(request: ConnectGuestRequest) -> Result<Value> {
             peer.last_seen_iso = now_iso();
         }
 
+        // A successful connection ends discovery: the UI swaps the Discovery
+        // list for the Connection Card, so scanning must stop here too.
+        if connect_result.is_ok() {
+            state.scanning = false;
+        }
+
         Ok(state.clone())
     })
 }
@@ -443,6 +487,7 @@ pub fn join_room(request: JoinRoomRequest) -> Result<Value> {
             trust_status: "pending".to_string(),
             connected: false,
             last_seen_iso: now_iso(),
+            rssi: None,
         }];
 
         let label = guest_advertising_label(state);
@@ -526,6 +571,7 @@ pub fn accept_host_connection() -> Result<Value> {
             trust_status: "pending".to_string(),
             connected: false,
             last_seen_iso: now_iso(),
+            rssi: None,
         }];
 
         if let Some(warning) = warning {
@@ -573,6 +619,7 @@ fn drain_peripheral_inbound() -> usize {
 #[napi]
 pub fn reset_ble_session() -> Result<Value> {
     stop_guest_advertising();
+    ble_central::disconnect();
     let _drained = drain_peripheral_inbound();
     with_state_json(|state| {
         state.room_id = None;
@@ -628,8 +675,63 @@ pub fn submit_calculation(request: SubmitCalculationRequest) -> Result<Value> {
             refresh_persisted_history(state);
         }
 
+        // Live host -> guest delivery over the retained GATT connection.
+        deliver_event_to_guest(state, &trusted_entry, &envelope);
+
         Ok(state.clone())
     })
+}
+
+/// Stream a freshly-signed calculation event to a connected guest over the real
+/// GATT write path (review gap #1). No-op unless we are the host with a live
+/// central connection. On a dropped link it reflects the disconnect instead of
+/// silently failing.
+fn deliver_event_to_guest(
+    state: &mut RoomState,
+    entry: &CalculationEntry,
+    envelope: &SignedEnvelope,
+) {
+    if state.session_role.as_deref() != Some("host") {
+        return;
+    }
+    if !state.peers.iter().any(|peer| peer.connected) {
+        return;
+    }
+
+    if !ble_central::is_connected() {
+        refresh_connection_state(state);
+        return;
+    }
+
+    let payload_json = match serde_json::to_vec(envelope) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            state.native_status.last_ble_error =
+                Some(format!("Failed to serialize calculation event for BLE: {error}"));
+            return;
+        }
+    };
+
+    let chunks = chunk_payload(entry.id.clone(), &payload_json);
+    let frames: std::result::Result<Vec<Vec<u8>>, _> =
+        chunks.iter().map(serde_json::to_vec).collect();
+    let frames = match frames {
+        Ok(frames) => frames,
+        Err(error) => {
+            state.native_status.last_ble_error =
+                Some(format!("Failed to frame calculation chunks for BLE: {error}"));
+            return;
+        }
+    };
+
+    match ble_central::write_frames(&frames) {
+        Ok(_) => {
+            state.native_status.last_ble_error = None;
+        }
+        Err(error) => {
+            state.native_status.last_ble_error = Some(error);
+        }
+    }
 }
 
 #[napi]
@@ -974,6 +1076,7 @@ impl NativeStorage {
         }
     }
 
+    #[allow(dead_code)] // Retained for reconnect-replay; see OutboxRecord.
     fn load_pending_outbox(&self, limit: usize, warnings: &mut Vec<String>) -> Vec<OutboxRecord> {
         let connection = match Connection::open(&self.path) {
             Ok(connection) => connection,
@@ -1161,39 +1264,12 @@ fn validate_signed_calculation_event(
 }
 
 fn consume_sync_outbox(state: &mut RoomState, storage: &NativeStorage) {
+    // Live delivery to a connected guest now happens in `deliver_event_to_guest`
+    // via the real GATT write path. The SQLite outbox remains a durable record of
+    // events; draining/acking it over BLE (for reconnect replay) is a separate
+    // follow-up, so here we only refresh the pending counter for diagnostics.
     state.native_status.pending_outbox_events =
         storage.pending_outbox_count(&mut state.native_warnings);
-
-    if state.native_status.pending_outbox_events == 0 {
-        return;
-    }
-
-    if !state.peers.iter().any(|peer| peer.connected) {
-        return;
-    }
-
-    let records = storage.load_pending_outbox(10, &mut state.native_warnings);
-    let chunk_count: usize = records
-        .iter()
-        .map(|record| {
-            let chunks = chunk_payload(record.event_id.clone(), record.payload_json.as_bytes());
-            if let Err(error) = reassemble_chunks(&chunks) {
-                push_warning_once(
-                    &mut state.native_warnings,
-                    format!("BLE chunk staging failed local reassembly check: {error}"),
-                );
-            }
-            chunks.len()
-        })
-        .sum();
-
-    if chunk_count > 0 {
-        state.native_status.last_ble_error = Some(format!(
-      "BLE event transport is not available yet; {} pending outbox event(s) staged into {} chunk(s) and retained.",
-      records.len(),
-      chunk_count
-    ));
-    }
 }
 
 fn chunk_payload(message_id: String, payload: &[u8]) -> Vec<BleTransportChunk> {
@@ -1224,6 +1300,7 @@ fn chunk_payload(message_id: String, payload: &[u8]) -> Vec<BleTransportChunk> {
         .collect()
 }
 
+#[allow(dead_code)] // Used by unit tests and the guest-side reassembly follow-up.
 fn reassemble_chunks(chunks: &[BleTransportChunk]) -> std::result::Result<Vec<u8>, String> {
     let Some(first) = chunks.first() else {
         return Err("No BLE chunks were provided".to_string());
@@ -1272,7 +1349,9 @@ fn scan_ble_join_requests(
     let advertisements = scan_ble_calculator_advertisements()?;
     Ok(advertisements
         .into_iter()
-        .filter_map(|(address, payload)| peer_from_advertisement(address, payload, room_filter))
+        .filter_map(|(address, payload, rssi)| {
+            peer_from_advertisement(address, payload, rssi, room_filter)
+        })
         .collect())
 }
 
@@ -1280,57 +1359,26 @@ fn scan_ble_rooms() -> std::result::Result<Vec<RoomSummary>, String> {
     let advertisements = scan_ble_calculator_advertisements()?;
     Ok(advertisements
         .into_iter()
-        .filter_map(|(address, payload)| room_from_advertisement(address, payload))
+        .filter_map(|(address, payload, rssi)| room_from_advertisement(address, payload, rssi))
         .collect())
 }
 
+/// Service-filtered scan via the persistent central. Each result carries the
+/// device address, the parsed calculator advertisement, and the RSSI (dBm).
 fn scan_ble_calculator_advertisements(
-) -> std::result::Result<Vec<(String, BleAdvertisementPayload)>, String> {
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_time()
-        .build()
-        .map_err(|error| format!("Tokio runtime unavailable: {error}"))?;
+) -> std::result::Result<Vec<(String, BleAdvertisementPayload, Option<i16>)>, String> {
+    let service_uuid = Uuid::parse_str(CALCULATOR_SERVICE_UUID)
+        .map_err(|error| format!("Invalid calculator service UUID: {error}"))?;
 
-    runtime.block_on(async {
-        let manager = Manager::new()
-            .await
-            .map_err(|error| format!("BLE manager unavailable: {error}"))?;
-        let adapters = manager
-            .adapters()
-            .await
-            .map_err(|error| format!("BLE adapter list unavailable: {error}"))?;
-        let adapter = adapters
-            .into_iter()
-            .next()
-            .ok_or_else(|| "No BLE adapter found".to_string())?;
-
-        adapter
-            .start_scan(ScanFilter::default())
-            .await
-            .map_err(|error| format!("BLE scan failed to start: {error}"))?;
-        tokio::time::sleep(Duration::from_millis(2200)).await;
-
-        let peripherals = adapter
-            .peripherals()
-            .await
-            .map_err(|error| format!("BLE peripheral list unavailable: {error}"))?;
-        let _ = adapter.stop_scan().await;
-
-        let mut advertisements = Vec::new();
-        for peripheral in peripherals {
-            let properties = match peripheral.properties().await {
-                Ok(Some(properties)) => properties,
-                Ok(None) => continue,
-                Err(_) => continue,
-            };
-            let address = properties.address.to_string();
-            if let Some(payload) = parse_calculator_advertisement(&properties) {
-                advertisements.push((address, payload));
-            }
-        }
-
-        Ok(advertisements)
-    })
+    let properties = ble_central::scan(service_uuid, 2200)?;
+    Ok(properties
+        .into_iter()
+        .filter_map(|props| {
+            let address = props.address.to_string();
+            let rssi = props.rssi;
+            parse_calculator_advertisement(&props).map(|payload| (address, payload, rssi))
+        })
+        .collect())
 }
 
 fn connect_ble_peer(peer_id: &str) -> std::result::Result<(), String> {
@@ -1338,59 +1386,12 @@ fn connect_ble_peer(peer_id: &str) -> std::result::Result<(), String> {
         return Err("Peer is not a native BLE discovery result".to_string());
     };
 
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_time()
-        .build()
-        .map_err(|error| format!("Tokio runtime unavailable: {error}"))?;
+    let service_uuid = Uuid::parse_str(CALCULATOR_SERVICE_UUID)
+        .map_err(|error| format!("Invalid calculator service UUID: {error}"))?;
+    let rx_uuid = Uuid::parse_str(ble::CALCULATOR_RX_CHARACTERISTIC_UUID)
+        .map_err(|error| format!("Invalid calculator RX characteristic UUID: {error}"))?;
 
-    runtime.block_on(async {
-        let manager = Manager::new()
-            .await
-            .map_err(|error| format!("BLE manager unavailable: {error}"))?;
-        let adapters = manager
-            .adapters()
-            .await
-            .map_err(|error| format!("BLE adapter list unavailable: {error}"))?;
-        let adapter = adapters
-            .into_iter()
-            .next()
-            .ok_or_else(|| "No BLE adapter found".to_string())?;
-
-        adapter
-            .start_scan(ScanFilter::default())
-            .await
-            .map_err(|error| format!("BLE scan failed before connect: {error}"))?;
-        tokio::time::sleep(Duration::from_millis(900)).await;
-
-        let peripherals = adapter
-            .peripherals()
-            .await
-            .map_err(|error| format!("BLE peripheral list unavailable before connect: {error}"))?;
-        let _ = adapter.stop_scan().await;
-
-        for peripheral in peripherals {
-            let properties = match peripheral.properties().await {
-                Ok(Some(properties)) => properties,
-                _ => continue,
-            };
-
-            if properties.address.to_string() != address {
-                continue;
-            }
-
-            peripheral
-                .connect()
-                .await
-                .map_err(|error| format!("BLE peripheral connect failed: {error}"))?;
-            peripheral
-                .discover_services()
-                .await
-                .map_err(|error| format!("BLE service discovery failed: {error}"))?;
-            return Ok(());
-        }
-
-        Err(format!("BLE peer {address} was not found for connect"))
-    })
+    ble_central::connect(address, service_uuid, rx_uuid)
 }
 
 fn parse_calculator_advertisement(
@@ -1440,6 +1441,7 @@ fn parse_local_name_advertisement(name: &str) -> Option<BleAdvertisementPayload>
 fn peer_from_advertisement(
     address: String,
     payload: BleAdvertisementPayload,
+    rssi: Option<i16>,
     room_filter: Option<&str>,
 ) -> Option<PeerSummary> {
     if payload.kind.to_ascii_uppercase() != JOIN_ADVERTISEMENT_KIND {
@@ -1464,12 +1466,14 @@ fn peer_from_advertisement(
         trust_status: "pending".to_string(),
         connected: false,
         last_seen_iso: now_iso(),
+        rssi,
     })
 }
 
 fn room_from_advertisement(
     address: String,
     payload: BleAdvertisementPayload,
+    rssi: Option<i16>,
 ) -> Option<RoomSummary> {
     if payload.kind.to_ascii_uppercase() != ROOM_ADVERTISEMENT_KIND {
         return None;
@@ -1488,6 +1492,7 @@ fn room_from_advertisement(
         trust_status: "pending".to_string(),
         joinable: true,
         last_seen_iso: now_iso(),
+        rssi,
     })
 }
 
@@ -1501,6 +1506,7 @@ fn merge_discovered_peers(
             Some(existing_peer) => {
                 existing_peer.label = peer.label;
                 existing_peer.last_seen_iso = peer.last_seen_iso;
+                existing_peer.rssi = peer.rssi;
             }
             None => merged.push(peer),
         }
@@ -1521,6 +1527,7 @@ fn merge_discovered_rooms(
                 existing_room.trust_status = room.trust_status;
                 existing_room.joinable = room.joinable;
                 existing_room.last_seen_iso = room.last_seen_iso;
+                existing_room.rssi = room.rssi;
             }
             None => merged.push(room),
         }
@@ -1718,6 +1725,7 @@ mod tests {
             trust_status: "trusted".to_string(),
             connected: true,
             last_seen_iso: "old".to_string(),
+            rssi: None,
         }];
         let discovered = vec![PeerSummary {
             id: "ble-1".to_string(),
@@ -1727,6 +1735,7 @@ mod tests {
             trust_status: "pending".to_string(),
             connected: false,
             last_seen_iso: "new".to_string(),
+            rssi: Some(-72),
         }];
 
         let merged = merge_discovered_peers(&existing, discovered);
@@ -1734,17 +1743,20 @@ mod tests {
         assert_eq!(merged[0].label, "New");
         assert!(merged[0].connected);
         assert_eq!(merged[0].trust_status, "trusted");
+        // A re-scan refreshes RSSI while preserving connection/trust.
+        assert_eq!(merged[0].rssi, Some(-72));
     }
 
     #[test]
     fn parses_join_request_local_name() {
         let payload = parse_local_name_advertisement("EvolveCalc:JOIN:room-123:MacBook Guest")
             .expect("advertisement should parse");
-        let peer = peer_from_advertisement("AA-BB".to_string(), payload, Some("room-123"))
+        let peer = peer_from_advertisement("AA-BB".to_string(), payload, Some(-58), Some("room-123"))
             .expect("join request should become a peer");
 
         assert_eq!(peer.id, "ble-AA-BB");
         assert_eq!(peer.label, "MacBook Guest");
+        assert_eq!(peer.rssi, Some(-58));
         assert_eq!(peer.session_role, "guest");
     }
 
@@ -1752,7 +1764,7 @@ mod tests {
     fn rejects_join_request_for_another_room() {
         let payload = parse_local_name_advertisement("EvolveCalc:JOIN:room-abc:Guest")
             .expect("advertisement should parse");
-        let peer = peer_from_advertisement("AA-BB".to_string(), payload, Some("room-other"));
+        let peer = peer_from_advertisement("AA-BB".to_string(), payload, None, Some("room-other"));
 
         assert!(peer.is_none());
     }
@@ -1761,10 +1773,11 @@ mod tests {
     fn parses_room_local_name() {
         let payload = parse_local_name_advertisement("EvolveCalc:ROOM:room-abc:Desk Calculator")
             .expect("advertisement should parse");
-        let room = room_from_advertisement("AA-BB".to_string(), payload)
+        let room = room_from_advertisement("AA-BB".to_string(), payload, Some(-61))
             .expect("room advertisement should become a room");
 
         assert_eq!(room.id, "room-abc");
+        assert_eq!(room.rssi, Some(-61));
         assert_eq!(room.name, "Desk Calculator");
         assert_eq!(room.host_device_id, "ble-AA-BB");
     }

@@ -36,11 +36,11 @@ The shell is a grid:
 }
 
 .workspace.history-open {
-  grid-template-columns: 52px 420px 330px;
+  grid-template-columns: 52px 420px 360px;
 }
 
 .workspace.host-open.history-open {
-  grid-template-columns: 300px 420px 330px;
+  grid-template-columns: 300px 420px 360px;
 }
 ```
 
@@ -62,7 +62,7 @@ These fixed sizes are intentional:
 | Calculator panel | `420px` wide, `620px` high | Keeps display, entry row, and keypad stable. |
 | Collapsed drawer | `52px` wide | Leaves only the expand button visible. |
 | Host Bench open drawer | `300px` wide | Fits room controls, role segment, facts, and error box. |
-| Peers/History open drawer | `330px` wide | Fits peer rows and history results without crowding. |
+| Network open drawer | `360px` wide | Fits discovery rows, the connection card, and history results without crowding. |
 | Status rail | `420px` max target | Aligns visually with the calculator. |
 
 On narrow browser widths, the document is allowed to scroll horizontally. This is preferred over shrinking the calculator until text and keypad controls overlap.
