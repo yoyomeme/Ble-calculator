@@ -39,6 +39,7 @@ pub const CALCULATOR_TX_CHARACTERISTIC_UUID: &str = "7c14f94a-77dd-4a65-9f04-6f7
 /// Advertisement `local_name` prefix. Kept in sync with the parser in `lib.rs`.
 const ADVERTISEMENT_PREFIX: &str = "EvolveCalc";
 const JOIN_ADVERTISEMENT_KIND: &str = "JOIN";
+const ROOM_ADVERTISEMENT_KIND: &str = "ROOM";
 
 /// Everything a backend needs to start advertising as a joinable guest.
 #[derive(Debug, Clone)]
@@ -51,13 +52,26 @@ pub struct PeripheralConfig {
 }
 
 impl PeripheralConfig {
-    /// Build a config for joining `room_id` advertised under `label`.
+    /// Build a config for a guest joining `room_id` advertised under `label`
+    /// (`EvolveCalc:JOIN:<room>:<label>`). The host scans for these and connects.
     pub fn join(room_id: &str, label: &str) -> Self {
+        Self::for_local_name(build_join_local_name(room_id, label))
+    }
+
+    /// Build a config for a host advertising `room_id` as a discoverable room
+    /// (`EvolveCalc:ROOM:<room>:<name>`). This is a discovery beacon only — the
+    /// host stays the BLE *central* for the data link — so guests scanning for
+    /// rooms (`scan_rooms`) can find it.
+    pub fn room(room_id: &str, room_name: &str) -> Self {
+        Self::for_local_name(build_room_local_name(room_id, room_name))
+    }
+
+    fn for_local_name(local_name: String) -> Self {
         Self {
             service_uuid: CALCULATOR_SERVICE_UUID.to_string(),
             rx_characteristic_uuid: CALCULATOR_RX_CHARACTERISTIC_UUID.to_string(),
             tx_characteristic_uuid: CALCULATOR_TX_CHARACTERISTIC_UUID.to_string(),
-            local_name: build_join_local_name(room_id, label),
+            local_name,
         }
     }
 }
@@ -66,10 +80,21 @@ impl PeripheralConfig {
 /// `parse_local_name_advertisement`. Colons are stripped from user-supplied
 /// fields so they cannot break the `prefix:kind:room:label` framing.
 pub fn build_join_local_name(room_id: &str, label: &str) -> String {
+    build_local_name(JOIN_ADVERTISEMENT_KIND, room_id, label)
+}
+
+/// Build the `local_name` a host advertises as a room discovery beacon. Same
+/// `prefix:kind:room:label` framing as [`build_join_local_name`], so the host
+/// scan parser reads it with `parse_local_name_advertisement`.
+pub fn build_room_local_name(room_id: &str, room_name: &str) -> String {
+    build_local_name(ROOM_ADVERTISEMENT_KIND, room_id, room_name)
+}
+
+fn build_local_name(kind: &str, room_id: &str, label: &str) -> String {
     format!(
         "{}:{}:{}:{}",
         ADVERTISEMENT_PREFIX,
-        JOIN_ADVERTISEMENT_KIND,
+        kind,
         sanitize_field(room_id),
         sanitize_field(label),
     )
@@ -100,6 +125,17 @@ pub trait BlePeripheral: Send {
     /// Drain calculation-event payloads written by a connected host since the
     /// last call. Reassembly of chunk framing is handled by the caller.
     fn take_inbound(&mut self) -> Vec<Vec<u8>>;
+
+    /// Send each frame to the subscribed host over the TX notify characteristic
+    /// (guest -> host). Returns how many frames were handed to the platform for
+    /// delivery. Frames that cannot be sent yet (no subscriber, or the notify
+    /// queue is full) may be retained and flushed once delivery is possible, so
+    /// a return value below `frames.len()` means the remainder is queued.
+    fn notify(&mut self, frames: &[Vec<u8>]) -> Result<usize, String>;
+
+    /// Whether a central (host) is currently subscribed to the TX characteristic.
+    /// Lets a guest surface an active host link in its UI.
+    fn has_subscriber(&self) -> bool;
 }
 
 /// Construct the peripheral backend for the current platform.
@@ -138,6 +174,14 @@ mod tests {
         // Exactly four fields must remain so the host parser stays correct.
         assert_eq!(name.split(':').count(), 4);
         assert_eq!(name, "EvolveCalc:JOIN:room evil:lab el");
+    }
+
+    #[test]
+    fn builds_room_local_name_with_room_kind() {
+        let name = build_room_local_name("room-abc", "Desk Calculator");
+        assert_eq!(name, "EvolveCalc:ROOM:room-abc:Desk Calculator");
+        // Must stay parseable as exactly four `prefix:kind:room:label` fields.
+        assert_eq!(name.split(':').count(), 4);
     }
 
     #[test]

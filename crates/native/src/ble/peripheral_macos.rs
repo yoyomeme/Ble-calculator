@@ -13,6 +13,7 @@
 //! `NSBluetoothAlwaysUsageDescription` entitlement, and a granted Bluetooth
 //! permission), so it is exercised structurally here and on-device separately.
 
+use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -26,7 +27,7 @@ use objc2_core_bluetooth::{
     CBMutableCharacteristic, CBMutableService, CBPeripheralManager, CBPeripheralManagerDelegate,
     CBService, CBUUID,
 };
-use objc2_foundation::{NSArray, NSError, NSMutableDictionary, NSString};
+use objc2_foundation::{NSArray, NSData, NSError, NSMutableDictionary, NSString};
 
 use super::{BlePeripheral, PeripheralConfig};
 
@@ -41,7 +42,13 @@ unsafe impl<T> Send for AssertSend<T> {}
 struct Shared {
     advertising: AtomicBool,
     powered_on: AtomicBool,
+    /// True while at least one central is subscribed to the TX characteristic.
+    subscribed: AtomicBool,
     inbound: Mutex<Vec<Vec<u8>>>,
+    /// Frames waiting to be notified to the subscribed host (guest -> host).
+    /// Drained on the CB queue; a full CB notify queue re-drains on
+    /// `peripheralManagerIsReadyToUpdateSubscribers`.
+    outbound: Mutex<VecDeque<Vec<u8>>>,
     last_error: Mutex<Option<String>>,
     /// The config we want to be advertising, if any.
     pending_config: Mutex<Option<PeripheralConfig>>,
@@ -72,7 +79,9 @@ impl MacosPeripheral {
             shared: Arc::new(Shared {
                 advertising: AtomicBool::new(false),
                 powered_on: AtomicBool::new(false),
+                subscribed: AtomicBool::new(false),
                 inbound: Mutex::new(Vec::new()),
+                outbound: Mutex::new(VecDeque::new()),
                 last_error: Mutex::new(None),
                 pending_config: Mutex::new(None),
                 manager: Mutex::new(None),
@@ -133,6 +142,20 @@ impl MacosPeripheral {
         };
         let shared = self.shared.clone();
         queue.exec_async(move || apply_pending(&shared));
+    }
+
+    /// Marshal `drain_outbound` onto the serial CB queue so notify delivery
+    /// touches the non-`Send` manager/characteristic only on that queue.
+    fn dispatch_drain(&self) {
+        let queue_guard = match self.shared.queue.lock() {
+            Ok(guard) => guard,
+            Err(_) => return,
+        };
+        let Some(AssertSend(queue)) = queue_guard.as_ref() else {
+            return;
+        };
+        let shared = self.shared.clone();
+        queue.exec_async(move || drain_outbound(&shared));
     }
 }
 
@@ -197,10 +220,15 @@ impl BlePeripheral for MacosPeripheral {
                         }
                     }
                     shared.advertising.store(false, Ordering::SeqCst);
+                    shared.subscribed.store(false, Ordering::SeqCst);
+                    if let Ok(mut outbound) = shared.outbound.lock() {
+                        outbound.clear();
+                    }
                 });
             }
         }
         self.shared.advertising.store(false, Ordering::SeqCst);
+        self.shared.subscribed.store(false, Ordering::SeqCst);
         Ok(())
     }
 
@@ -212,6 +240,71 @@ impl BlePeripheral for MacosPeripheral {
         match self.shared.inbound.lock() {
             Ok(mut inbound) => std::mem::take(&mut *inbound),
             Err(_) => Vec::new(),
+        }
+    }
+
+    fn notify(&mut self, frames: &[Vec<u8>]) -> Result<usize, String> {
+        if frames.is_empty() {
+            return Ok(0);
+        }
+        {
+            let mut queue = self
+                .shared
+                .outbound
+                .lock()
+                .map_err(|_| "BLE peripheral outbound queue lock was poisoned".to_string())?;
+            queue.extend(frames.iter().cloned());
+        }
+        // Delivery happens on the CB queue; it flushes what it can now and the
+        // `isReadyToUpdateSubscribers` callback flushes the rest under backpressure.
+        self.dispatch_drain();
+        Ok(frames.len())
+    }
+
+    fn has_subscriber(&self) -> bool {
+        self.shared.subscribed.load(Ordering::SeqCst)
+    }
+}
+
+/// Flush queued outbound frames to subscribed centrals over the TX
+/// characteristic. Runs on the serial CB queue. Stops when the notify queue is
+/// full (`updateValue` returns `false`) and resumes from
+/// `peripheralManagerIsReadyToUpdateSubscribers`.
+fn drain_outbound(shared: &Arc<Shared>) {
+    if !shared.subscribed.load(Ordering::SeqCst) {
+        return;
+    }
+    let manager_guard = match shared.manager.lock() {
+        Ok(guard) => guard,
+        Err(_) => return,
+    };
+    let Some(AssertSend(manager)) = manager_guard.as_ref() else {
+        return;
+    };
+    let tx_guard = match shared.tx_characteristic.lock() {
+        Ok(guard) => guard,
+        Err(_) => return,
+    };
+    let Some(AssertSend(tx)) = tx_guard.as_ref() else {
+        return;
+    };
+    let mut outbound = match shared.outbound.lock() {
+        Ok(outbound) => outbound,
+        Err(_) => return,
+    };
+
+    while let Some(front) = outbound.front() {
+        let data = NSData::with_bytes(front);
+        // `None` centrals => deliver to every central subscribed to this
+        // characteristic. Returns false when the internal transmit queue is
+        // full; the remaining frames stay queued for the ready callback.
+        let sent = unsafe {
+            manager.updateValue_forCharacteristic_onSubscribedCentrals(&data, tx, None)
+        };
+        if sent {
+            outbound.pop_front();
+        } else {
+            break;
         }
     }
 }
@@ -434,8 +527,29 @@ define_class!(
             _central: &CBCentral,
             _characteristic: &CBCharacteristic,
         ) {
-            // A host subscribed to the TX characteristic; outbound notify
-            // delivery is handled by the calculator's outbox drain.
+            // A host subscribed to the TX characteristic: the guest -> host link
+            // is live. Flush anything already queued.
+            let shared = &self.ivars().shared;
+            shared.subscribed.store(true, Ordering::SeqCst);
+            drain_outbound(shared);
+        }
+
+        #[unsafe(method(peripheralManager:central:didUnsubscribeFromCharacteristic:))]
+        fn did_unsubscribe(
+            &self,
+            _peripheral: &CBPeripheralManager,
+            _central: &CBCentral,
+            _characteristic: &CBCharacteristic,
+        ) {
+            // The host dropped its subscription; hold queued frames until a host
+            // subscribes again rather than dropping them.
+            self.ivars().shared.subscribed.store(false, Ordering::SeqCst);
+        }
+
+        #[unsafe(method(peripheralManagerIsReadyToUpdateSubscribers:))]
+        fn is_ready_to_update(&self, _peripheral: &CBPeripheralManager) {
+            // CoreBluetooth's notify queue drained; resume sending under backpressure.
+            drain_outbound(&self.ivars().shared);
         }
     }
 );

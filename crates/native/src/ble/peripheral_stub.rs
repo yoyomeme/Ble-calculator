@@ -44,4 +44,15 @@ impl BlePeripheral for StubPeripheral {
     fn take_inbound(&mut self) -> Vec<Vec<u8>> {
         Vec::new()
     }
+
+    fn notify(&mut self, _frames: &[Vec<u8>]) -> Result<usize, String> {
+        Err(
+            "Guest BLE notify (guest -> host) is not implemented on this operating system."
+                .to_string(),
+        )
+    }
+
+    fn has_subscriber(&self) -> bool {
+        false
+    }
 }

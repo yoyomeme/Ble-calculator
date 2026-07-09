@@ -24,11 +24,13 @@ use std::time::Duration;
 use bluer::adv::{Advertisement, AdvertisementHandle, Type as AdvertisementType};
 use bluer::gatt::local::{
     Application, ApplicationHandle, Characteristic, CharacteristicNotify,
-    CharacteristicNotifyMethod, CharacteristicWrite, CharacteristicWriteMethod, Service,
+    CharacteristicNotifyMethod, CharacteristicNotifier, CharacteristicWrite,
+    CharacteristicWriteMethod, Service,
 };
 use bluer::{Adapter, Session};
 use futures::FutureExt;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
+use tokio::sync::Mutex as AsyncMutex;
 use uuid::Uuid;
 
 use super::{BlePeripheral, PeripheralConfig};
@@ -39,11 +41,17 @@ const START_TIMEOUT: Duration = Duration::from_secs(10);
 
 struct LinuxShared {
     advertising: AtomicBool,
+    /// True while a host is subscribed to the TX characteristic.
+    subscribed: AtomicBool,
     inbound: Mutex<Vec<Vec<u8>>>,
+    /// The active TX notifier, captured when a host subscribes. Used by the
+    /// worker to push guest -> host events. `None` when no host is subscribed.
+    notifier: AsyncMutex<Option<CharacteristicNotifier>>,
 }
 
 enum Command {
     Start(PeripheralConfig, Sender<Result<(), String>>),
+    Notify(Vec<Vec<u8>>, Sender<Result<usize, String>>),
     Stop,
 }
 
@@ -57,7 +65,9 @@ impl LinuxPeripheral {
     pub fn new() -> Self {
         let shared = Arc::new(LinuxShared {
             advertising: AtomicBool::new(false),
+            subscribed: AtomicBool::new(false),
             inbound: Mutex::new(Vec::new()),
+            notifier: AsyncMutex::new(None),
         });
         let (commands, receiver) = unbounded_channel::<Command>();
 
@@ -110,6 +120,7 @@ impl BlePeripheral for LinuxPeripheral {
     fn stop(&mut self) -> Result<(), String> {
         let _ = self.commands.send(Command::Stop);
         self.shared.advertising.store(false, Ordering::SeqCst);
+        self.shared.subscribed.store(false, Ordering::SeqCst);
         Ok(())
     }
 
@@ -122,6 +133,23 @@ impl BlePeripheral for LinuxPeripheral {
             Ok(mut inbound) => std::mem::take(&mut *inbound),
             Err(_) => Vec::new(),
         }
+    }
+
+    fn notify(&mut self, frames: &[Vec<u8>]) -> Result<usize, String> {
+        if frames.is_empty() {
+            return Ok(0);
+        }
+        let (reply, reply_rx) = mpsc::channel();
+        self.commands
+            .send(Command::Notify(frames.to_vec(), reply))
+            .map_err(|_| "Linux BLE peripheral worker is not running".to_string())?;
+        reply_rx
+            .recv_timeout(START_TIMEOUT)
+            .map_err(|_| "Timed out waiting for BlueZ notify".to_string())?
+    }
+
+    fn has_subscriber(&self) -> bool {
+        self.shared.subscribed.load(Ordering::SeqCst)
     }
 }
 
@@ -158,12 +186,40 @@ async fn run_worker(
                     }
                 }
             }
+            Command::Notify(frames, reply) => {
+                let _ = reply.send(notify_frames(&shared, frames).await);
+            }
             Command::Stop => {
                 active = None;
                 shared.advertising.store(false, Ordering::SeqCst);
+                shared.subscribed.store(false, Ordering::SeqCst);
+                *shared.notifier.lock().await = None;
             }
         }
     }
+}
+
+/// Push each frame to the subscribed host over the captured TX notifier.
+async fn notify_frames(shared: &Arc<LinuxShared>, frames: Vec<Vec<u8>>) -> Result<usize, String> {
+    let mut slot = shared.notifier.lock().await;
+    let Some(notifier) = slot.as_mut() else {
+        return Err("No host is subscribed to the guest TX characteristic".to_string());
+    };
+    if notifier.is_stopped() {
+        *slot = None;
+        shared.subscribed.store(false, Ordering::SeqCst);
+        return Err("Host unsubscribed from the guest TX characteristic".to_string());
+    }
+
+    let mut sent = 0usize;
+    for frame in frames {
+        notifier
+            .notify(frame)
+            .await
+            .map_err(|error| format!("BlueZ notify failed: {error}"))?;
+        sent += 1;
+    }
+    Ok(sent)
 }
 
 async fn start_session(
@@ -203,14 +259,21 @@ async fn start_session(
         ..Default::default()
     };
 
-    // TX: notify characteristic for guest -> host events. Notify delivery is a
-    // later step (parity with the macOS backend); the session is retained.
+    // TX: notify characteristic for guest -> host events. When a host subscribes
+    // BlueZ hands us a notifier; capture it so `notify_frames` can push signed
+    // calculation events, and flag the live subscription for the guest UI.
+    let notify_shared = shared.clone();
     let tx_characteristic = Characteristic {
         uuid: tx_uuid,
         notify: Some(CharacteristicNotify {
             notify: true,
-            method: CharacteristicNotifyMethod::Fun(Box::new(|_notifier| {
-                async move {}.boxed()
+            method: CharacteristicNotifyMethod::Fun(Box::new(move |notifier| {
+                let notify_shared = notify_shared.clone();
+                async move {
+                    notify_shared.subscribed.store(true, Ordering::SeqCst);
+                    *notify_shared.notifier.lock().await = Some(notifier);
+                }
+                .boxed()
             })),
             ..Default::default()
         }),

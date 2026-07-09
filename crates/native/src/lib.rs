@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::{
+    collections::HashMap,
     env, fs,
     path::{Path, PathBuf},
     sync::Mutex,
@@ -28,8 +29,23 @@ const ADVERTISEMENT_PREFIX: &str = "EvolveCalc";
 const JOIN_ADVERTISEMENT_KIND: &str = "JOIN";
 const ROOM_ADVERTISEMENT_KIND: &str = "ROOM";
 const BLE_CHUNK_PAYLOAD_SIZE: usize = 180;
+/// Hard ceiling for one serialized transport frame. Core Bluetooth's automatic
+/// long-write supports up to 512 bytes with write-with-response, so a framed
+/// chunk (`BleTransportChunk` JSON: base64 payload + message-id UUID + counters)
+/// must stay under this. `BLE_CHUNK_PAYLOAD_SIZE` is sized to leave headroom;
+/// `frame_event_for_ble` asserts it and `worst_case_frame_fits_mtu_budget` tests it.
+const BLE_MAX_FRAME_BYTES: usize = 512;
+/// Cap on concurrently-reassembling inbound messages, so a peer that streams
+/// incomplete chunk sets cannot grow the reassembly buffer without bound.
+const BLE_MAX_INFLIGHT_MESSAGES: usize = 64;
 
 static APP_STATE: Lazy<Mutex<RoomState>> = Lazy::new(|| Mutex::new(RoomState::new()));
+
+/// Partially-received inbound chunk sets, keyed by `message_id`. A message is
+/// removed and processed once all `total` chunks have arrived. Kept out of
+/// `RoomState` so partial transport framing never leaks into the UI contract.
+static BLE_REASSEMBLY: Lazy<Mutex<HashMap<String, Vec<BleTransportChunk>>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// The platform BLE peripheral backend (guest advertising / GATT server).
 /// `btleplug` cannot fill the peripheral role, so this is a per-OS native
@@ -272,8 +288,161 @@ pub fn get_state() -> Result<Value> {
     with_state_json(|state| {
         refresh_persisted_history(state);
         refresh_connection_state(state);
+        process_incoming_ble(state);
         Ok(state.clone())
     })
+}
+
+/// Drain and process calculation events received over BLE since the last poll.
+/// Host (central) reads guest -> host TX notifications; guest (peripheral) reads
+/// host -> guest characteristic writes. Both are reassembled, signature- and
+/// holder-binding-verified, and appended to history. This is the receive half
+/// that closes the two end-to-end gaps (host->guest #1 and guest->host).
+fn process_incoming_ble(state: &mut RoomState) {
+    let role = state.session_role.as_deref();
+
+    let mut frames: Vec<Vec<u8>> = Vec::new();
+    let mut host_subscribed = false;
+
+    match role {
+        Some("guest") => {
+            if let Ok(mut peripheral) = PERIPHERAL.lock() {
+                frames.extend(peripheral.take_inbound());
+                host_subscribed = peripheral.has_subscriber();
+            }
+        }
+        Some("host") => {
+            frames.extend(ble_central::take_notifications());
+        }
+        _ => return,
+    }
+
+    let received = ingest_ble_frames(frames, &mut state.native_warnings);
+
+    if !received.is_empty() {
+        if let Some(storage) = NativeStorage::open(&mut state.native_warnings) {
+            for entry in &received {
+                let mut stored = entry.clone();
+                stored.trusted = true;
+                storage.persist_received_calculation(&stored, &mut state.native_warnings);
+            }
+        }
+        // A verified event proves the peer holds the signing key it claims, so
+        // the live link is now a trusted, connected session (findings #3, #5).
+        note_verified_peer(state);
+        refresh_persisted_history(state);
+    } else if role == Some("guest") && host_subscribed {
+        // No data yet, but a host has subscribed: surface the live link so the
+        // guest UI leaves the "waiting" state (finding #5).
+        mark_host_connected(state);
+    }
+}
+
+/// Parse, buffer, reassemble, and verify inbound BLE frames. Returns the fully
+/// received-and-verified calculation events. Malformed frames and events that
+/// fail signature/holder-binding verification are dropped with a warning.
+fn ingest_ble_frames(frames: Vec<Vec<u8>>, warnings: &mut Vec<String>) -> Vec<CalculationEntry> {
+    let mut completed = Vec::new();
+    if frames.is_empty() {
+        return completed;
+    }
+
+    let mut buffers = match BLE_REASSEMBLY.lock() {
+        Ok(buffers) => buffers,
+        Err(_) => return completed,
+    };
+
+    for frame in frames {
+        let chunk: BleTransportChunk = match serde_json::from_slice(&frame) {
+            Ok(chunk) => chunk,
+            Err(error) => {
+                push_warning_once(warnings, format!("Dropped malformed inbound BLE frame: {error}"));
+                continue;
+            }
+        };
+
+        if chunk.total == 0 {
+            continue;
+        }
+
+        // Bound the in-flight set: refuse new message ids past the cap so a peer
+        // streaming incomplete sets cannot grow the buffer without bound.
+        if !buffers.contains_key(&chunk.message_id) && buffers.len() >= BLE_MAX_INFLIGHT_MESSAGES {
+            push_warning_once(
+                warnings,
+                "Too many incomplete inbound BLE messages; dropping new chunk.",
+            );
+            continue;
+        }
+
+        let total = chunk.total;
+        let message_id = chunk.message_id.clone();
+        let entry = buffers.entry(message_id.clone()).or_default();
+        // Replace a resent chunk at the same index instead of duplicating it, so
+        // `len() == total` reliably means "every distinct index present".
+        match entry.iter_mut().find(|existing| existing.index == chunk.index) {
+            Some(existing) => *existing = chunk,
+            None => entry.push(chunk),
+        }
+
+        if entry.len() as u16 != total {
+            continue;
+        }
+
+        let chunks = buffers.remove(&message_id).unwrap_or_default();
+        match reassemble_chunks(&chunks) {
+            Ok(bytes) => match verify_received_calculation_event(&bytes) {
+                Ok(event) => completed.push(event),
+                Err(error) => push_warning_once(
+                    warnings,
+                    format!("Rejected received BLE calculation event: {error}"),
+                ),
+            },
+            Err(error) => push_warning_once(
+                warnings,
+                format!("Failed to reassemble received BLE chunks: {error}"),
+            ),
+        }
+    }
+
+    completed
+}
+
+/// Reflect a verified peer on the current session: trust the live peer and, for
+/// a guest, mark the host connected. Trust is now earned by a verified signed
+/// event rather than asserted on bare connection (finding #3).
+fn note_verified_peer(state: &mut RoomState) {
+    match state.session_role.as_deref() {
+        Some("host") => {
+            for peer in &mut state.peers {
+                if peer.connected {
+                    peer.trust_status = "trusted".to_string();
+                    peer.last_seen_iso = now_iso();
+                }
+            }
+        }
+        Some("guest") => {
+            for peer in &mut state.peers {
+                if peer.session_role == "host" {
+                    peer.connected = true;
+                    peer.trust_status = "trusted".to_string();
+                    peer.last_seen_iso = now_iso();
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Mark the guest's host peer connected without promoting trust (used when the
+/// host has subscribed but no verified event has arrived yet).
+fn mark_host_connected(state: &mut RoomState) {
+    for peer in &mut state.peers {
+        if peer.session_role == "host" && !peer.connected {
+            peer.connected = true;
+            peer.last_seen_iso = now_iso();
+        }
+    }
 }
 
 /// Poll-based liveness for the host's retained central connection. If the state
@@ -307,17 +476,32 @@ fn refresh_connection_state(state: &mut RoomState) {
 pub fn create_room(request: CreateRoomRequest) -> Result<Value> {
     with_state_json(|state| {
         let room_name = trim_or_default(&request.room_name, "Calculator Room");
-        state.room_id = Some(format!(
+        let room_id = format!(
             "room-{}",
             Uuid::new_v4().simple().to_string()[..8].to_string()
-        ));
-        state.room_name = Some(room_name);
+        );
+        state.room_id = Some(room_id.clone());
+        state.room_name = Some(room_name.clone());
         state.session_role = Some("host".to_string());
         state.ble_role = Some("central".to_string());
         state.scanning = false;
         state.advertising = false;
         state.peers.clear();
         state.rooms.clear();
+        state.native_status.last_ble_error = None;
+
+        // Advertise a ROOM discovery beacon so guests scanning for hosts
+        // (`scan_rooms`) can find this room. Best-effort and non-fatal: the host
+        // stays the BLE central for the data link, and the canonical flow (guest
+        // advertises JOIN, host scans + connects) still works without it. This
+        // gives `ROOM` advertisements a real producer (finding #1).
+        if let Err(error) = start_room_advertising(&room_id, &room_name) {
+            push_warning_once(
+                &mut state.native_warnings,
+                format!("Room discovery beacon could not start: {error}"),
+            );
+        }
+
         Ok(state.clone())
     })
 }
@@ -392,7 +576,11 @@ pub fn connect_guest(request: ConnectGuestRequest) -> Result<Value> {
             match &connect_result {
                 Ok(()) => {
                     peer.connected = true;
-                    peer.trust_status = "trusted".to_string();
+                    // Trust is *not* asserted on a bare GATT connection. It is
+                    // earned once a signed calculation event from this peer
+                    // passes signature + holder-binding verification in
+                    // `process_incoming_ble` (finding #3).
+                    peer.trust_status = "pending".to_string();
                     state.native_status.last_ble_error = None;
                 }
                 Err(error) => {
@@ -527,6 +715,16 @@ fn start_guest_advertising(room_id: &str, label: &str) -> std::result::Result<()
     peripheral.start_advertising(&config)
 }
 
+/// Advertise a host ROOM discovery beacon (`EvolveCalc:ROOM:<room>:<name>`) via
+/// the peripheral backend so guests scanning for rooms can find this host.
+fn start_room_advertising(room_id: &str, room_name: &str) -> std::result::Result<(), String> {
+    let config = ble::PeripheralConfig::room(room_id, room_name);
+    let mut peripheral = PERIPHERAL
+        .lock()
+        .map_err(|_| "BLE peripheral backend lock was poisoned".to_string())?;
+    peripheral.start_advertising(&config)
+}
+
 fn stop_guest_advertising() {
     if let Ok(mut peripheral) = PERIPHERAL.lock() {
         let _ = peripheral.stop();
@@ -606,10 +804,12 @@ fn peripheral_status_json() -> Value {
     }
 }
 
-/// Discard any calculation-event frames a host wrote over GATT that have not
-/// been consumed. Full receive-side verification is a later step; draining here
-/// keeps the inbound buffer from growing across sessions.
+/// Discard any un-consumed inbound frames and partially-reassembled messages
+/// when resetting the session, so a new session never inherits stale bytes.
 fn drain_peripheral_inbound() -> usize {
+    if let Ok(mut buffers) = BLE_REASSEMBLY.lock() {
+        buffers.clear();
+    }
     match PERIPHERAL.lock() {
         Ok(mut peripheral) => peripheral.take_inbound().len(),
         Err(_) => 0,
@@ -675,8 +875,13 @@ pub fn submit_calculation(request: SubmitCalculationRequest) -> Result<Value> {
             refresh_persisted_history(state);
         }
 
-        // Live host -> guest delivery over the retained GATT connection.
-        deliver_event_to_guest(state, &trusted_entry, &envelope);
+        // Live cross-device delivery: a host writes to the connected guest
+        // (host -> guest), a guest notifies the subscribed host (guest -> host).
+        match state.session_role.as_deref() {
+            Some("host") => deliver_event_to_guest(state, &trusted_entry, &envelope),
+            Some("guest") => deliver_event_to_host(state, &trusted_entry, &envelope),
+            _ => {}
+        }
 
         Ok(state.clone())
     })
@@ -703,35 +908,70 @@ fn deliver_event_to_guest(
         return;
     }
 
-    let payload_json = match serde_json::to_vec(envelope) {
-        Ok(bytes) => bytes,
-        Err(error) => {
-            state.native_status.last_ble_error =
-                Some(format!("Failed to serialize calculation event for BLE: {error}"));
-            return;
-        }
-    };
-
-    let chunks = chunk_payload(entry.id.clone(), &payload_json);
-    let frames: std::result::Result<Vec<Vec<u8>>, _> =
-        chunks.iter().map(serde_json::to_vec).collect();
-    let frames = match frames {
+    let frames = match frame_event_for_ble(entry.id.clone(), envelope) {
         Ok(frames) => frames,
         Err(error) => {
-            state.native_status.last_ble_error =
-                Some(format!("Failed to frame calculation chunks for BLE: {error}"));
+            state.native_status.last_ble_error = Some(error);
             return;
         }
     };
 
     match ble_central::write_frames(&frames) {
-        Ok(_) => {
-            state.native_status.last_ble_error = None;
-        }
+        Ok(_) => state.native_status.last_ble_error = None,
+        Err(error) => state.native_status.last_ble_error = Some(error),
+    }
+}
+
+/// Guest -> host delivery: notify the freshly-signed event to a subscribed host
+/// over the TX characteristic. Frames are queued by the peripheral backend even
+/// if no host has subscribed yet, and flushed once one does — so a guest can
+/// calculate before the host connects without losing events.
+fn deliver_event_to_host(
+    state: &mut RoomState,
+    entry: &CalculationEntry,
+    envelope: &SignedEnvelope,
+) {
+    if state.session_role.as_deref() != Some("guest") {
+        return;
+    }
+
+    let frames = match frame_event_for_ble(entry.id.clone(), envelope) {
+        Ok(frames) => frames,
         Err(error) => {
             state.native_status.last_ble_error = Some(error);
+            return;
         }
+    };
+
+    let result = match PERIPHERAL.lock() {
+        Ok(mut peripheral) => peripheral.notify(&frames),
+        Err(_) => Err("BLE peripheral backend lock was poisoned".to_string()),
+    };
+    match result {
+        Ok(_) => state.native_status.last_ble_error = None,
+        Err(error) => state.native_status.last_ble_error = Some(error),
     }
+}
+
+/// Serialize a signed envelope, chunk it, and frame each chunk for BLE transport.
+/// Shared by the host->guest write and guest->host notify paths. Asserts each
+/// frame stays within the write-with-response budget (finding #4).
+fn frame_event_for_ble(
+    message_id: String,
+    envelope: &SignedEnvelope,
+) -> std::result::Result<Vec<Vec<u8>>, String> {
+    let payload_json = serde_json::to_vec(envelope)
+        .map_err(|error| format!("Failed to serialize calculation event for BLE: {error}"))?;
+    let chunks = chunk_payload(message_id, &payload_json);
+    let frames: std::result::Result<Vec<Vec<u8>>, _> =
+        chunks.iter().map(serde_json::to_vec).collect();
+    let frames =
+        frames.map_err(|error| format!("Failed to frame calculation chunks for BLE: {error}"))?;
+    debug_assert!(
+        frames.iter().all(|frame| frame.len() <= BLE_MAX_FRAME_BYTES),
+        "framed BLE chunk exceeds the {BLE_MAX_FRAME_BYTES}-byte write-with-response budget"
+    );
+    Ok(frames)
 }
 
 #[napi]
@@ -1051,6 +1291,43 @@ impl NativeStorage {
         }
     }
 
+    /// Persist a calculation event received from a peer over BLE. Unlike
+    /// [`persist_calculation`] this does **not** enqueue a sync-outbox row: a
+    /// received event is recorded locally but never re-broadcast by this device.
+    fn persist_received_calculation(&self, entry: &CalculationEntry, warnings: &mut Vec<String>) {
+        let connection = match Connection::open(&self.path) {
+            Ok(connection) => connection,
+            Err(error) => {
+                push_warning_once(
+                    warnings,
+                    format!("SQLite open failed while persisting received event: {error}"),
+                );
+                return;
+            }
+        };
+
+        if let Err(error) = connection.execute(
+            "
+      INSERT OR REPLACE INTO calculations
+        (id, origin_device_id, expression, result, trusted, created_at_iso)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+      ",
+            params![
+                entry.id,
+                entry.origin_device_id,
+                entry.expression,
+                entry.result,
+                if entry.trusted { 1 } else { 0 },
+                entry.created_at_iso
+            ],
+        ) {
+            push_warning_once(
+                warnings,
+                format!("SQLite received-calculation persist failed: {error}"),
+            );
+        }
+    }
+
     fn pending_outbox_count(&self, warnings: &mut Vec<String>) -> usize {
         let connection = match Connection::open(&self.path) {
             Ok(connection) => connection,
@@ -1201,10 +1478,17 @@ fn sign_calculation_event(
     identity: &NativeIdentity,
     entry: &CalculationEntry,
 ) -> std::result::Result<SignedEnvelope, String> {
+    // Embed the public key (`jwk`) so a *receiving* device can verify the
+    // signature and holder binding without a pre-shared key or PKI: it verifies
+    // with the embedded key, then checks the origin device id equals the
+    // fingerprint of that key. `kid` remains the fingerprint for quick display.
+    let public_key_b64 =
+        URL_SAFE_NO_PAD.encode(identity.signing_key.verifying_key().as_bytes());
     let protected = json!({
       "alg": "EdDSA",
       "typ": "calc-event+jws",
       "kid": identity.public_key_fingerprint,
+      "jwk": public_key_b64,
     });
     let payload = serde_json::to_value(entry).map_err(|error| error.to_string())?;
     let protected_b64 =
@@ -1261,6 +1545,60 @@ fn validate_signed_calculation_event(
     Ok(ValidationSummary::local_event_valid(
         "Local calculation event signature and holder binding verified",
     ))
+}
+
+/// Verify a `SignedEnvelope` received from another device. Unlike
+/// [`validate_signed_calculation_event`], the signer is a *peer*, so the key is
+/// taken from the envelope's embedded `jwk` and holder binding is checked
+/// against the fingerprint of that same key. Returns the verified event.
+fn verify_received_calculation_event(
+    payload: &[u8],
+) -> std::result::Result<CalculationEntry, String> {
+    let envelope: SignedEnvelope = serde_json::from_slice(payload)
+        .map_err(|error| format!("Invalid received signed envelope: {error}"))?;
+
+    let protected_bytes = URL_SAFE_NO_PAD
+        .decode(&envelope.protected)
+        .map_err(|error| format!("Invalid protected header encoding: {error}"))?;
+    let protected: Value = serde_json::from_slice(&protected_bytes)
+        .map_err(|error| format!("Invalid protected header: {error}"))?;
+    let jwk_b64 = protected
+        .get("jwk")
+        .and_then(|value| value.as_str())
+        .ok_or_else(|| "Received event is missing the embedded public key".to_string())?;
+    let key_bytes = URL_SAFE_NO_PAD
+        .decode(jwk_b64)
+        .map_err(|error| format!("Invalid embedded public key encoding: {error}"))?;
+    let key_array: [u8; 32] = key_bytes
+        .try_into()
+        .map_err(|_| "Invalid embedded public key length".to_string())?;
+    let verifying_key = VerifyingKey::from_bytes(&key_array)
+        .map_err(|error| format!("Invalid embedded public key: {error}"))?;
+
+    let signing_input = format!("{}.{}", envelope.protected, envelope.payload);
+    let signature_bytes = URL_SAFE_NO_PAD
+        .decode(&envelope.signature)
+        .map_err(|error| format!("Invalid received signature encoding: {error}"))?;
+    let signature_array: [u8; 64] = signature_bytes
+        .try_into()
+        .map_err(|_| "Invalid received signature length".to_string())?;
+    let signature = Signature::from_bytes(&signature_array);
+    verifying_key
+        .verify(signing_input.as_bytes(), &signature)
+        .map_err(|error| format!("Received event signature verification failed: {error}"))?;
+
+    let payload_bytes = URL_SAFE_NO_PAD
+        .decode(&envelope.payload)
+        .map_err(|error| format!("Invalid received payload encoding: {error}"))?;
+    let entry: CalculationEntry = serde_json::from_slice(&payload_bytes)
+        .map_err(|error| format!("Invalid received payload: {error}"))?;
+
+    let expected_device_id = format!("native-{}", fingerprint_public_key(&verifying_key));
+    if entry.origin_device_id != expected_device_id {
+        return Err("Received event failed holder key binding".to_string());
+    }
+
+    Ok(entry)
 }
 
 fn consume_sync_outbox(state: &mut RoomState, storage: &NativeStorage) {
@@ -1390,8 +1728,10 @@ fn connect_ble_peer(peer_id: &str) -> std::result::Result<(), String> {
         .map_err(|error| format!("Invalid calculator service UUID: {error}"))?;
     let rx_uuid = Uuid::parse_str(ble::CALCULATOR_RX_CHARACTERISTIC_UUID)
         .map_err(|error| format!("Invalid calculator RX characteristic UUID: {error}"))?;
+    let tx_uuid = Uuid::parse_str(ble::CALCULATOR_TX_CHARACTERISTIC_UUID)
+        .map_err(|error| format!("Invalid calculator TX characteristic UUID: {error}"))?;
 
-    ble_central::connect(address, service_uuid, rx_uuid)
+    ble_central::connect(address, service_uuid, rx_uuid, tx_uuid)
 }
 
 fn parse_calculator_advertisement(
@@ -1689,10 +2029,13 @@ fn is_database_path(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        calculate_expression, chunk_payload, is_database_path, merge_discovered_peers,
-        parse_local_name_advertisement, peer_from_advertisement, reassemble_chunks,
-        room_from_advertisement, PeerSummary,
+        calculate_expression, chunk_payload, identity_from_signing_key, is_database_path,
+        merge_discovered_peers, parse_local_name_advertisement, peer_from_advertisement,
+        reassemble_chunks, room_from_advertisement, sign_calculation_event,
+        verify_received_calculation_event, CalculationEntry, PeerSummary, SigningKey,
+        BLE_CHUNK_PAYLOAD_SIZE, BLE_MAX_FRAME_BYTES,
     };
+    use rand_core::OsRng;
     use std::path::Path;
 
     #[test]
@@ -1780,6 +2123,82 @@ mod tests {
         assert_eq!(room.rssi, Some(-61));
         assert_eq!(room.name, "Desk Calculator");
         assert_eq!(room.host_device_id, "ble-AA-BB");
+    }
+
+    fn test_identity() -> super::NativeIdentity {
+        identity_from_signing_key(SigningKey::generate(&mut OsRng), false)
+    }
+
+    fn test_entry(identity: &super::NativeIdentity) -> CalculationEntry {
+        CalculationEntry {
+            id: "evt-round-trip".to_string(),
+            origin_device_id: format!("native-{}", identity.public_key_fingerprint),
+            expression: "2 + 2".to_string(),
+            result: "4".to_string(),
+            trusted: false,
+            created_at_iso: "2026-01-01T00:00:00Z".to_string(),
+        }
+    }
+
+    #[test]
+    fn verifies_received_signed_event_round_trip() {
+        let identity = test_identity();
+        let entry = test_entry(&identity);
+        let envelope = sign_calculation_event(&identity, &entry).expect("sign");
+        let bytes = serde_json::to_vec(&envelope).expect("serialize envelope");
+
+        let verified = verify_received_calculation_event(&bytes).expect("verify");
+        assert_eq!(verified.id, "evt-round-trip");
+        assert_eq!(verified.result, "4");
+        assert_eq!(verified.origin_device_id, entry.origin_device_id);
+    }
+
+    #[test]
+    fn rejects_received_event_whose_origin_is_not_the_signer() {
+        let identity = test_identity();
+        // Sign a self-consistent envelope, but claim a different origin device:
+        // the signature verifies, holder binding must not.
+        let mut entry = test_entry(&identity);
+        entry.origin_device_id = "native-someoneelse".to_string();
+        let envelope = sign_calculation_event(&identity, &entry).expect("sign");
+        let bytes = serde_json::to_vec(&envelope).expect("serialize envelope");
+
+        let error = verify_received_calculation_event(&bytes).expect_err("must reject");
+        assert!(error.contains("holder key binding"), "unexpected error: {error}");
+    }
+
+    #[test]
+    fn rejects_received_event_with_tampered_payload() {
+        let identity = test_identity();
+        let entry = test_entry(&identity);
+        let mut envelope = sign_calculation_event(&identity, &entry).expect("sign");
+        // Flip the payload so the signature no longer matches.
+        envelope.payload.push_str("AA");
+        let bytes = serde_json::to_vec(&envelope).expect("serialize envelope");
+
+        let error = verify_received_calculation_event(&bytes).expect_err("must reject");
+        assert!(
+            error.contains("signature verification failed") || error.contains("payload"),
+            "unexpected error: {error}"
+        );
+    }
+
+    #[test]
+    fn worst_case_frame_fits_mtu_budget() {
+        // A full-size chunk with a UUID-length message id is the largest single
+        // frame we ever put on the wire; it must stay within the 512-byte budget.
+        let message_id = "123e4567-e89b-12d3-a456-426614174000".to_string();
+        let payload = vec![0xABu8; BLE_CHUNK_PAYLOAD_SIZE];
+        let chunks = chunk_payload(message_id, &payload);
+        assert_eq!(chunks.len(), 1);
+        for chunk in &chunks {
+            let frame = serde_json::to_vec(chunk).expect("frame");
+            assert!(
+                frame.len() <= BLE_MAX_FRAME_BYTES,
+                "framed chunk is {} bytes, over the {BLE_MAX_FRAME_BYTES} budget",
+                frame.len()
+            );
+        }
     }
 
     #[test]
