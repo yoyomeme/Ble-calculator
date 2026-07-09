@@ -14,7 +14,7 @@
 //! permission), so it is exercised structurally here and on-device separately.
 
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use dispatch2::{DispatchQueue, DispatchQueueAttr, DispatchRetained};
@@ -31,6 +31,14 @@ use objc2_foundation::{NSArray, NSData, NSError, NSMutableDictionary, NSString};
 
 use super::{BlePeripheral, PeripheralConfig};
 
+/// Upper bound on queued outbound messages retained for a not-yet-subscribed
+/// host. A guest can calculate before the host connects, but an absent host
+/// must not grow the queue without bound; the oldest whole messages are dropped
+/// (and surfaced as an error) past this cap. Message-granular so a drop never
+/// leaves a half-sent chunk set the receiver can't reassemble; mirrors the
+/// inbound `BLE_MAX_INFLIGHT_MESSAGES` cap.
+const MAX_OUTBOUND_MESSAGES: usize = 64;
+
 /// Confines a non-`Send` value to the serial CB queue. Sound because every
 /// access happens on that single queue.
 struct AssertSend<T>(T);
@@ -44,11 +52,20 @@ struct Shared {
     powered_on: AtomicBool,
     /// True while at least one central is subscribed to the TX characteristic.
     subscribed: AtomicBool,
+    /// The subscribed central's `maximumUpdateValueLength` in bytes, captured in
+    /// `didSubscribeToCharacteristic`. Notifications larger than this are never
+    /// deliverable (`updateValue` fails without ever signalling ready), so
+    /// `drain_outbound` drops oversized frames loudly instead of stalling.
+    /// `0` = no subscriber observed yet.
+    max_update_len: AtomicUsize,
     inbound: Mutex<Vec<Vec<u8>>>,
-    /// Frames waiting to be notified to the subscribed host (guest -> host).
-    /// Drained on the CB queue; a full CB notify queue re-drains on
+    /// Messages waiting to be notified to the subscribed host (guest -> host),
+    /// each a queue of that message's chunk frames — grouped so overflow and
+    /// undeliverable-frame drops always discard whole messages, never a partial
+    /// chunk set the receiver could not reassemble. Drained on the CB queue; a
+    /// full CB notify queue re-drains on
     /// `peripheralManagerIsReadyToUpdateSubscribers`.
-    outbound: Mutex<VecDeque<Vec<u8>>>,
+    outbound: Mutex<VecDeque<VecDeque<Vec<u8>>>>,
     last_error: Mutex<Option<String>>,
     /// The config we want to be advertising, if any.
     pending_config: Mutex<Option<PeripheralConfig>>,
@@ -80,6 +97,7 @@ impl MacosPeripheral {
                 advertising: AtomicBool::new(false),
                 powered_on: AtomicBool::new(false),
                 subscribed: AtomicBool::new(false),
+                max_update_len: AtomicUsize::new(0),
                 inbound: Mutex::new(Vec::new()),
                 outbound: Mutex::new(VecDeque::new()),
                 last_error: Mutex::new(None),
@@ -186,19 +204,23 @@ impl BlePeripheral for MacosPeripheral {
 
         // Advertising is asynchronous (service add -> start -> didStartAdvertising).
         // Wait briefly for the delegate to confirm so we return an accurate result
-        // instead of an optimistic Ok (review gap #7). If neither confirmation nor
-        // error arrives within the window (e.g. Bluetooth still powering on), treat
-        // it as pending Ok — the runtime status surfaces the eventual outcome.
-        for _ in 0..30 {
+        // instead of an optimistic Ok (review gap #7). The window is kept short
+        // (~200 ms) because this blocks the calling Node worker thread; if neither
+        // confirmation nor error arrives in time (e.g. Bluetooth still powering
+        // on), treat it as pending Ok — the eventual outcome surfaces on the next
+        // poll via `take_last_error` / `is_advertising`.
+        for _ in 0..8 {
             if self.shared.advertising.load(Ordering::SeqCst) {
                 return Ok(());
             }
-            if let Ok(slot) = self.shared.last_error.lock() {
-                if let Some(error) = slot.as_ref() {
-                    return Err(error.clone());
+            // Take (not peek) so the error is not re-surfaced by the next
+            // `take_last_error` poll after we already returned it here.
+            if let Ok(mut slot) = self.shared.last_error.lock() {
+                if let Some(error) = slot.take() {
+                    return Err(error);
                 }
             }
-            std::thread::sleep(std::time::Duration::from_millis(50));
+            std::thread::sleep(std::time::Duration::from_millis(25));
         }
         Ok(())
     }
@@ -253,7 +275,16 @@ impl BlePeripheral for MacosPeripheral {
                 .outbound
                 .lock()
                 .map_err(|_| "BLE peripheral outbound queue lock was poisoned".to_string())?;
-            queue.extend(frames.iter().cloned());
+            // One `notify` call = one message's chunk frames = one group.
+            queue.push_back(frames.iter().cloned().collect());
+            let overflow = queue.len().saturating_sub(MAX_OUTBOUND_MESSAGES);
+            if overflow > 0 {
+                queue.drain(..overflow);
+                self.shared.set_error(format!(
+                    "BLE notify queue overflowed; dropped the {overflow} oldest queued message(s). \
+                     Events queued before a host subscribes are kept up to {MAX_OUTBOUND_MESSAGES} messages."
+                ));
+            }
         }
         // Delivery happens on the CB queue; it flushes what it can now and the
         // `isReadyToUpdateSubscribers` callback flushes the rest under backpressure.
@@ -263,6 +294,21 @@ impl BlePeripheral for MacosPeripheral {
 
     fn has_subscriber(&self) -> bool {
         self.shared.subscribed.load(Ordering::SeqCst)
+    }
+
+    fn take_last_error(&mut self) -> Option<String> {
+        self.shared
+            .last_error
+            .lock()
+            .ok()
+            .and_then(|mut slot| slot.take())
+    }
+
+    fn max_notify_frame_len(&self) -> Option<usize> {
+        match self.shared.max_update_len.load(Ordering::SeqCst) {
+            0 => None,
+            len => Some(len),
+        }
     }
 }
 
@@ -293,7 +339,27 @@ fn drain_outbound(shared: &Arc<Shared>) {
         Err(_) => return,
     };
 
-    while let Some(front) = outbound.front() {
+    let max_update_len = shared.max_update_len.load(Ordering::SeqCst);
+    while let Some(group) = outbound.front_mut() {
+        let Some(front) = group.front() else {
+            outbound.pop_front();
+            continue;
+        };
+        // A notification larger than the subscribed central's
+        // `maximumUpdateValueLength` can never be delivered: `updateValue`
+        // keeps returning false and `isReadyToUpdateSubscribers` never fires
+        // for it, which would stall every frame behind it forever. Drop the
+        // whole message (a partial chunk set can never reassemble anyway) and
+        // surface the failure instead.
+        if max_update_len > 0 && front.len() > max_update_len {
+            shared.set_error(format!(
+                "Dropped a queued BLE message with a {}-byte frame; the subscribed host accepts at most {} bytes per notification.",
+                front.len(),
+                max_update_len
+            ));
+            outbound.pop_front();
+            continue;
+        }
         let data = NSData::with_bytes(front);
         // `None` centrals => deliver to every central subscribed to this
         // characteristic. Returns false when the internal transmit queue is
@@ -301,10 +367,12 @@ fn drain_outbound(shared: &Arc<Shared>) {
         let sent = unsafe {
             manager.updateValue_forCharacteristic_onSubscribedCentrals(&data, tx, None)
         };
-        if sent {
-            outbound.pop_front();
-        } else {
+        if !sent {
             break;
+        }
+        group.pop_front();
+        if group.is_empty() {
+            outbound.pop_front();
         }
     }
 }
@@ -524,12 +592,16 @@ define_class!(
         fn did_subscribe(
             &self,
             _peripheral: &CBPeripheralManager,
-            _central: &CBCentral,
+            central: &CBCentral,
             _characteristic: &CBCharacteristic,
         ) {
             // A host subscribed to the TX characteristic: the guest -> host link
-            // is live. Flush anything already queued.
+            // is live. Capture how large each notification may be for this
+            // central (Apple: read `maximumUpdateValueLength` at runtime, never
+            // hardcode), then flush anything already queued.
             let shared = &self.ivars().shared;
+            let max_update_len = unsafe { central.maximumUpdateValueLength() };
+            shared.max_update_len.store(max_update_len, Ordering::SeqCst);
             shared.subscribed.store(true, Ordering::SeqCst);
             drain_outbound(shared);
         }
@@ -558,5 +630,54 @@ impl PeripheralDelegate {
     fn new(shared: Arc<Shared>) -> Retained<Self> {
         let this = Self::alloc().set_ivars(DelegateIvars { shared });
         unsafe { msg_send![super(this), init] }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // These tests never call `start_advertising`, so no CBPeripheralManager (and
+    // no Bluetooth permission prompt) is created: `dispatch_drain` is a no-op
+    // while the CB queue is unset, leaving frames observable in `outbound`.
+
+    #[test]
+    fn notify_overflow_drops_oldest_messages_and_surfaces_error() {
+        let mut peripheral = MacosPeripheral::new();
+        // Each notify call queues one message (of two chunk frames here).
+        for message in 0..MAX_OUTBOUND_MESSAGES + 10 {
+            let frames = vec![
+                message.to_le_bytes().to_vec(),
+                message.to_le_bytes().to_vec(),
+            ];
+            peripheral.notify(&frames).expect("notify should queue frames");
+        }
+
+        let queue = peripheral.shared.outbound.lock().expect("outbound lock");
+        assert_eq!(queue.len(), MAX_OUTBOUND_MESSAGES);
+        // Whole oldest messages were dropped; the front group is message #10,
+        // still holding both of its frames.
+        let front = queue.front().expect("front message");
+        assert_eq!(front.len(), 2);
+        assert_eq!(front.front(), Some(&10usize.to_le_bytes().to_vec()));
+        drop(queue);
+
+        let error = peripheral.take_last_error().expect("overflow surfaces an error");
+        assert!(error.contains("oldest queued message"), "unexpected error: {error}");
+        // Take semantics: the error is reported once, not on every poll.
+        assert_eq!(peripheral.take_last_error(), None);
+    }
+
+    #[test]
+    fn notify_below_cap_keeps_every_message_and_reports_no_error() {
+        let mut peripheral = MacosPeripheral::new();
+        assert_eq!(peripheral.notify(&[vec![1u8], vec![2u8]]), Ok(2));
+        assert_eq!(peripheral.notify(&[vec![3u8]]), Ok(1));
+
+        let queue = peripheral.shared.outbound.lock().expect("outbound lock");
+        assert_eq!(queue.len(), 2);
+        assert_eq!(queue.front().map(|group| group.len()), Some(2));
+        drop(queue);
+        assert_eq!(peripheral.take_last_error(), None);
     }
 }

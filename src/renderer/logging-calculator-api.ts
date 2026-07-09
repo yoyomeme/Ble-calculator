@@ -74,10 +74,20 @@ export function logStartupEnvironment(hasNativeBridge: boolean): void {
   );
 }
 
+export type LoggingCalculatorApi = NativeCalculatorApi & {
+  /**
+   * `getState` for the background receive pump. Unlike the user-initiated
+   * commands it does not log the call itself — only diagnostics that changed
+   * (new warnings, BLE error transitions) — so a ~1s poll stays quiet.
+   */
+  pollState(): Promise<RoomState>;
+};
+
 export function createLoggingCalculatorApi(
   api: NativeCalculatorApi
-): NativeCalculatorApi {
+): LoggingCalculatorApi {
   const loggedWarnings = new Set<string>();
+  const loggedPollErrors = new Set<string>();
   let loggedCapabilities = false;
   // `undefined` = not yet observed, so the first observed value is logged too.
   let lastBleError: string | null | undefined = undefined;
@@ -89,7 +99,10 @@ export function createLoggingCalculatorApi(
       `✓ ${action} (${Math.round(elapsedMs)}ms)`,
       summarizeState(state)
     );
+    processDiagnostics(state);
+  }
 
+  function processDiagnostics(state: RoomState): void {
     if (!loggedCapabilities && state.nativeCapabilities) {
       loggedCapabilities = true;
       logStore.push(
@@ -141,8 +154,26 @@ export function createLoggingCalculatorApi(
     }
   }
 
+  async function pollState(): Promise<RoomState> {
+    try {
+      const state = await api.getState();
+      processDiagnostics(state);
+      return state;
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "Unexpected native bridge error";
+      // Log each distinct poll failure once, not on every tick.
+      if (!loggedPollErrors.has(message)) {
+        loggedPollErrors.add(message);
+        logStore.push("error", "action", `✗ background poll failed: ${message}`);
+      }
+      throw caught;
+    }
+  }
+
   return {
     getState: () => logged("getState", undefined, () => api.getState()),
+    pollState,
     createRoom: (request: CreateRoomRequest) =>
       logged("createRoom", request, () => api.createRoom(request)),
     startScanning: () => logged("startScanning", undefined, () => api.startScanning()),
