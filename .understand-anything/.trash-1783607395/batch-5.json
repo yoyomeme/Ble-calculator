@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Main project documentation covering the BLE Calculator Desktop Electron app architecture, commands, visual UI pass workflow, and native Rust module status with BLE sync capabilities.",
+      "tags": ["documentation", "entry-point", "overview", "architecture"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:electron-builder.yml",
+      "type": "config",
+      "name": "electron-builder.yml",
+      "filePath": "electron-builder.yml",
+      "summary": "Electron Builder configuration for packaging the Evolve Calc desktop app, defining app metadata, file inclusion patterns, asar unpack rules, and platform-specific targets (DMG for macOS, NSIS for Windows, AppImage/deb for Linux) with Bluetooth usage descriptions.",
+      "tags": ["configuration", "infrastructure", "deployment", "packaging", "electron"],
+      "complexity": "moderate",
+      "languageNotes": "Multi-platform packaging config with platform-specific overrides and macOS Bluetooth permission strings required for CoreBluetooth BLE operations."
+    },
+    {
+      "id": "document:evolve-calculator-theme.md",
+      "type": "document",
+      "name": "evolve-calculator-theme.md",
+      "filePath": "evolve-calculator-theme.md",
+      "summary": "Comprehensive UI theme specification extracting the Evolve brand identity (warm colors, condensed type, cream/charcoal palette) and applying it to a desktop calculator layout with detailed CSS tokens, component sketches, and interaction guidelines.",
+      "tags": ["documentation", "design", "theme", "ui-specification", "css"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "index.html",
+      "summary": "HTML entry point for the Electron renderer process with strict Content Security Policy, mounting the React app root and loading the main renderer TypeScript module.",
+      "tags": ["entry-point", "markup", "renderer", "csp"],
+      "complexity": "simple",
+      "languageNotes": "Restrictive CSP limits sources to self and the Vite dev server at 127.0.0.1:5173, allowing only inline styles for HMR."
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "NPM package configuration for the BLE Calculator Desktop app, defining dependencies (React, lucide-react), dev tooling (TypeScript, Vite, Vitest, Electron), and build scripts for development, native module compilation, testing, and cross-platform packaging.",
+      "tags": ["configuration", "build-system", "dependencies", "electron"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "tsconfig.json",
+      "summary": "TypeScript compiler configuration with strict mode enabled, targeting ES2022 with NodeNext module resolution, React JSX transform, and indexed access safety for the Electron + React desktop application.",
+      "tags": ["configuration", "typescript", "build-system"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:package.json",
+      "target": "config:tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:package.json",
+      "target": "config:electron-builder.yml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:tsconfig.json",
+      "target": "file:src",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:index.html",
+      "target": "file:src/renderer/main.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:electron-builder.yml",
+      "target": "file:dist/src/electron",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "config:electron-builder.yml",
+      "target": "file:dist/src/shared",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "config:electron-builder.yml",
+      "target": "file:dist/renderer",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "config:electron-builder.yml",
+      "target": "file:index.*.node",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "config:package.json",
+      "target": "file:dist/src/electron/main.js",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:src",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:evolve-calculator-theme.md",
+      "target": "file:src/renderer",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:scripts/browser-visual-ui-pass.mjs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:crates/native",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:package.json",
+      "target": "file:scripts/build-native.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:package.json",
+      "target": "file:scripts/package-platforms.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

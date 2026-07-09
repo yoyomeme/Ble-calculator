@@ -1,0 +1,267 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/electron/main.ts",
+      "type": "file",
+      "name": "main.ts",
+      "filePath": "src/electron/main.ts",
+      "summary": "Electron main process entry point that registers IPC handlers for calculator operations and creates the application window with sandbox configuration.",
+      "tags": ["entry-point", "electron", "ipc-bridge"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/electron/native-calculator.ts",
+      "type": "file",
+      "name": "native-calculator.ts",
+      "filePath": "src/electron/native-calculator.ts",
+      "summary": "Loads the native Rust napi-rs BLE calculator module from multiple candidate paths with runtime type validation, falling back to a mock implementation for development environments.",
+      "tags": ["api-loader", "native-bridge", "mock-provider"],
+      "complexity": "complex",
+      "languageNotes": "Uses createRequire to load native .node modules with graceful fallback to mock API for environments without the native extension."
+    },
+    {
+      "id": "file:src/electron/preload.ts",
+      "type": "file",
+      "name": "preload.ts",
+      "filePath": "src/electron/preload.ts",
+      "summary": "Electron preload script that exposes the calculator API to the renderer process via contextBridge, mapping all IPC channel invocations.",
+      "tags": ["ipc-bridge", "context-bridge", "preload"],
+      "complexity": "simple",
+      "languageNotes": "Uses contextBridge.exposeInMainWorld to safely expose IPC-bound API without direct Node.js access in renderer."
+    },
+    {
+      "id": "file:src/renderer/global.d.ts",
+      "type": "file",
+      "name": "global.d.ts",
+      "filePath": "src/renderer/global.d.ts",
+      "summary": "TypeScript global declaration that extends the Window interface with the calculator API exposed by the preload script.",
+      "tags": ["type-definition", "typescript", "global-augmentation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/calculator-api.ts",
+      "type": "file",
+      "name": "calculator-api.ts",
+      "filePath": "src/shared/calculator-api.ts",
+      "summary": "Shared TypeScript types and IPC channel names defining the calculator API contract between Electron main and renderer processes.",
+      "tags": ["type-definition", "api-contract", "shared-types"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/electron/main.ts:registerCalculatorIpc",
+      "type": "function",
+      "name": "registerCalculatorIpc",
+      "filePath": "src/electron/main.ts",
+      "lineRange": [15, 38],
+      "summary": "Registers IPC handlers for all calculator API channels, bridging renderer requests to the native calculator implementation.",
+      "tags": ["ipc-handler", "registration", "bridge"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/electron/main.ts:createWindow",
+      "type": "function",
+      "name": "createWindow",
+      "filePath": "src/electron/main.ts",
+      "lineRange": [40, 63],
+      "summary": "Creates and configures the Electron BrowserWindow with sandbox security, loading either dev server or production bundle.",
+      "tags": ["window-creation", "electron", "sandbox"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/electron/native-calculator.ts:getCalculatorApi",
+      "type": "function",
+      "name": "getCalculatorApi",
+      "filePath": "src/electron/native-calculator.ts",
+      "lineRange": [26, 33],
+      "summary": "Singleton accessor that returns the cached native API, loading it on first use with fallback to mock implementation.",
+      "tags": ["singleton", "api-loader", "exported"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/electron/native-calculator.ts:loadNativeApi",
+      "type": "function",
+      "name": "loadNativeApi",
+      "filePath": "src/electron/native-calculator.ts",
+      "lineRange": [35, 51],
+      "summary": "Attempts to load the native Rust module from multiple candidate paths with runtime interface validation.",
+      "tags": ["native-loader", "validation", "fallback"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/electron/native-calculator.ts:createMockCalculatorApi",
+      "type": "function",
+      "name": "createMockCalculatorApi",
+      "filePath": "src/electron/native-calculator.ts",
+      "lineRange": [76, 221],
+      "summary": "Creates a complete mock implementation of the calculator API with in-memory state for development and testing without the native module.",
+      "tags": ["mock", "development", "in-memory-state"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/electron/native-calculator.ts:cloneState",
+      "type": "function",
+      "name": "cloneState",
+      "filePath": "src/electron/native-calculator.ts",
+      "lineRange": [223, 225],
+      "summary": "Deep clones the RoomState using JSON serialization to prevent state mutation across API calls.",
+      "tags": ["utility", "immutability", "state-cloning"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/electron/main.ts",
+      "target": "file:src/electron/native-calculator.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/electron/main.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "file:src/shared/expression.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/electron/preload.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/global.d.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/electron/main.ts",
+      "target": "function:src/electron/main.ts:registerCalculatorIpc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/electron/main.ts",
+      "target": "function:src/electron/main.ts:createWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "function:src/electron/native-calculator.ts:getCalculatorApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "function:src/electron/native-calculator.ts:getCalculatorApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "function:src/electron/native-calculator.ts:loadNativeApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "function:src/electron/native-calculator.ts:createMockCalculatorApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/electron/native-calculator.ts",
+      "target": "function:src/electron/native-calculator.ts:cloneState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/shared/calculator-api.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/electron/main.ts:registerCalculatorIpc",
+      "target": "function:src/electron/native-calculator.ts:getCalculatorApi",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/electron/main.ts:createWindow",
+      "target": "file:src/electron/preload.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "function:src/electron/native-calculator.ts:getCalculatorApi",
+      "target": "function:src/electron/native-calculator.ts:loadNativeApi",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/electron/native-calculator.ts:getCalculatorApi",
+      "target": "function:src/electron/native-calculator.ts:createMockCalculatorApi",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/electron/native-calculator.ts:createMockCalculatorApi",
+      "target": "function:src/shared/expression.ts:calculateExpression",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/electron/native-calculator.ts:createMockCalculatorApi",
+      "target": "function:src/electron/native-calculator.ts:cloneState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/electron/preload.ts",
+      "target": "file:src/electron/main.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/renderer/global.d.ts",
+      "target": "file:src/electron/preload.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

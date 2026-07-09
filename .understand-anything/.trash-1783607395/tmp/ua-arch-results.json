@@ -1,0 +1,501 @@
+{
+  "scriptCompleted": true,
+  "directoryGroups": {
+    "crates": [
+      "file:crates/native/src/ble/mod.rs",
+      "file:crates/native/src/ble/peripheral_linux.rs",
+      "file:crates/native/src/ble/peripheral_macos.rs",
+      "file:crates/native/src/ble/peripheral_stub.rs",
+      "file:crates/native/src/ble/peripheral_windows.rs",
+      "file:crates/native/src/ble_central.rs",
+      "file:crates/native/src/lib.rs",
+      "file:crates/native/build.rs",
+      "config:crates/native/Cargo.toml",
+      "document:crates/native/README.md"
+    ],
+    "src": [
+      "file:src/renderer/browser-calculator.ts",
+      "file:src/renderer/log-store.ts",
+      "file:src/renderer/logging-calculator-api.ts",
+      "file:src/renderer/main.tsx",
+      "file:src/renderer/index.html",
+      "file:src/renderer/styles.css",
+      "file:src/shared/expression.test.ts",
+      "file:src/shared/expression.ts",
+      "file:src/electron/main.ts",
+      "file:src/electron/native-calculator.ts",
+      "file:src/electron/preload.ts",
+      "file:src/shared/calculator-api.ts",
+      "file:src/renderer/global.d.ts"
+    ],
+    "index.html": [
+      "file:index.html"
+    ],
+    ".understand-anything": [
+      "file:.understand-anything/.understandignore"
+    ],
+    "artifacts": [
+      "file:artifacts/browser-visual-ui-pass/report.json"
+    ],
+    "eslint.config.mjs": [
+      "file:eslint.config.mjs"
+    ],
+    "scripts": [
+      "file:scripts/browser-visual-ui-pass.mjs",
+      "file:scripts/build-mac-arm64.command",
+      "file:scripts/build-native-optional.mjs",
+      "file:scripts/build-native.mjs",
+      "file:scripts/next-version.mjs",
+      "file:scripts/package-platforms.mjs",
+      "file:scripts/release-all.bat",
+      "file:scripts/release-all.command",
+      "file:scripts/visual-ui-pass.mjs",
+      "file:scripts/visual-ui-screenshot-app.cjs"
+    ],
+    "electron-builder.yml": [
+      "config:electron-builder.yml"
+    ],
+    "package.json": [
+      "config:package.json"
+    ],
+    "tsconfig.json": [
+      "config:tsconfig.json"
+    ],
+    "vite.config.mts": [
+      "config:vite.config.mts"
+    ],
+    "vitest.config.mts": [
+      "config:vitest.config.mts"
+    ],
+    "README.md": [
+      "document:README.md"
+    ],
+    "evolve-calculator-theme.md": [
+      "document:evolve-calculator-theme.md"
+    ],
+    "docs": [
+      "document:docs/calculator-architecture.md",
+      "document:docs/developer-onboarding.md",
+      "document:docs/runtime-native-and-security.md",
+      "document:docs/ui-layout-and-visual-pass.md"
+    ],
+    ".github": [
+      "pipeline:.github/workflows/release.yml"
+    ]
+  },
+  "nodeTypeGroups": {
+    "file": [
+      "file:crates/native/src/ble/mod.rs",
+      "file:crates/native/src/ble/peripheral_linux.rs",
+      "file:crates/native/src/ble/peripheral_macos.rs",
+      "file:crates/native/src/ble/peripheral_stub.rs",
+      "file:crates/native/src/ble/peripheral_windows.rs",
+      "file:crates/native/src/ble_central.rs",
+      "file:crates/native/src/lib.rs",
+      "file:crates/native/build.rs",
+      "file:src/renderer/browser-calculator.ts",
+      "file:src/renderer/log-store.ts",
+      "file:src/renderer/logging-calculator-api.ts",
+      "file:src/renderer/main.tsx",
+      "file:src/renderer/index.html",
+      "file:src/renderer/styles.css",
+      "file:src/shared/expression.test.ts",
+      "file:src/shared/expression.ts",
+      "file:src/electron/main.ts",
+      "file:src/electron/native-calculator.ts",
+      "file:src/electron/preload.ts",
+      "file:src/shared/calculator-api.ts",
+      "file:index.html",
+      "file:src/renderer/global.d.ts",
+      "file:.understand-anything/.understandignore",
+      "file:artifacts/browser-visual-ui-pass/report.json",
+      "file:eslint.config.mjs",
+      "file:scripts/browser-visual-ui-pass.mjs",
+      "file:scripts/build-mac-arm64.command",
+      "file:scripts/build-native-optional.mjs",
+      "file:scripts/build-native.mjs",
+      "file:scripts/next-version.mjs",
+      "file:scripts/package-platforms.mjs",
+      "file:scripts/release-all.bat",
+      "file:scripts/release-all.command",
+      "file:scripts/visual-ui-pass.mjs",
+      "file:scripts/visual-ui-screenshot-app.cjs"
+    ],
+    "config": [
+      "config:electron-builder.yml",
+      "config:package.json",
+      "config:tsconfig.json",
+      "config:crates/native/Cargo.toml",
+      "config:vite.config.mts",
+      "config:vitest.config.mts"
+    ],
+    "document": [
+      "document:README.md",
+      "document:evolve-calculator-theme.md",
+      "document:docs/calculator-architecture.md",
+      "document:docs/developer-onboarding.md",
+      "document:docs/runtime-native-and-security.md",
+      "document:docs/ui-layout-and-visual-pass.md",
+      "document:crates/native/README.md"
+    ],
+    "service": [],
+    "pipeline": [
+      "pipeline:.github/workflows/release.yml"
+    ],
+    "table": [],
+    "schema": [],
+    "resource": [],
+    "endpoint": []
+  },
+  "crossCategoryEdges": [
+    {
+      "fromType": "document->file",
+      "toType": "documents",
+      "edgeType": "documents",
+      "count": 30
+    },
+    {
+      "fromType": "file->file",
+      "toType": "configures",
+      "edgeType": "configures",
+      "count": 5
+    },
+    {
+      "fromType": "file->file",
+      "toType": "depends_on",
+      "edgeType": "depends_on",
+      "count": 5
+    },
+    {
+      "fromType": "file->file",
+      "toType": "related",
+      "edgeType": "related",
+      "count": 3
+    },
+    {
+      "fromType": "document->document",
+      "toType": "documents",
+      "edgeType": "documents",
+      "count": 3
+    },
+    {
+      "fromType": "config->file",
+      "toType": "configures",
+      "edgeType": "configures",
+      "count": 2
+    },
+    {
+      "fromType": "config->config",
+      "toType": "depends_on",
+      "edgeType": "depends_on",
+      "count": 2
+    },
+    {
+      "fromType": "config->file",
+      "toType": "depends_on",
+      "edgeType": "depends_on",
+      "count": 2
+    },
+    {
+      "fromType": "file->config",
+      "toType": "depends_on",
+      "edgeType": "depends_on",
+      "count": 2
+    },
+    {
+      "fromType": "pipeline->file",
+      "toType": "deploys",
+      "edgeType": "deploys",
+      "count": 1
+    },
+    {
+      "fromType": "document->config",
+      "toType": "documents",
+      "edgeType": "documents",
+      "count": 1
+    }
+  ],
+  "interGroupImports": [
+    {
+      "from": "scripts",
+      "to": "src",
+      "count": 1
+    }
+  ],
+  "intraGroupDensity": {
+    "crates": {
+      "internalEdges": 6,
+      "totalEdges": 12,
+      "density": 0.5
+    },
+    "src": {
+      "internalEdges": 17,
+      "totalEdges": 35,
+      "density": 0.4857142857142857
+    },
+    "index.html": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    ".understand-anything": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "artifacts": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "eslint.config.mjs": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "scripts": {
+      "internalEdges": 5,
+      "totalEdges": 11,
+      "density": 0.45454545454545453
+    },
+    "electron-builder.yml": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "package.json": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "tsconfig.json": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "vite.config.mts": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "vitest.config.mts": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "README.md": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "evolve-calculator-theme.md": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    "docs": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    },
+    ".github": {
+      "internalEdges": 0,
+      "totalEdges": 0,
+      "density": 0
+    }
+  },
+  "patternMatches": {
+    "crates": "service",
+    "src": "types",
+    "artifacts": "infrastructure",
+    "eslint.config.mjs": "config",
+    "scripts": "infrastructure",
+    "electron-builder.yml": "config",
+    "package.json": "config",
+    "tsconfig.json": "config",
+    "vite.config.mts": "config",
+    "vitest.config.mts": "config",
+    "README.md": "documentation",
+    "evolve-calculator-theme.md": "documentation",
+    "docs": "documentation",
+    ".github": "ci-cd"
+  },
+  "deploymentTopology": {
+    "hasDockerfile": false,
+    "hasCompose": false,
+    "hasK8s": false,
+    "hasTerraform": false,
+    "hasCI": true,
+    "infraFiles": [
+      "scripts/release-all.bat",
+      "scripts/release-all.command",
+      ".github/workflows/release.yml"
+    ]
+  },
+  "dataPipeline": {
+    "schemaFiles": [],
+    "migrationFiles": [],
+    "dataModelFiles": [],
+    "apiHandlerFiles": []
+  },
+  "docCoverage": {
+    "groupsWithDocs": 4,
+    "totalGroups": 16,
+    "coverageRatio": 0.25,
+    "undocumentedGroups": [
+      "src",
+      "index.html",
+      ".understand-anything",
+      "artifacts",
+      "eslint.config.mjs",
+      "scripts",
+      "electron-builder.yml",
+      "package.json",
+      "tsconfig.json",
+      "vite.config.mts",
+      "vitest.config.mts",
+      ".github"
+    ]
+  },
+  "dependencyDirection": [
+    {
+      "dependent": "scripts",
+      "dependsOn": "src",
+      "strength": 1
+    }
+  ],
+  "fileStats": {
+    "totalFileNodes": 49,
+    "filesPerGroup": {
+      "crates": 10,
+      "src": 13,
+      "index.html": 1,
+      ".understand-anything": 1,
+      "artifacts": 1,
+      "eslint.config.mjs": 1,
+      "scripts": 10,
+      "electron-builder.yml": 1,
+      "package.json": 1,
+      "tsconfig.json": 1,
+      "vite.config.mts": 1,
+      "vitest.config.mts": 1,
+      "README.md": 1,
+      "evolve-calculator-theme.md": 1,
+      "docs": 4,
+      ".github": 1
+    },
+    "nodeTypeCounts": {
+      "file": 35,
+      "config": 6,
+      "document": 7,
+      "service": 0,
+      "pipeline": 1,
+      "table": 0,
+      "schema": 0,
+      "resource": 0,
+      "endpoint": 0
+    }
+  },
+  "fileFanIn": {
+    "file:crates/native/src/ble/mod.rs": 1,
+    "file:crates/native/src/ble/peripheral_linux.rs": 1,
+    "file:crates/native/src/ble/peripheral_macos.rs": 1,
+    "file:crates/native/src/ble/peripheral_stub.rs": 1,
+    "file:crates/native/src/ble/peripheral_windows.rs": 1,
+    "file:crates/native/src/ble_central.rs": 1,
+    "file:crates/native/src/lib.rs": 0,
+    "file:crates/native/build.rs": 0,
+    "file:src/renderer/browser-calculator.ts": 1,
+    "file:src/renderer/log-store.ts": 2,
+    "file:src/renderer/logging-calculator-api.ts": 1,
+    "file:src/renderer/main.tsx": 0,
+    "file:src/renderer/index.html": 1,
+    "file:src/renderer/styles.css": 1,
+    "file:src/shared/expression.test.ts": 0,
+    "file:src/shared/expression.ts": 4,
+    "file:src/electron/main.ts": 0,
+    "file:src/electron/native-calculator.ts": 1,
+    "file:src/electron/preload.ts": 0,
+    "file:src/shared/calculator-api.ts": 7,
+    "file:index.html": 0,
+    "file:src/renderer/global.d.ts": 0,
+    "file:.understand-anything/.understandignore": 0,
+    "file:artifacts/browser-visual-ui-pass/report.json": 0,
+    "file:eslint.config.mjs": 0,
+    "file:scripts/browser-visual-ui-pass.mjs": 0,
+    "file:scripts/build-mac-arm64.command": 0,
+    "file:scripts/build-native-optional.mjs": 0,
+    "file:scripts/build-native.mjs": 3,
+    "file:scripts/next-version.mjs": 0,
+    "file:scripts/package-platforms.mjs": 2,
+    "file:scripts/release-all.bat": 0,
+    "file:scripts/release-all.command": 0,
+    "file:scripts/visual-ui-pass.mjs": 0,
+    "file:scripts/visual-ui-screenshot-app.cjs": 0,
+    "config:electron-builder.yml": 0,
+    "config:package.json": 0,
+    "config:tsconfig.json": 0,
+    "config:crates/native/Cargo.toml": 0,
+    "config:vite.config.mts": 0,
+    "config:vitest.config.mts": 0,
+    "document:README.md": 0,
+    "document:evolve-calculator-theme.md": 0,
+    "document:docs/calculator-architecture.md": 0,
+    "document:docs/developer-onboarding.md": 0,
+    "document:docs/runtime-native-and-security.md": 0,
+    "document:docs/ui-layout-and-visual-pass.md": 0,
+    "document:crates/native/README.md": 0,
+    "pipeline:.github/workflows/release.yml": 0
+  },
+  "fileFanOut": {
+    "file:crates/native/src/ble/mod.rs": 4,
+    "file:crates/native/src/ble/peripheral_linux.rs": 0,
+    "file:crates/native/src/ble/peripheral_macos.rs": 0,
+    "file:crates/native/src/ble/peripheral_stub.rs": 0,
+    "file:crates/native/src/ble/peripheral_windows.rs": 0,
+    "file:crates/native/src/ble_central.rs": 0,
+    "file:crates/native/src/lib.rs": 2,
+    "file:crates/native/build.rs": 0,
+    "file:src/renderer/browser-calculator.ts": 2,
+    "file:src/renderer/log-store.ts": 0,
+    "file:src/renderer/logging-calculator-api.ts": 2,
+    "file:src/renderer/main.tsx": 6,
+    "file:src/renderer/index.html": 0,
+    "file:src/renderer/styles.css": 0,
+    "file:src/shared/expression.test.ts": 1,
+    "file:src/shared/expression.ts": 0,
+    "file:src/electron/main.ts": 2,
+    "file:src/electron/native-calculator.ts": 2,
+    "file:src/electron/preload.ts": 1,
+    "file:src/shared/calculator-api.ts": 0,
+    "file:index.html": 0,
+    "file:src/renderer/global.d.ts": 1,
+    "file:.understand-anything/.understandignore": 0,
+    "file:artifacts/browser-visual-ui-pass/report.json": 0,
+    "file:eslint.config.mjs": 0,
+    "file:scripts/browser-visual-ui-pass.mjs": 0,
+    "file:scripts/build-mac-arm64.command": 0,
+    "file:scripts/build-native-optional.mjs": 0,
+    "file:scripts/build-native.mjs": 0,
+    "file:scripts/next-version.mjs": 0,
+    "file:scripts/package-platforms.mjs": 1,
+    "file:scripts/release-all.bat": 2,
+    "file:scripts/release-all.command": 2,
+    "file:scripts/visual-ui-pass.mjs": 0,
+    "file:scripts/visual-ui-screenshot-app.cjs": 1,
+    "config:electron-builder.yml": 0,
+    "config:package.json": 0,
+    "config:tsconfig.json": 0,
+    "config:crates/native/Cargo.toml": 0,
+    "config:vite.config.mts": 0,
+    "config:vitest.config.mts": 0,
+    "document:README.md": 0,
+    "document:evolve-calculator-theme.md": 0,
+    "document:docs/calculator-architecture.md": 0,
+    "document:docs/developer-onboarding.md": 0,
+    "document:docs/runtime-native-and-security.md": 0,
+    "document:docs/ui-layout-and-visual-pass.md": 0,
+    "document:crates/native/README.md": 0,
+    "pipeline:.github/workflows/release.yml": 0
+  }
+}

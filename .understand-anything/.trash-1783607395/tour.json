@@ -1,0 +1,116 @@
+[
+  {
+    "order": 1,
+    "title": "Electron Entry Point",
+    "description": "The main process bootstraps the Electron application, registering IPC handlers for calculator operations and creating the sandboxed browser window. This is where the runtime architecture begins: the main process holds the native module and exposes a secure API to the renderer.",
+    "nodeIds": [
+      "file:src/electron/main.ts"
+    ],
+    "languageLesson": "Electron's main process runs in Node.js and creates renderer processes. The sandbox setting in webPreferences isolates the renderer from direct Node.js access, requiring IPC (Inter-Process Communication) for any privileged operations."
+  },
+  {
+    "order": 2,
+    "title": "Secure IPC Bridge",
+    "description": "The preload script runs in an isolated context between the main and renderer processes. It exposes the calculator API via contextBridge, mapping IPC channel invocations while preventing direct access to Node.js APIs. This is the security boundary: renderer processes never touch Node.js directly.",
+    "nodeIds": [
+      "file:src/electron/preload.ts",
+      "file:src/renderer/global.d.ts"
+    ],
+    "languageLesson": "Electron's contextBridge.exposeInMainWorld safely exposes APIs to the renderer. The preload script has access to Node.js APIs (ipcRenderer) but can only selectively expose them to the renderer, maintaining the principle of least privilege."
+  },
+  {
+    "order": 3,
+    "title": "API Contract",
+    "description": "The shared TypeScript types define the contract between Electron main and renderer processes. This file specifies all IPC channel names, request/response types, and the complete calculator API surface. Both ends of the IPC bridge depend on this single source of truth for type safety.",
+    "nodeIds": [
+      "file:src/shared/calculator-api.ts"
+    ],
+    "languageLesson": "Shared TypeScript types across process boundaries enable end-to-end type safety. The renderer calls window.calculator.* methods as if they were local, but the preload script transparently forwards these to IPC channels bound in the main process."
+  },
+  {
+    "order": 4,
+    "title": "Native Module Loader",
+    "description": "The native calculator loader attempts to load the Rust napi-rs module from multiple candidate paths, with runtime interface validation. If the native module is unavailable, it falls back to a mock implementation for development. This graceful fallback enables UI development before the Rust backend is built.",
+    "nodeIds": [
+      "file:src/electron/native-calculator.ts"
+    ],
+    "languageLesson": "Node.js native addons (.node files) are platform-specific binaries. The loader uses createRequire for ESM compatibility and checks for expected exports at runtime, throwing a clear error if the module interface doesn't match expectations."
+  },
+  {
+    "order": 5,
+    "title": "Rust Native Core",
+    "description": "The native lib.rs is the heart of the application: it implements cross-device calculator sync with BLE transport, SQLite persistence, keychain identity management, and JWS cryptographic signing. All napi-rs exports are defined here, bridging Rust functions to JavaScript calls through the native module loader.",
+    "nodeIds": [
+      "file:crates/native/src/lib.rs"
+    ],
+    "languageLesson": "napi-rs is a framework for building pre-compiled Node.js addons in Rust. It serializes complex Rust types (structs, enums, Results) into JavaScript values automatically, so native functions feel like regular async JS functions to callers."
+  },
+  {
+    "order": 6,
+    "title": "BLE Platform Abstraction",
+    "description": "The BLE module defines a platform-agnostic trait for peripheral operations, with conditional compilation selecting the appropriate implementation for macOS (CoreBluetooth), Linux (BlueZ), Windows (WinRT), or a stub for unsupported platforms. This abstraction layer keeps the core business logic independent of OS-specific BLE APIs.",
+    "nodeIds": [
+      "file:crates/native/src/ble/mod.rs"
+    ],
+    "languageLesson": "Rust traits define shared behavior across platform-specific implementations. Conditional compilation (cfg_attr) selects the correct backend at compile time, so each platform binary only includes its own dependencies—no Windows APIs on macOS, no BlueZ on Windows."
+  },
+  {
+    "order": 7,
+    "title": "Platform Implementations",
+    "description": "Each platform file implements the BlePeripheral trait using the native BLE stack: peripheral_macos.rs uses CoreBluetooth via objc2, peripheral_linux.rs uses BlueZ via the bluetooth crate, and peripheral_windows.rs uses Windows GATT via windows-rs. These files handle the messy platform details so the core logic stays clean.",
+    "nodeIds": [
+      "file:crates/native/src/ble/peripheral_macos.rs",
+      "file:crates/native/src/ble/peripheral_linux.rs",
+      "file:crates/native/src/ble/peripheral_windows.rs",
+      "file:crates/native/src/ble/peripheral_stub.rs",
+      "file:crates/native/src/ble_central.rs"
+    ],
+    "languageLesson": "Cross-platform native development often requires separate bindings for each OS. objc2 provides type-safe Objective-C interop on macOS, windows-rs generates Rust bindings from WinIDL metadata, and bluez provides async tokio integration for Linux Bluetooth."
+  },
+  {
+    "order": 8,
+    "title": "React UI and State",
+    "description": "The renderer main.tsx is a single-file React application implementing the calculator UI with host/guest role selection, room discovery, peer connection management, and calculation input. It wraps the calculator API with logging middleware, polls for state updates, and maintains the entire UI state tree in one component.",
+    "nodeIds": [
+      "file:src/renderer/main.tsx",
+      "file:src/renderer/browser-calculator.ts"
+    ],
+    "languageLesson": "React components in Electron can use browser APIs like fetch and Web Workers, but Node.js APIs require IPC through the preload bridge. This app uses useSyncExternalStore for reactive log updates and direct state management without a framework library."
+  },
+  {
+    "order": 9,
+    "title": "Utilities and Testing",
+    "description": "The expression.ts module provides safe arithmetic evaluation with stack-based parsing and operator precedence—no eval() for security. Paired with expression.test.ts for unit testing, and log-store.ts for React-integrated debugging, these utilities demonstrate the project's approach to safety and developer experience.",
+    "nodeIds": [
+      "file:src/shared/expression.ts",
+      "file:src/shared/expression.test.ts",
+      "file:src/renderer/log-store.ts",
+      "file:src/renderer/logging-calculator-api.ts"
+    ],
+    "languageLesson": "Safe expression parsing avoids eval() by tokenizing input and using a stack-based algorithm (shunting-yard for precedence). Tests use Vitest, a Vite-native test runner that shares the same config as the dev server for consistency."
+  },
+  {
+    "order": 10,
+    "title": "Build and Release Pipeline",
+    "description": "The project uses a multi-stage build: Cargo compiles the Rust module via napi-rs, Vite bundles the React UI, and electron-builder packages everything into platform-specific installers. The release workflow orchestrates cross-platform builds across macOS, Linux, and Windows in parallel, each on its own OS runner with platform-specific Rust toolchains.",
+    "nodeIds": [
+      "file:scripts/build-native.mjs",
+      "file:scripts/package-platforms.mjs",
+      "config:crates/native/Cargo.toml",
+      "pipeline:.github/workflows/release.yml"
+    ],
+    "languageLesson": "Cross-platform Electron apps require building native modules on each target OS. Rust targets are added via rustup, cargo compiles platform-specific .node binaries, and electron-builder assembles the final app. GitHub Actions matrix builds run on separate runners for genuine native compilation."
+  },
+  {
+    "order": 11,
+    "title": "Architecture Documentation",
+    "description": "The project's documentation layer explains the complete system: calculator-architecture.md covers runtime architecture, BLE roles, and security boundaries; developer-onboarding.md provides the shortest path for new contributors; runtime-native-and-security.md documents the IPC security model; and ui-layout-and-visual-pass.md explains the fixed grid layout and screenshot testing approach.",
+    "nodeIds": [
+      "document:README.md",
+      "document:docs/calculator-architecture.md",
+      "document:docs/developer-onboarding.md",
+      "document:docs/runtime-native-and-security.md",
+      "document:docs/ui-layout-and-visual-pass.md"
+    ]
+  }
+]

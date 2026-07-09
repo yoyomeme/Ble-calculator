@@ -1,0 +1,3740 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "4cb918997aa78067e6c33942e7d93ab6050a7121",
+  "generatedAt": "2026-07-09T14:29:47.137Z",
+  "files": {
+    ".github/workflows/release.yml": {
+      "filePath": ".github/workflows/release.yml",
+      "contentHash": "6c78cd44323cf86d5fe5d3e2217094a4af035f5e1e920f58e7719a697986eb0f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 111,
+      "hasStructuralAnalysis": true
+    },
+    ".understand-anything/.understandignore": {
+      "filePath": ".understand-anything/.understandignore",
+      "contentHash": "78477918e4a8d1e9ce1d533b2422994d1bac66ce7eb0b57e4ec9b274b8e1b4f3",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 31,
+      "hasStructuralAnalysis": false
+    },
+    "artifacts/browser-visual-ui-pass/report.json": {
+      "filePath": "artifacts/browser-visual-ui-pass/report.json",
+      "contentHash": "aaabb0747e959874410fe2c2d47a9e48cd5165d718e26f6d73be4f4cdf9e4c6f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 848,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/build.rs": {
+      "filePath": "crates/native/build.rs",
+      "contentHash": "fb4b8223e3c918998e1c985096bc8f6052adf75e9891ec5266ef7a6a57aa843f",
+      "functions": [
+        {
+          "name": "main",
+          "params": [],
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/Cargo.toml": {
+      "filePath": "crates/native/Cargo.toml",
+      "contentHash": "9baed93b496c3a5af7702e6fcb8e4b5743c7eb3a39d00113577d9a9308233ddf",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 59,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/README.md": {
+      "filePath": "crates/native/README.md",
+      "contentHash": "2968bc8e121a735eeea96f17c91f6e00782986703edcdab586fbfa76a4097f44",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 20,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/ble_central.rs": {
+      "filePath": "crates/native/src/ble_central.rs",
+      "contentHash": "f2762ec0faadf85d21387ed79f2dfb286af202bbf9827b9ca1ed3b85d74504e9",
+      "functions": [
+        {
+          "name": "runtime",
+          "params": [],
+          "returnType": "Result<&'static tokio::runtime::Runtime, String>",
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "lock",
+          "params": [],
+          "returnType": "Result<std::sync::MutexGuard<'static, CentralInner>, String>",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "ensure_adapter",
+          "params": [
+            "rt",
+            "inner"
+          ],
+          "returnType": "Result<Adapter, String>",
+          "exported": false,
+          "lineCount": 25
+        },
+        {
+          "name": "scan",
+          "params": [
+            "service_uuid",
+            "duration_ms"
+          ],
+          "returnType": "Result<Vec<PeripheralProperties>, String>",
+          "exported": true,
+          "lineCount": 29
+        },
+        {
+          "name": "connect",
+          "params": [
+            "address",
+            "service_uuid",
+            "rx_uuid",
+            "tx_uuid"
+          ],
+          "returnType": "Result<(), String>",
+          "exported": true,
+          "lineCount": 81
+        },
+        {
+          "name": "take_notifications",
+          "params": [],
+          "returnType": "Result<Vec<Vec<u8>>, String>",
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "is_connected",
+          "params": [],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "write_frames",
+          "params": [
+            "frames"
+          ],
+          "returnType": "Result<usize, String>",
+          "exported": true,
+          "lineCount": 35
+        },
+        {
+          "name": "disconnect",
+          "params": [],
+          "exported": true,
+          "lineCount": 12
+        }
+      ],
+      "classes": [
+        {
+          "name": "CentralInner",
+          "methods": [],
+          "properties": [
+            "adapter",
+            "connected",
+            "notifications"
+          ],
+          "exported": false,
+          "lineCount": 12
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::pin",
+          "specifiers": [
+            "Pin"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Mutex"
+          ]
+        },
+        {
+          "source": "std::time",
+          "specifiers": [
+            "Duration"
+          ]
+        },
+        {
+          "source": "btleplug::api",
+          "specifiers": [
+            "Central",
+            "CharPropFlags",
+            "Characteristic",
+            "PeripheralProperties",
+            "ScanFilter",
+            "ValueNotification",
+            "WriteType"
+          ]
+        },
+        {
+          "source": "btleplug::platform",
+          "specifiers": [
+            "Adapter",
+            "Manager",
+            "Peripheral"
+          ]
+        },
+        {
+          "source": "futures::stream",
+          "specifiers": [
+            "Stream",
+            "StreamExt"
+          ]
+        },
+        {
+          "source": "futures",
+          "specifiers": [
+            "FutureExt"
+          ]
+        },
+        {
+          "source": "once_cell::sync",
+          "specifiers": [
+            "Lazy"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "Uuid"
+          ]
+        }
+      ],
+      "exports": [
+        "scan",
+        "connect",
+        "take_notifications",
+        "is_connected",
+        "write_frames",
+        "disconnect"
+      ],
+      "totalLines": 328,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/ble/mod.rs": {
+      "filePath": "crates/native/src/ble/mod.rs",
+      "contentHash": "6d8357bf6d8338dc6d553aa78d6a57009a9eda5261608b64c3ea405ac2a10716",
+      "functions": [
+        {
+          "name": "join",
+          "params": [
+            "room_id",
+            "label"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "room",
+          "params": [
+            "room_id",
+            "room_name"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "for_local_name",
+          "params": [
+            "local_name"
+          ],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "build_join_local_name",
+          "params": [
+            "room_id",
+            "label"
+          ],
+          "returnType": "String",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "build_room_local_name",
+          "params": [
+            "room_id",
+            "room_name"
+          ],
+          "returnType": "String",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "build_local_name",
+          "params": [
+            "kind",
+            "room_id",
+            "label"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "sanitize_field",
+          "params": [
+            "value"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "new_peripheral",
+          "params": [],
+          "returnType": "Box<dyn BlePeripheral>",
+          "exported": true,
+          "lineCount": 18
+        }
+      ],
+      "classes": [
+        {
+          "name": "PeripheralConfig",
+          "methods": [
+            "join",
+            "room",
+            "for_local_name"
+          ],
+          "properties": [
+            "service_uuid",
+            "rx_characteristic_uuid",
+            "tx_characteristic_uuid",
+            "local_name"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "BlePeripheral",
+          "methods": [
+            "platform",
+            "is_supported",
+            "start_advertising",
+            "stop",
+            "is_advertising",
+            "take_inbound",
+            "notify",
+            "has_subscriber",
+            "take_last_error",
+            "max_notify_frame_len"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 46
+        }
+      ],
+      "imports": [],
+      "exports": [
+        "PeripheralConfig",
+        "join",
+        "room",
+        "build_join_local_name",
+        "build_room_local_name",
+        "BlePeripheral",
+        "new_peripheral"
+      ],
+      "totalLines": 211,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/ble/peripheral_linux.rs": {
+      "filePath": "crates/native/src/ble/peripheral_linux.rs",
+      "contentHash": "c497ca062d0768442438c28533a4bcfaff1b6b606dcf0ce3acf96cf90eeb789d",
+      "functions": [
+        {
+          "name": "new",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "platform",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_supported",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "start_advertising",
+          "params": [
+            "config"
+          ],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "is_advertising",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "take_inbound",
+          "params": [],
+          "returnType": "Vec<Vec<u8>>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "notify",
+          "params": [
+            "frames"
+          ],
+          "returnType": "Result<usize, String>",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "has_subscriber",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "run_worker",
+          "params": [
+            "receiver",
+            "shared"
+          ],
+          "exported": false,
+          "lineCount": 36
+        },
+        {
+          "name": "notify_frames",
+          "params": [
+            "shared",
+            "frames"
+          ],
+          "returnType": "Result<usize, String>",
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "start_session",
+          "params": [
+            "config",
+            "shared"
+          ],
+          "returnType": "bluer::Result<ActiveSession>",
+          "exported": false,
+          "lineCount": 86
+        },
+        {
+          "name": "parse_uuid",
+          "params": [
+            "value"
+          ],
+          "returnType": "bluer::Result<Uuid>",
+          "exported": false,
+          "lineCount": 8
+        }
+      ],
+      "classes": [
+        {
+          "name": "LinuxShared",
+          "methods": [],
+          "properties": [
+            "advertising",
+            "subscribed",
+            "inbound",
+            "notifier"
+          ],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "Command",
+          "methods": [],
+          "properties": [
+            "Start",
+            "Notify",
+            "Stop"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "LinuxPeripheral",
+          "methods": [
+            "new",
+            "platform",
+            "is_supported",
+            "start_advertising",
+            "stop",
+            "is_advertising",
+            "take_inbound",
+            "notify",
+            "has_subscriber"
+          ],
+          "properties": [
+            "shared",
+            "commands",
+            "_worker"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "ActiveSession",
+          "methods": [],
+          "properties": [
+            "_session",
+            "_adapter",
+            "_app",
+            "_advertisement"
+          ],
+          "exported": false,
+          "lineCount": 6
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::sync::atomic",
+          "specifiers": [
+            "AtomicBool",
+            "Ordering"
+          ]
+        },
+        {
+          "source": "std::sync::mpsc",
+          "specifiers": [
+            "self",
+            "Sender"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc",
+            "Mutex"
+          ]
+        },
+        {
+          "source": "std::time",
+          "specifiers": [
+            "Duration"
+          ]
+        },
+        {
+          "source": "bluer::adv",
+          "specifiers": [
+            "Advertisement",
+            "AdvertisementHandle"
+          ]
+        },
+        {
+          "source": "bluer::gatt::local",
+          "specifiers": [
+            "Application",
+            "ApplicationHandle",
+            "Characteristic",
+            "CharacteristicNotify",
+            "CharacteristicNotifyMethod",
+            "CharacteristicNotifier",
+            "CharacteristicWrite",
+            "CharacteristicWriteMethod",
+            "Service"
+          ]
+        },
+        {
+          "source": "bluer",
+          "specifiers": [
+            "Adapter",
+            "Session"
+          ]
+        },
+        {
+          "source": "futures",
+          "specifiers": [
+            "FutureExt"
+          ]
+        },
+        {
+          "source": "tokio::sync::mpsc",
+          "specifiers": [
+            "unbounded_channel",
+            "UnboundedSender"
+          ]
+        },
+        {
+          "source": "tokio::sync::Mutex as AsyncMutex",
+          "specifiers": [
+            "tokio::sync::Mutex as AsyncMutex"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "Uuid"
+          ]
+        },
+        {
+          "source": "super",
+          "specifiers": [
+            "BlePeripheral",
+            "PeripheralConfig"
+          ]
+        }
+      ],
+      "exports": [
+        "LinuxPeripheral",
+        "new"
+      ],
+      "totalLines": 320,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/ble/peripheral_macos.rs": {
+      "filePath": "crates/native/src/ble/peripheral_macos.rs",
+      "contentHash": "398018aba0fb80251829572545412fd9b3c42b81f1756b18f92b051efab0deb8",
+      "functions": [
+        {
+          "name": "set_error",
+          "params": [
+            "message"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "new",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "ensure_manager",
+          "params": [],
+          "exported": false,
+          "lineCount": 35
+        },
+        {
+          "name": "dispatch_apply",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "dispatch_drain",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "platform",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_supported",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "start_advertising",
+          "params": [
+            "config"
+          ],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 28
+        },
+        {
+          "name": "is_advertising",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "take_inbound",
+          "params": [],
+          "returnType": "Vec<Vec<u8>>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "notify",
+          "params": [
+            "frames"
+          ],
+          "returnType": "Result<usize, String>",
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "has_subscriber",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "take_last_error",
+          "params": [],
+          "returnType": "Option<String>",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "max_notify_frame_len",
+          "params": [],
+          "returnType": "Option<usize>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "drain_outbound",
+          "params": [
+            "shared"
+          ],
+          "exported": false,
+          "lineCount": 60
+        },
+        {
+          "name": "apply_pending",
+          "params": [
+            "shared"
+          ],
+          "exported": false,
+          "lineCount": 65
+        },
+        {
+          "name": "start_advertising_now",
+          "params": [
+            "shared"
+          ],
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "new",
+          "params": [
+            "shared"
+          ],
+          "returnType": "Retained<Self>",
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "classes": [
+        {
+          "name": "AssertSend",
+          "methods": [],
+          "properties": [],
+          "exported": false,
+          "lineCount": 1
+        },
+        {
+          "name": "Shared",
+          "methods": [
+            "set_error"
+          ],
+          "properties": [
+            "advertising",
+            "powered_on",
+            "subscribed",
+            "max_update_len",
+            "inbound",
+            "outbound",
+            "last_error",
+            "pending_config",
+            "manager",
+            "tx_characteristic",
+            "queue",
+            "delegate"
+          ],
+          "exported": false,
+          "lineCount": 30
+        },
+        {
+          "name": "MacosPeripheral",
+          "methods": [
+            "new",
+            "ensure_manager",
+            "dispatch_apply",
+            "dispatch_drain",
+            "platform",
+            "is_supported",
+            "start_advertising",
+            "stop",
+            "is_advertising",
+            "take_inbound",
+            "notify",
+            "has_subscriber",
+            "take_last_error",
+            "max_notify_frame_len"
+          ],
+          "properties": [
+            "shared"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "DelegateIvars",
+          "methods": [],
+          "properties": [
+            "shared"
+          ],
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::collections",
+          "specifiers": [
+            "VecDeque"
+          ]
+        },
+        {
+          "source": "std::sync::atomic",
+          "specifiers": [
+            "AtomicBool",
+            "AtomicUsize",
+            "Ordering"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc",
+            "Mutex"
+          ]
+        },
+        {
+          "source": "dispatch2",
+          "specifiers": [
+            "DispatchQueue",
+            "DispatchQueueAttr",
+            "DispatchRetained"
+          ]
+        },
+        {
+          "source": "objc2::rc",
+          "specifiers": [
+            "Retained"
+          ]
+        },
+        {
+          "source": "objc2::runtime",
+          "specifiers": [
+            "AnyObject",
+            "NSObject",
+            "NSObjectProtocol",
+            "ProtocolObject"
+          ]
+        },
+        {
+          "source": "objc2",
+          "specifiers": [
+            "define_class",
+            "msg_send",
+            "AllocAnyThread",
+            "DefinedClass"
+          ]
+        },
+        {
+          "source": "objc2_core_bluetooth",
+          "specifiers": [
+            "CBATTError",
+            "CBATTRequest",
+            "CBAdvertisementDataLocalNameKey",
+            "CBAdvertisementDataServiceUUIDsKey",
+            "CBAttributePermissions",
+            "CBCentral",
+            "CBCharacteristic",
+            "CBCharacteristicProperties",
+            "CBManagerState",
+            "CBMutableCharacteristic",
+            "CBMutableService",
+            "CBPeripheralManager",
+            "CBPeripheralManagerDelegate",
+            "CBService",
+            "CBUUID"
+          ]
+        },
+        {
+          "source": "objc2_foundation",
+          "specifiers": [
+            "NSArray",
+            "NSData",
+            "NSError",
+            "NSMutableDictionary",
+            "NSString"
+          ]
+        },
+        {
+          "source": "super",
+          "specifiers": [
+            "BlePeripheral",
+            "PeripheralConfig"
+          ]
+        }
+      ],
+      "exports": [
+        "MacosPeripheral",
+        "new"
+      ],
+      "totalLines": 684,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/ble/peripheral_stub.rs": {
+      "filePath": "crates/native/src/ble/peripheral_stub.rs",
+      "contentHash": "544c409a15934de3b631d7252914bdc21aaf08462f63c810f96d68801be05a66",
+      "functions": [
+        {
+          "name": "new",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "platform",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_supported",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "start_advertising",
+          "params": [
+            "_config"
+          ],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_advertising",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "take_inbound",
+          "params": [],
+          "returnType": "Vec<Vec<u8>>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "notify",
+          "params": [
+            "_frames"
+          ],
+          "returnType": "Result<usize, String>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "has_subscriber",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "StubPeripheral",
+          "methods": [
+            "new",
+            "platform",
+            "is_supported",
+            "start_advertising",
+            "stop",
+            "is_advertising",
+            "take_inbound",
+            "notify",
+            "has_subscriber"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "super",
+          "specifiers": [
+            "BlePeripheral",
+            "PeripheralConfig"
+          ]
+        }
+      ],
+      "exports": [
+        "StubPeripheral",
+        "new"
+      ],
+      "totalLines": 59,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/ble/peripheral_windows.rs": {
+      "filePath": "crates/native/src/ble/peripheral_windows.rs",
+      "contentHash": "f5d7f7592e22e64393ca41cce6f023f145b58cadbf8c79e0152d2d24d5e03f5a",
+      "functions": [
+        {
+          "name": "drop",
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "new",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "platform",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_supported",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "start_advertising",
+          "params": [
+            "config"
+          ],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "stop",
+          "params": [],
+          "returnType": "Result<(), String>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "is_advertising",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "take_inbound",
+          "params": [],
+          "returnType": "Vec<Vec<u8>>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "notify",
+          "params": [
+            "frames"
+          ],
+          "returnType": "Result<usize, String>",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "has_subscriber",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "build_session",
+          "params": [
+            "config",
+            "shared"
+          ],
+          "returnType": "windows::core::Result<ActiveSession>",
+          "exported": false,
+          "lineCount": 79
+        },
+        {
+          "name": "notify_frame",
+          "params": [
+            "tx",
+            "frame"
+          ],
+          "returnType": "windows::core::Result<()>",
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "subscribed_count",
+          "params": [
+            "tx"
+          ],
+          "returnType": "u32",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "read_buffer",
+          "params": [
+            "buffer"
+          ],
+          "returnType": "windows::core::Result<Vec<u8>>",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "to_guid",
+          "params": [
+            "uuid"
+          ],
+          "returnType": "GUID",
+          "exported": false,
+          "lineCount": 6
+        }
+      ],
+      "classes": [
+        {
+          "name": "WindowsShared",
+          "methods": [],
+          "properties": [
+            "advertising",
+            "inbound"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "ActiveSession",
+          "methods": [
+            "drop"
+          ],
+          "properties": [
+            "provider",
+            "rx",
+            "write_token",
+            "tx"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "WindowsPeripheral",
+          "methods": [
+            "new",
+            "platform",
+            "is_supported",
+            "start_advertising",
+            "stop",
+            "is_advertising",
+            "take_inbound",
+            "notify",
+            "has_subscriber"
+          ],
+          "properties": [
+            "shared",
+            "active"
+          ],
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::sync::atomic",
+          "specifiers": [
+            "AtomicBool",
+            "Ordering"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc",
+            "Mutex"
+          ]
+        },
+        {
+          "source": "windows::core",
+          "specifiers": [
+            "GUID"
+          ]
+        },
+        {
+          "source": "windows::Devices::Bluetooth",
+          "specifiers": [
+            "BluetoothError"
+          ]
+        },
+        {
+          "source": "windows::Devices::Bluetooth::GenericAttributeProfile",
+          "specifiers": [
+            "GattCharacteristicProperties",
+            "GattLocalCharacteristic",
+            "GattLocalCharacteristicParameters",
+            "GattProtectionLevel",
+            "GattServiceProvider",
+            "GattServiceProviderAdvertisingParameters",
+            "GattWriteOption",
+            "GattWriteRequestedEventArgs"
+          ]
+        },
+        {
+          "source": "windows::Foundation",
+          "specifiers": [
+            "EventRegistrationToken",
+            "TypedEventHandler"
+          ]
+        },
+        {
+          "source": "windows::Storage::Streams",
+          "specifiers": [
+            "DataReader",
+            "DataWriter",
+            "IBuffer"
+          ]
+        },
+        {
+          "source": "super",
+          "specifiers": [
+            "BlePeripheral",
+            "PeripheralConfig"
+          ]
+        }
+      ],
+      "exports": [
+        "WindowsPeripheral",
+        "new"
+      ],
+      "totalLines": 257,
+      "hasStructuralAnalysis": true
+    },
+    "crates/native/src/lib.rs": {
+      "filePath": "crates/native/src/lib.rs",
+      "contentHash": "823c026083982ef928dbfaff86895848bc95f296c8fada992afbcec6342f16f8",
+      "functions": [
+        {
+          "name": "current",
+          "params": [],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "local_event_valid",
+          "params": [
+            "reason"
+          ],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "unsupported",
+          "params": [
+            "kind",
+            "reason"
+          ],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "new",
+          "params": [],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "get_state",
+          "params": [],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "process_incoming_ble",
+          "params": [
+            "state"
+          ],
+          "exported": false,
+          "lineCount": 58
+        },
+        {
+          "name": "ingest_ble_frames",
+          "params": [
+            "frames",
+            "warnings"
+          ],
+          "returnType": "Vec<CalculationEntry>",
+          "exported": false,
+          "lineCount": 66
+        },
+        {
+          "name": "note_verified_peer",
+          "params": [
+            "state"
+          ],
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "mark_host_connected",
+          "params": [
+            "state"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "refresh_connection_state",
+          "params": [
+            "state"
+          ],
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "create_room",
+          "params": [
+            "request"
+          ],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 32
+        },
+        {
+          "name": "start_scanning",
+          "params": [],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 29
+        },
+        {
+          "name": "connect_guest",
+          "params": [
+            "request"
+          ],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 73
+        },
+        {
+          "name": "scan_rooms",
+          "params": [],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 28
+        },
+        {
+          "name": "join_room",
+          "params": [
+            "request"
+          ],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 53
+        },
+        {
+          "name": "guest_advertising_label",
+          "params": [
+            "state"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "start_guest_advertising",
+          "params": [
+            "room_id",
+            "label"
+          ],
+          "returnType": "std::result::Result<(), String>",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "start_room_advertising",
+          "params": [
+            "room_id",
+            "room_name"
+          ],
+          "returnType": "std::result::Result<(), String>",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "stop_guest_advertising",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "start_advertising",
+          "params": [
+            "request"
+          ],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "accept_host_connection",
+          "params": [],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 41
+        },
+        {
+          "name": "peripheral_backend_supported",
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "peripheral_status_json",
+          "params": [],
+          "returnType": "Value",
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "drain_peripheral_inbound",
+          "params": [],
+          "returnType": "usize",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "reset_ble_session",
+          "params": [],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "submit_calculation",
+          "params": [
+            "request"
+          ],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 50
+        },
+        {
+          "name": "deliver_event_to_guest",
+          "params": [
+            "state",
+            "entry",
+            "envelope"
+          ],
+          "exported": false,
+          "lineCount": 30
+        },
+        {
+          "name": "deliver_event_to_host",
+          "params": [
+            "state",
+            "entry",
+            "envelope"
+          ],
+          "exported": false,
+          "lineCount": 29
+        },
+        {
+          "name": "frame_event_for_ble",
+          "params": [
+            "message_id",
+            "envelope",
+            "frame_budget"
+          ],
+          "returnType": "std::result::Result<Vec<Vec<u8>>, String>",
+          "exported": false,
+          "lineCount": 25
+        },
+        {
+          "name": "get_native_runtime_status",
+          "params": [],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "validate_credential_bundle",
+          "params": [
+            "payload"
+          ],
+          "returnType": "Result<Value>",
+          "exported": true,
+          "lineCount": 22
+        },
+        {
+          "name": "with_state_json",
+          "params": [
+            "action"
+          ],
+          "returnType": "Result<Value>",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "load_or_create_identity",
+          "params": [
+            "warnings"
+          ],
+          "returnType": "NativeIdentity",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "load_keychain_signing_key",
+          "params": [
+            "warnings"
+          ],
+          "returnType": "Option<SigningKey>",
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "load_keychain_signing_key",
+          "params": [
+            "warnings"
+          ],
+          "returnType": "Option<SigningKey>",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "create_and_store_signing_key",
+          "params": [
+            "entry",
+            "warnings"
+          ],
+          "returnType": "Option<SigningKey>",
+          "exported": false,
+          "lineCount": 18
+        },
+        {
+          "name": "decode_signing_key",
+          "params": [
+            "encoded"
+          ],
+          "returnType": "Option<SigningKey>",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "identity_from_signing_key",
+          "params": [
+            "signing_key",
+            "keychain_backed"
+          ],
+          "returnType": "NativeIdentity",
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "fingerprint_public_key",
+          "params": [
+            "verifying_key"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "open",
+          "params": [
+            "warnings"
+          ],
+          "returnType": "Option<Self>",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "initialize",
+          "params": [],
+          "returnType": "rusqlite::Result<()>",
+          "exported": false,
+          "lineCount": 29
+        },
+        {
+          "name": "load_history",
+          "params": [
+            "limit",
+            "warnings"
+          ],
+          "returnType": "Option<Vec<CalculationEntry>>",
+          "exported": false,
+          "lineCount": 63
+        },
+        {
+          "name": "persist_calculation",
+          "params": [
+            "entry",
+            "envelope",
+            "warnings"
+          ],
+          "exported": false,
+          "lineCount": 66
+        },
+        {
+          "name": "persist_received_calculation",
+          "params": [
+            "entry",
+            "warnings"
+          ],
+          "exported": false,
+          "lineCount": 33
+        },
+        {
+          "name": "pending_outbox_count",
+          "params": [
+            "warnings"
+          ],
+          "returnType": "usize",
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "load_pending_outbox",
+          "params": [
+            "limit",
+            "warnings"
+          ],
+          "returnType": "Vec<OutboxRecord>",
+          "exported": false,
+          "lineCount": 56
+        },
+        {
+          "name": "refresh_persisted_history",
+          "params": [
+            "state"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "app_database_path",
+          "params": [
+            "warnings"
+          ],
+          "returnType": "Option<PathBuf>",
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "sign_calculation_event",
+          "params": [
+            "identity",
+            "entry"
+          ],
+          "returnType": "std::result::Result<SignedEnvelope, String>",
+          "exported": false,
+          "lineCount": 30
+        },
+        {
+          "name": "validate_signed_calculation_event",
+          "params": [
+            "identity",
+            "envelope"
+          ],
+          "returnType": "Result<ValidationSummary>",
+          "exported": false,
+          "lineCount": 41
+        },
+        {
+          "name": "verify_received_calculation_event",
+          "params": [
+            "payload"
+          ],
+          "returnType": "std::result::Result<CalculationEntry, String>",
+          "exported": false,
+          "lineCount": 49
+        },
+        {
+          "name": "consume_sync_outbox",
+          "params": [
+            "state",
+            "storage"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "chunk_payload_sized",
+          "params": [
+            "message_id",
+            "payload",
+            "chunk_size"
+          ],
+          "returnType": "Vec<BleTransportChunk>",
+          "exported": false,
+          "lineCount": 28
+        },
+        {
+          "name": "chunk_payload_size_for_frame_budget",
+          "params": [
+            "frame_budget"
+          ],
+          "returnType": "Option<usize>",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "reassemble_chunks",
+          "params": [
+            "chunks"
+          ],
+          "returnType": "std::result::Result<Vec<u8>, String>",
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "scan_ble_join_requests",
+          "params": [
+            "room_filter"
+          ],
+          "returnType": "std::result::Result<Vec<PeerSummary>, String>",
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "scan_ble_rooms",
+          "params": [],
+          "returnType": "std::result::Result<Vec<RoomSummary>, String>",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "scan_ble_calculator_advertisements",
+          "params": [],
+          "returnType": "std::result::Result<Vec<(String, BleAdvertisementPayload, Option<i16>)>, String>",
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "connect_ble_peer",
+          "params": [
+            "peer_id"
+          ],
+          "returnType": "std::result::Result<(), String>",
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "parse_calculator_advertisement",
+          "params": [
+            "properties"
+          ],
+          "returnType": "Option<BleAdvertisementPayload>",
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "parse_local_name_advertisement",
+          "params": [
+            "name"
+          ],
+          "returnType": "Option<BleAdvertisementPayload>",
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "peer_from_advertisement",
+          "params": [
+            "address",
+            "payload",
+            "rssi",
+            "room_filter"
+          ],
+          "returnType": "Option<PeerSummary>",
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "room_from_advertisement",
+          "params": [
+            "address",
+            "payload",
+            "rssi"
+          ],
+          "returnType": "Option<RoomSummary>",
+          "exported": false,
+          "lineCount": 25
+        },
+        {
+          "name": "merge_discovered_peers",
+          "params": [
+            "existing",
+            "discovered"
+          ],
+          "returnType": "Vec<PeerSummary>",
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "merge_discovered_rooms",
+          "params": [
+            "existing",
+            "discovered"
+          ],
+          "returnType": "Vec<RoomSummary>",
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "trim_or_default",
+          "params": [
+            "value",
+            "default_value"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "now_iso",
+          "params": [],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "calculate_expression",
+          "params": [
+            "expression"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "parse_expression",
+          "params": [
+            "expression"
+          ],
+          "returnType": "Option<f64>",
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "tokenize",
+          "params": [
+            "input"
+          ],
+          "returnType": "Option<Vec<Token>>",
+          "exported": false,
+          "lineCount": 40
+        },
+        {
+          "name": "precedence",
+          "params": [
+            "op"
+          ],
+          "returnType": "u8",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "apply_op",
+          "params": [
+            "values",
+            "op"
+          ],
+          "returnType": "Option<()>",
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "push_warning_once",
+          "params": [
+            "warnings",
+            "warning"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "to_hex",
+          "params": [
+            "bytes"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_database_path",
+          "params": [
+            "path"
+          ],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 4
+        }
+      ],
+      "classes": [
+        {
+          "name": "PeerSummary",
+          "methods": [],
+          "properties": [
+            "id",
+            "label",
+            "session_role",
+            "ble_role",
+            "trust_status",
+            "connected",
+            "last_seen_iso",
+            "rssi"
+          ],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "RoomSummary",
+          "methods": [],
+          "properties": [
+            "id",
+            "name",
+            "host_device_id",
+            "trust_status",
+            "joinable",
+            "last_seen_iso",
+            "rssi"
+          ],
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "CalculationEntry",
+          "methods": [],
+          "properties": [
+            "id",
+            "origin_device_id",
+            "expression",
+            "result",
+            "trusted",
+            "created_at_iso"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "NativeCapabilities",
+          "methods": [
+            "current"
+          ],
+          "properties": [
+            "ble_central_scanning",
+            "ble_peripheral_advertising",
+            "sqlite_persistence",
+            "keychain_storage",
+            "local_jws_signing",
+            "jwe_decryption",
+            "jwt_sd_jwt_verification",
+            "issuer_trust_validation",
+            "holder_key_binding",
+            "cross_device_sync"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "NativeRuntimeStatus",
+          "methods": [],
+          "properties": [
+            "sqlite_path",
+            "keychain_backed",
+            "public_key_fingerprint",
+            "last_ble_error",
+            "last_validation",
+            "pending_outbox_events"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "ValidationSummary",
+          "methods": [
+            "local_event_valid",
+            "unsupported"
+          ],
+          "properties": [
+            "valid",
+            "kind",
+            "issuer_trusted",
+            "holder_bound",
+            "reason"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "RoomState",
+          "methods": [
+            "new"
+          ],
+          "properties": [
+            "local_device_id",
+            "room_id",
+            "room_name",
+            "session_role",
+            "ble_role",
+            "scanning",
+            "advertising",
+            "peers",
+            "rooms",
+            "history",
+            "native_capabilities",
+            "native_status",
+            "native_warnings"
+          ],
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "NativeIdentity",
+          "methods": [],
+          "properties": [
+            "signing_key",
+            "keychain_backed",
+            "public_key_fingerprint"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "NativeStorage",
+          "methods": [
+            "open",
+            "initialize",
+            "load_history",
+            "persist_calculation",
+            "persist_received_calculation",
+            "pending_outbox_count",
+            "load_pending_outbox"
+          ],
+          "properties": [
+            "path"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "OutboxRecord",
+          "methods": [],
+          "properties": [
+            "event_id",
+            "payload_json"
+          ],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "CreateRoomRequest",
+          "methods": [],
+          "properties": [
+            "room_name"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "StartAdvertisingRequest",
+          "methods": [],
+          "properties": [
+            "room_code"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "ConnectGuestRequest",
+          "methods": [],
+          "properties": [
+            "peer_id"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "JoinRoomRequest",
+          "methods": [],
+          "properties": [
+            "room_id"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "SubmitCalculationRequest",
+          "methods": [],
+          "properties": [
+            "expression"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "SignedEnvelope",
+          "methods": [],
+          "properties": [
+            "protected",
+            "payload",
+            "signature"
+          ],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "BleTransportChunk",
+          "methods": [],
+          "properties": [
+            "message_id",
+            "index",
+            "total",
+            "payload_b64"
+          ],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "BleAdvertisementPayload",
+          "methods": [],
+          "properties": [
+            "kind",
+            "room_id",
+            "room_name",
+            "device_id",
+            "label"
+          ],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "Token",
+          "methods": [],
+          "properties": [
+            "Number",
+            "Op"
+          ],
+          "exported": false,
+          "lineCount": 4
+        }
+      ],
+      "imports": [
+        {
+          "source": "base64",
+          "specifiers": [
+            "engine::general_purpose::URL_SAFE_NO_PAD"
+          ]
+        },
+        {
+          "source": "btleplug::api",
+          "specifiers": [
+            "PeripheralProperties"
+          ]
+        },
+        {
+          "source": "ed25519_dalek",
+          "specifiers": [
+            "Signature",
+            "Signer",
+            "SigningKey",
+            "Verifier",
+            "VerifyingKey"
+          ]
+        },
+        {
+          "source": "napi::bindgen_prelude",
+          "specifiers": [
+            "*"
+          ]
+        },
+        {
+          "source": "napi_derive",
+          "specifiers": [
+            "napi"
+          ]
+        },
+        {
+          "source": "once_cell::sync",
+          "specifiers": [
+            "Lazy"
+          ]
+        },
+        {
+          "source": "rand_core",
+          "specifiers": [
+            "OsRng"
+          ]
+        },
+        {
+          "source": "rusqlite",
+          "specifiers": [
+            "params",
+            "Connection"
+          ]
+        },
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "serde_json",
+          "specifiers": [
+            "json",
+            "Value"
+          ]
+        },
+        {
+          "source": "sha2",
+          "specifiers": [
+            "Digest",
+            "Sha256"
+          ]
+        },
+        {
+          "source": "std",
+          "specifiers": [
+            "collections::HashMap",
+            "env",
+            "fs",
+            "sync::Mutex"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "format_description::well_known::Rfc3339",
+            "OffsetDateTime"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "Uuid"
+          ]
+        }
+      ],
+      "exports": [
+        "CreateRoomRequest",
+        "StartAdvertisingRequest",
+        "ConnectGuestRequest",
+        "JoinRoomRequest",
+        "SubmitCalculationRequest",
+        "get_state",
+        "create_room",
+        "start_scanning",
+        "connect_guest",
+        "scan_rooms",
+        "join_room",
+        "start_advertising",
+        "accept_host_connection",
+        "reset_ble_session",
+        "submit_calculation",
+        "get_native_runtime_status",
+        "validate_credential_bundle"
+      ],
+      "totalLines": 2343,
+      "hasStructuralAnalysis": true
+    },
+    "docs/calculator-architecture.md": {
+      "filePath": "docs/calculator-architecture.md",
+      "contentHash": "c5c95cb7fabc48b54b4aa69bc91f32f177237e41b0cd0407b863f97ac3d72d54",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1006,
+      "hasStructuralAnalysis": true
+    },
+    "docs/developer-onboarding.md": {
+      "filePath": "docs/developer-onboarding.md",
+      "contentHash": "8c15521775c4df8cc8ffe79878cbff751a0f96a9a97262195e7aba6723075c26",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 178,
+      "hasStructuralAnalysis": true
+    },
+    "docs/runtime-native-and-security.md": {
+      "filePath": "docs/runtime-native-and-security.md",
+      "contentHash": "82f9b8f47b93e0c83b1a790e6c87c03379bff481fefbe4263706b6feb1250de2",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 608,
+      "hasStructuralAnalysis": true
+    },
+    "docs/ui-layout-and-visual-pass.md": {
+      "filePath": "docs/ui-layout-and-visual-pass.md",
+      "contentHash": "19c1346ca854e7cfafaf71db9c6b5cf3b77541c883d919d6de6083ede2173fc7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 191,
+      "hasStructuralAnalysis": true
+    },
+    "electron-builder.yml": {
+      "filePath": "electron-builder.yml",
+      "contentHash": "db11d68eab6e5441138a3c9594a549b5627a1276a7ea9eb7b3b17193e8d1337b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 44,
+      "hasStructuralAnalysis": true
+    },
+    "eslint.config.mjs": {
+      "filePath": "eslint.config.mjs",
+      "contentHash": "f8eed38ff8cb8df8adb11c63fd1f94b14717cc49f1f57ffd7cc28c07053f77e2",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "@eslint/js",
+          "specifiers": [
+            "js"
+          ]
+        },
+        {
+          "source": "@typescript-eslint/eslint-plugin",
+          "specifiers": [
+            "tseslint"
+          ]
+        },
+        {
+          "source": "@typescript-eslint/parser",
+          "specifiers": [
+            "tsparser"
+          ]
+        },
+        {
+          "source": "eslint-plugin-react-hooks",
+          "specifiers": [
+            "reactHooks"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 69,
+      "hasStructuralAnalysis": true
+    },
+    "evolve-calculator-theme.md": {
+      "filePath": "evolve-calculator-theme.md",
+      "contentHash": "e5a54941f7a40ce52b1b82ffe31d079f6c38ea27e1fb3a60280dcee605dd037e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 270,
+      "hasStructuralAnalysis": true
+    },
+    "index.html": {
+      "filePath": "index.html",
+      "contentHash": "37fe523c4a4c8d5f1dd58dc7ee1ad83f7c6d87dc76e0b3f514a54ec6e58f67ee",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "package.json": {
+      "filePath": "package.json",
+      "contentHash": "5ec74d5023ae9fd9b0e699fc2b007087d98c9a030d5357f6ebb834d89d7cf243",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 50,
+      "hasStructuralAnalysis": true
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "8f6324429002a91f00f1638083336060437be29e2a337f6a21457584bb5dcea7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 78,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/browser-visual-ui-pass.mjs": {
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "contentHash": "9424efc4f82419044d3a1e2ab7c44baeda146fcdf7a7aa64bf7c2f532c0f377e",
+      "functions": [
+        {
+          "name": "main",
+          "params": [],
+          "exported": false,
+          "lineCount": 107
+        },
+        {
+          "name": "createTarget",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "closeTarget",
+          "params": [
+            "id"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "scenarioScript",
+          "params": [
+            "action"
+          ],
+          "exported": false,
+          "lineCount": 36
+        },
+        {
+          "name": "metricsScript",
+          "params": [],
+          "exported": false,
+          "lineCount": 43
+        },
+        {
+          "name": "getOverlaps",
+          "params": [
+            "rects"
+          ],
+          "exported": false,
+          "lineCount": 19
+        },
+        {
+          "name": "waitForLoad",
+          "params": [
+            "client"
+          ],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "waitForHttp",
+          "params": [
+            "url",
+            "timeoutMs"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "delay",
+          "params": [
+            "ms"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "fetchJson",
+          "params": [
+            "url",
+            "options"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "fetchText",
+          "params": [
+            "url"
+          ],
+          "exported": false,
+          "lineCount": 20
+        }
+      ],
+      "classes": [
+        {
+          "name": "CdpClient",
+          "methods": [
+            "connect",
+            "constructor",
+            "send",
+            "on",
+            "close",
+            "handleMessage"
+          ],
+          "properties": [],
+          "exported": false,
+          "lineCount": 65
+        }
+      ],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawn"
+          ]
+        },
+        {
+          "source": "node:buffer",
+          "specifiers": [
+            "Buffer"
+          ]
+        },
+        {
+          "source": "node:fs/promises",
+          "specifiers": [
+            "mkdir",
+            "mkdtemp",
+            "rm",
+            "writeFile"
+          ]
+        },
+        {
+          "source": "node:http",
+          "specifiers": [
+            "http"
+          ]
+        },
+        {
+          "source": "node:os",
+          "specifiers": [
+            "os"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        },
+        {
+          "source": "node:url",
+          "specifiers": [
+            "fileURLToPath"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 373,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/build-mac-arm64.command": {
+      "filePath": "scripts/build-mac-arm64.command",
+      "contentHash": "6182f007c3cd8118db6af72e1159d24363774399cb9a7275f93f7130b2668956",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 66,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/build-native-optional.mjs": {
+      "filePath": "scripts/build-native-optional.mjs",
+      "contentHash": "1f964f8bd4936f5dff1a3e8df0f8dac049f8f9de7ebb0aa0696f00e2bcdc1be4",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawnSync"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 36,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/build-native.mjs": {
+      "filePath": "scripts/build-native.mjs",
+      "contentHash": "b2e26168eda60f176887902d9b05ef70cdb2d7920225e168cf29b16a3ee2cbb8",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawnSync"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/next-version.mjs": {
+      "filePath": "scripts/next-version.mjs",
+      "contentHash": "0cfb71bbc77d8faf98ae78ca7b94d15fe8c8ea5791e6d5b9ac9b9453c6bb86a2",
+      "functions": [
+        {
+          "name": "gh",
+          "params": [
+            "args"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "compareSemver",
+          "params": [
+            "a",
+            "b"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "latestTag",
+          "params": [],
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "seedVersion",
+          "params": [],
+          "exported": false,
+          "lineCount": 8
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawnSync"
+          ]
+        },
+        {
+          "source": "node:fs",
+          "specifiers": [
+            "readFileSync"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 88,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/package-platforms.mjs": {
+      "filePath": "scripts/package-platforms.mjs",
+      "contentHash": "b644b105dd5974b6368a752de0733e9568e309e2eccc47e5c2668392ba7d6f8a",
+      "functions": [
+        {
+          "name": "buildNativeForTarget",
+          "params": [
+            "key",
+            "env"
+          ],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "expandTargets",
+          "params": [
+            "values"
+          ],
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "groupElectronTargets",
+          "params": [
+            "targets"
+          ],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "currentTargetKey",
+          "params": [],
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "currentHostTargets",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "ensureRustTargetInstalled",
+          "params": [
+            "key",
+            "env"
+          ],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "takeFlag",
+          "params": [
+            "values",
+            "flag"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "buildEnvWithRustupCargo",
+          "params": [],
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "run",
+          "params": [
+            "command",
+            "args"
+          ],
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "stashNativeArtifacts",
+          "params": [],
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "restoreNativeArtifacts",
+          "params": [
+            "artifacts"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "printPlan",
+          "params": [
+            "targets",
+            "grouped",
+            "skipNativeBuild"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "printUsageAndExit",
+          "params": [
+            "code"
+          ],
+          "exported": false,
+          "lineCount": 25
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawnSync"
+          ]
+        },
+        {
+          "source": "node:fs",
+          "specifiers": [
+            "existsSync",
+            "mkdirSync",
+            "readdirSync",
+            "renameSync",
+            "rmSync"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 320,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/release-all.bat": {
+      "filePath": "scripts/release-all.bat",
+      "contentHash": "5d0ce9f80e893c6c7cdfcfa2973811a33e7a87d3208af8127fccf0b6bf3e88dc",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 93,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/release-all.command": {
+      "filePath": "scripts/release-all.command",
+      "contentHash": "73fe095d9990f555c0fd1238de92917fd47353a3c9223a0594f1170e6068feaa",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 105,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/visual-ui-pass.mjs": {
+      "filePath": "scripts/visual-ui-pass.mjs",
+      "contentHash": "332b2ccc90662dea2f7ec53d1355d58123cb5c7304b80b6a8a54d75a0bc85403",
+      "functions": [
+        {
+          "name": "waitForServer",
+          "params": [
+            "url"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "canReach",
+          "params": [
+            "url"
+          ],
+          "exported": false,
+          "lineCount": 14
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "node:child_process",
+          "specifiers": [
+            "spawn"
+          ]
+        },
+        {
+          "source": "node:fs/promises",
+          "specifiers": [
+            "mkdir",
+            "writeFile"
+          ]
+        },
+        {
+          "source": "node:http",
+          "specifiers": [
+            "http"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        },
+        {
+          "source": "node:url",
+          "specifiers": [
+            "fileURLToPath"
+          ]
+        },
+        {
+          "source": "electron",
+          "specifiers": [
+            "electronPath"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 103,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/visual-ui-screenshot-app.cjs": {
+      "filePath": "scripts/visual-ui-screenshot-app.cjs",
+      "contentHash": "9927823b7bcc7ea5b212f1795de93c4627f62a73a57d54253db4a781f14a010c",
+      "functions": [
+        {
+          "name": "main",
+          "params": [],
+          "exported": false,
+          "lineCount": 61
+        },
+        {
+          "name": "withTimeout",
+          "params": [
+            "promise",
+            "label"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "applyScenarioScript",
+          "params": [
+            "action"
+          ],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "metricsScript",
+          "params": [],
+          "exported": false,
+          "lineCount": 42
+        },
+        {
+          "name": "getOverlaps",
+          "params": [
+            "rects"
+          ],
+          "exported": false,
+          "lineCount": 19
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 161,
+      "hasStructuralAnalysis": true
+    },
+    "src/electron/main.ts": {
+      "filePath": "src/electron/main.ts",
+      "contentHash": "2bcd7bac36d5794435cda7f7ed878ad1e40771452d81c5ad73f713d4d670fefc",
+      "functions": [
+        {
+          "name": "registerCalculatorIpc",
+          "params": [],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "createWindow",
+          "params": [],
+          "returnType": "Promise<void>",
+          "exported": false,
+          "lineCount": 24
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "electron",
+          "specifiers": [
+            "app",
+            "BrowserWindow",
+            "ipcMain"
+          ]
+        },
+        {
+          "source": "node:path",
+          "specifiers": [
+            "path"
+          ]
+        },
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "calculatorChannels"
+          ]
+        },
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "ConnectGuestRequest",
+            "CreateRoomRequest",
+            "JoinRoomRequest",
+            "StartAdvertisingRequest",
+            "SubmitCalculationRequest"
+          ]
+        },
+        {
+          "source": "./native-calculator",
+          "specifiers": [
+            "getCalculatorApi"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 81,
+      "hasStructuralAnalysis": true
+    },
+    "src/electron/native-calculator.ts": {
+      "filePath": "src/electron/native-calculator.ts",
+      "contentHash": "3bebecae89ad67d0a09d55364fa47b3e37d7ddac1e24bf42dc18a20d644c8ed0",
+      "functions": [
+        {
+          "name": "getCalculatorApi",
+          "params": [],
+          "returnType": "NativeCalculatorApi",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "loadNativeApi",
+          "params": [],
+          "returnType": "NativeCalculatorApi | null",
+          "exported": false,
+          "lineCount": 17
+        },
+        {
+          "name": "isNativeCalculatorApi",
+          "params": [
+            "value"
+          ],
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "isMissingModuleError",
+          "params": [
+            "error"
+          ],
+          "returnType": "boolean",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "createMockCalculatorApi",
+          "params": [],
+          "returnType": "NativeCalculatorApi",
+          "exported": false,
+          "lineCount": 146
+        },
+        {
+          "name": "cloneState",
+          "params": [
+            "state"
+          ],
+          "returnType": "RoomState",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "ConnectGuestRequest",
+            "CreateRoomRequest",
+            "JoinRoomRequest",
+            "NativeCalculatorApi",
+            "RoomState",
+            "StartAdvertisingRequest",
+            "SubmitCalculationRequest"
+          ]
+        },
+        {
+          "source": "../shared/expression",
+          "specifiers": [
+            "calculateExpression"
+          ]
+        },
+        {
+          "source": "node:crypto",
+          "specifiers": [
+            "randomUUID"
+          ]
+        },
+        {
+          "source": "node:module",
+          "specifiers": [
+            "createRequire"
+          ]
+        }
+      ],
+      "exports": [
+        "getCalculatorApi"
+      ],
+      "totalLines": 226,
+      "hasStructuralAnalysis": true
+    },
+    "src/electron/preload.ts": {
+      "filePath": "src/electron/preload.ts",
+      "contentHash": "d95e2c1419f295d08588fcd25675de336c41a71ef3f03e166119d0c3c898ead2",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "electron",
+          "specifiers": [
+            "contextBridge",
+            "ipcRenderer"
+          ]
+        },
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "ConnectGuestRequest",
+            "CreateRoomRequest",
+            "JoinRoomRequest",
+            "NativeCalculatorApi",
+            "StartAdvertisingRequest",
+            "SubmitCalculationRequest"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 42,
+      "hasStructuralAnalysis": true
+    },
+    "src/renderer/browser-calculator.ts": {
+      "filePath": "src/renderer/browser-calculator.ts",
+      "contentHash": "86a634b26bf503eca235f596902ec2af89bec6b4be2fd6dd8396ad783e09af9b",
+      "functions": [
+        {
+          "name": "createBrowserCalculatorApi",
+          "params": [],
+          "returnType": "NativeCalculatorApi",
+          "exported": true,
+          "lineCount": 152
+        },
+        {
+          "name": "cloneState",
+          "params": [
+            "state"
+          ],
+          "returnType": "RoomState",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "randomId",
+          "params": [],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "ConnectGuestRequest",
+            "CreateRoomRequest",
+            "JoinRoomRequest",
+            "NativeCalculatorApi",
+            "RoomState",
+            "StartAdvertisingRequest",
+            "SubmitCalculationRequest"
+          ]
+        },
+        {
+          "source": "../shared/expression",
+          "specifiers": [
+            "calculateExpression"
+          ]
+        }
+      ],
+      "exports": [
+        "createBrowserCalculatorApi"
+      ],
+      "totalLines": 172,
+      "hasStructuralAnalysis": true
+    },
+    "src/renderer/global.d.ts": {
+      "filePath": "src/renderer/global.d.ts",
+      "contentHash": "0d57c894b6a70eb345d0fd8880bfb7b593ab74dc26a3d87345149ed5ddff4fd7",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "NativeCalculatorApi"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "src/renderer/index.html": {
+      "filePath": "src/renderer/index.html",
+      "contentHash": "38cc53b6381baf0bfc2c1b78cd0ae292f849c26fcebfe29bd7292ffa88c3eccd",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "src/renderer/log-store.ts": {
+      "filePath": "src/renderer/log-store.ts",
+      "contentHash": "b3b4432500e30452f28962bfd1a98efb217f8e3ea0c34dcb250aae0a5355e0ce",
+      "functions": [
+        {
+          "name": "formatEntryForCopy",
+          "params": [
+            "entry"
+          ],
+          "returnType": "string",
+          "exported": true,
+          "lineCount": 11
+        }
+      ],
+      "classes": [
+        {
+          "name": "LogStore",
+          "methods": [
+            "push",
+            "clear",
+            "toText",
+            "emit"
+          ],
+          "properties": [
+            "entries",
+            "listeners",
+            "nextId",
+            "subscribe",
+            "getSnapshot"
+          ],
+          "exported": false,
+          "lineCount": 51
+        }
+      ],
+      "imports": [],
+      "exports": [
+        "formatEntryForCopy",
+        "logStore"
+      ],
+      "totalLines": 86,
+      "hasStructuralAnalysis": true
+    },
+    "src/renderer/logging-calculator-api.ts": {
+      "filePath": "src/renderer/logging-calculator-api.ts",
+      "contentHash": "b7bbe7fa4d2ea5118a475933576e3b8dbabaf7d4d876a834f21ce723f63996b4",
+      "functions": [
+        {
+          "name": "shorten",
+          "params": [
+            "value",
+            "keep"
+          ],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "summarizeState",
+          "params": [
+            "state"
+          ],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 20
+        },
+        {
+          "name": "describeArgs",
+          "params": [
+            "args"
+          ],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "logStartupEnvironment",
+          "params": [
+            "hasNativeBridge"
+          ],
+          "returnType": "void",
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "createLoggingCalculatorApi",
+          "params": [
+            "api"
+          ],
+          "returnType": "LoggingCalculatorApi",
+          "exported": true,
+          "lineCount": 109
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "ConnectGuestRequest",
+            "CreateRoomRequest",
+            "JoinRoomRequest",
+            "NativeCalculatorApi",
+            "RoomState",
+            "StartAdvertisingRequest",
+            "SubmitCalculationRequest"
+          ]
+        },
+        {
+          "source": "./log-store",
+          "specifiers": [
+            "logStore"
+          ]
+        }
+      ],
+      "exports": [
+        "logStartupEnvironment",
+        "createLoggingCalculatorApi"
+      ],
+      "totalLines": 195,
+      "hasStructuralAnalysis": true
+    },
+    "src/renderer/main.tsx": {
+      "filePath": "src/renderer/main.tsx",
+      "contentHash": "45b465652a91e9c092469a93d79d1f34e68e20a5b1570ef9b96826228f1ca036",
+      "functions": [
+        {
+          "name": "canFitBothDrawers",
+          "params": [],
+          "returnType": "boolean",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "App",
+          "params": [],
+          "exported": false,
+          "lineCount": 401
+        },
+        {
+          "name": "LogConsole",
+          "params": [
+            "{ open, onToggle }"
+          ],
+          "exported": false,
+          "lineCount": 108
+        },
+        {
+          "name": "PanelHeader",
+          "params": [
+            "{ eyebrow, title }"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "StatusPill",
+          "params": [
+            "{ icon, label }"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "RoleSwitcher",
+          "params": [
+            "{\n  value,\n  disabled,\n  onSelect\n}"
+          ],
+          "exported": false,
+          "lineCount": 32
+        },
+        {
+          "name": "HostFields",
+          "params": [
+            "{\n  roomName,\n  onRoomNameChange,\n  roomCreated,\n  scanning,\n  isConnected,\n  pending,\n  onCreateRoom,\n  onFindGuests\n}"
+          ],
+          "exported": false,
+          "lineCount": 53
+        },
+        {
+          "name": "GuestFields",
+          "params": [
+            "{\n  roomCode,\n  onRoomCodeChange,\n  scanning,\n  isConnected,\n  pending,\n  onFindHosts,\n  onJoinByCode\n}"
+          ],
+          "exported": false,
+          "lineCount": 51
+        },
+        {
+          "name": "NetworkTabs",
+          "params": [
+            "{\n  value,\n  onChange\n}"
+          ],
+          "exported": false,
+          "lineCount": 30
+        },
+        {
+          "name": "DiscoveryPane",
+          "params": [
+            "{\n  uiRole,\n  scanning,\n  rooms,\n  peers,\n  connectedPeer,\n  pending,\n  onConnectGuest,\n  onJoinRoom,\n  onDisconnect\n}"
+          ],
+          "exported": false,
+          "lineCount": 84
+        },
+        {
+          "name": "DiscoveryRow",
+          "params": [
+            "{\n  icon,\n  title,\n  subtitle,\n  rssi,\n  disabled,\n  onClick\n}"
+          ],
+          "exported": false,
+          "lineCount": 26
+        },
+        {
+          "name": "ConnectionCard",
+          "params": [
+            "{\n  peer,\n  pending,\n  onDisconnect\n}"
+          ],
+          "exported": false,
+          "lineCount": 44
+        },
+        {
+          "name": "TrustBadge",
+          "params": [
+            "{ status }"
+          ],
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "RssiIndicator",
+          "params": [
+            "{ rssi }"
+          ],
+          "exported": false,
+          "lineCount": 22
+        },
+        {
+          "name": "rssiToBars",
+          "params": [
+            "rssi"
+          ],
+          "returnType": "number",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "HistoryPane",
+          "params": [
+            "{ history }"
+          ],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "RoleSwitchModal",
+          "params": [
+            "{\n  target,\n  pending,\n  onConfirm,\n  onCancel\n}"
+          ],
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "SessionFacts",
+          "params": [
+            "{\n  state,\n  pendingAction\n}"
+          ],
+          "exported": false,
+          "lineCount": 28
+        },
+        {
+          "name": "StatusBeacon",
+          "params": [
+            "{ status }"
+          ],
+          "exported": false,
+          "lineCount": 8
+        },
+        {
+          "name": "shortId",
+          "params": [
+            "id"
+          ],
+          "returnType": "string",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "react",
+          "specifiers": [
+            "React",
+            "useCallback",
+            "useEffect",
+            "useMemo",
+            "useRef",
+            "useState",
+            "useSyncExternalStore"
+          ]
+        },
+        {
+          "source": "react-dom/client",
+          "specifiers": [
+            "createRoot"
+          ]
+        },
+        {
+          "source": "lucide-react",
+          "specifiers": [
+            "Bluetooth",
+            "Calculator",
+            "Check",
+            "ChevronDown",
+            "ChevronLeft",
+            "ChevronRight",
+            "ChevronUp",
+            "Copy",
+            "Delete",
+            "DoorOpen",
+            "Radio",
+            "Search",
+            "ShieldCheck",
+            "ShieldQuestion",
+            "Terminal",
+            "Trash2",
+            "Unplug",
+            "Users"
+          ]
+        },
+        {
+          "source": "../shared/calculator-api",
+          "specifiers": [
+            "PeerSummary",
+            "RoomState",
+            "RoomSummary",
+            "SessionRole",
+            "TrustStatus"
+          ]
+        },
+        {
+          "source": "../shared/expression",
+          "specifiers": [
+            "calculateExpression"
+          ]
+        },
+        {
+          "source": "./browser-calculator",
+          "specifiers": [
+            "createBrowserCalculatorApi"
+          ]
+        },
+        {
+          "source": "./log-store",
+          "specifiers": [
+            "logStore"
+          ]
+        },
+        {
+          "source": "./logging-calculator-api",
+          "specifiers": [
+            "createLoggingCalculatorApi",
+            "logStartupEnvironment"
+          ]
+        },
+        {
+          "source": "./styles.css",
+          "specifiers": []
+        }
+      ],
+      "exports": [],
+      "totalLines": 1112,
+      "hasStructuralAnalysis": true
+    },
+    "src/renderer/styles.css": {
+      "filePath": "src/renderer/styles.css",
+      "contentHash": "98aecf7098f8c251ce4ce38b81dfb3707961faa8ad08c61d84703050c7bb8eba",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1393,
+      "hasStructuralAnalysis": false
+    },
+    "src/shared/calculator-api.ts": {
+      "filePath": "src/shared/calculator-api.ts",
+      "contentHash": "fd42b1a909e56c6a0fffcb6a4c133d456f423a4360102848d74e1b2e3008150b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "calculatorChannels"
+      ],
+      "totalLines": 131,
+      "hasStructuralAnalysis": true
+    },
+    "src/shared/expression.test.ts": {
+      "filePath": "src/shared/expression.test.ts",
+      "contentHash": "de60e94dcee0b71ffeec21fe5dc2d84adaed3a759666c2c7dc0081dad98b7407",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "vitest",
+          "specifiers": [
+            "describe",
+            "expect",
+            "it"
+          ]
+        },
+        {
+          "source": "./expression",
+          "specifiers": [
+            "calculateExpression"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 21,
+      "hasStructuralAnalysis": true
+    },
+    "src/shared/expression.ts": {
+      "filePath": "src/shared/expression.ts",
+      "contentHash": "735be2a263b46e4b68cc6122b1c6a51abada81239599e7862298d6be542cdae5",
+      "functions": [
+        {
+          "name": "calculateExpression",
+          "params": [
+            "expression"
+          ],
+          "returnType": "string",
+          "exported": true,
+          "lineCount": 47
+        },
+        {
+          "name": "applyOp",
+          "params": [
+            "values",
+            "op"
+          ],
+          "returnType": "void",
+          "exported": false,
+          "lineCount": 29
+        }
+      ],
+      "classes": [],
+      "imports": [],
+      "exports": [
+        "calculateExpression"
+      ],
+      "totalLines": 78,
+      "hasStructuralAnalysis": true
+    },
+    "tsconfig.json": {
+      "filePath": "tsconfig.json",
+      "contentHash": "627743777ae2c5897996575ace1fe56c55963b1957d2657f80682abf235dde7f",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "vite.config.mts": {
+      "filePath": "vite.config.mts",
+      "contentHash": "b7316f855b2bcb076c69179551ab08db2c0766c92313e75c53ca5aaa37a86a1d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 18,
+      "hasStructuralAnalysis": false
+    },
+    "vitest.config.mts": {
+      "filePath": "vitest.config.mts",
+      "contentHash": "37099acdcd7101d013758a6b93c10fdef6ff9ae9c14cd59028d3a619a95e67ce",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 9,
+      "hasStructuralAnalysis": false
+    }
+  }
+}

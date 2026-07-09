@@ -1,0 +1,505 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/renderer/browser-calculator.ts",
+      "type": "file",
+      "name": "browser-calculator.ts",
+      "filePath": "src/renderer/browser-calculator.ts",
+      "summary": "In-memory browser implementation of the calculator API for development/testing. Provides BLE session simulation, room management, peer discovery, and calculation submission without native dependencies.",
+      "tags": ["test-double", "api-implementation", "ble-simulation", "factory"],
+      "complexity": "moderate",
+      "languageNotes": "Factory function returning an API object with methods matching the native interface. Uses immutable state cloning pattern with cloneState helper."
+    },
+    {
+      "id": "function:src/renderer/browser-calculator.ts:createBrowserCalculatorApi",
+      "type": "function",
+      "name": "createBrowserCalculatorApi",
+      "filePath": "src/renderer/browser-calculator.ts",
+      "lineRange": [12, 163],
+      "summary": "Factory function creating a mock calculator API implementation. Returns an object with getState, createRoom, startScanning, connectGuest, scanRooms, joinRoom, startAdvertising, acceptHostConnection, resetBleSession, submitCalculation, and pollState methods for browser-based testing.",
+      "tags": ["factory", "test-double", "api-implementation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/renderer/log-store.ts",
+      "type": "file",
+      "name": "log-store.ts",
+      "filePath": "src/renderer/log-store.ts",
+      "summary": "Immutable log storage implementation using React's external store pattern. Provides a LogStore class with push, clear, toText methods and subscribe/getSnapshot for React integration via useSyncExternalStore.",
+      "tags": ["logging", "state-management", "react-integration", "immutable"],
+      "complexity": "simple",
+      "languageNotes": "Implements React's useSyncExternalStore API with subscribe/getSnapshot for reactive log updates."
+    },
+    {
+      "id": "class:src/renderer/log-store.ts:LogStore",
+      "type": "class",
+      "name": "LogStore",
+      "filePath": "src/renderer/log-store.ts",
+      "lineRange": [21, 71],
+      "summary": "Immutable log store class implementing React external store pattern. Stores log entries with auto-incrementing IDs and provides push, clear, toText, emit methods plus subscribe/getSnapshot for React integration.",
+      "tags": ["state-management", "logging", "react-integration", "immutable"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/renderer/logging-calculator-api.ts",
+      "type": "file",
+      "name": "logging-calculator-api.ts",
+      "filePath": "src/renderer/logging-calculator-api.ts",
+      "summary": "Logging middleware wrapper for calculator API calls. Wraps any calculator API implementation to log method invocations, results, timing, diagnostics, and errors to the log store for debugging.",
+      "tags": ["logging", "middleware", "debugging", "wrapper"],
+      "complexity": "moderate",
+      "languageNotes": "Higher-order factory pattern wrapping API methods with logging instrumentation."
+    },
+    {
+      "id": "function:src/renderer/logging-calculator-api.ts:summarizeState",
+      "type": "function",
+      "name": "summarizeState",
+      "filePath": "src/renderer/logging-calculator-api.ts",
+      "lineRange": [23, 42],
+      "summary": "Formats calculator state into a compact multi-line summary string showing peer count, room count, connection status, and pending actions for logging.",
+      "tags": ["logging", "formatting", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/renderer/logging-calculator-api.ts:describeArgs",
+      "type": "function",
+      "name": "describeArgs",
+      "filePath": "src/renderer/logging-calculator-api.ts",
+      "lineRange": [44, 53],
+      "summary": "Formats function arguments into a concise string representation with value shortening for logging brevity.",
+      "tags": ["logging", "formatting", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/renderer/logging-calculator-api.ts:logStartupEnvironment",
+      "type": "function",
+      "name": "logStartupEnvironment",
+      "filePath": "src/renderer/logging-calculator-api.ts",
+      "lineRange": [61, 75],
+      "summary": "Logs application startup environment details including native bridge availability, platform context, and initial diagnostics to the log store.",
+      "tags": ["logging", "startup", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/renderer/logging-calculator-api.ts:createLoggingCalculatorApi",
+      "type": "function",
+      "name": "createLoggingCalculatorApi",
+      "filePath": "src/renderer/logging-calculator-api.ts",
+      "lineRange": [86, 194],
+      "summary": "Factory creating a logging wrapper around any calculator API implementation. Intercepts all API calls to log invocation, timing, results, state changes, and errors before delegating to the underlying API.",
+      "tags": ["factory", "middleware", "logging", "wrapper"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/renderer/main.tsx",
+      "type": "file",
+      "name": "main.tsx",
+      "filePath": "src/renderer/main.tsx",
+      "summary": "Main React renderer entry point implementing the calculator UI with BLE networking. Provides host/guest role selection, room discovery, peer connection management, calculation input with history, and a debug log console drawer.",
+      "tags": ["entry-point", "react-component", "ui", "ble-networking"],
+      "complexity": "complex",
+      "languageNotes": "Single file React application with 20 component functions and extensive state management. No separate component files."
+    },
+    {
+      "id": "function:src/renderer/main.tsx:App",
+      "type": "function",
+      "name": "App",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [102, 502],
+      "summary": "Root React component managing calculator UI state, BLE networking, role switching, and drawer navigation. Integrates calculator API with polling, handles expression input, maintains connection history, and orchestrates all UI interactions.",
+      "tags": ["react-component", "root-component", "state-management", "orchestration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:LogConsole",
+      "type": "function",
+      "name": "LogConsole",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [504, 611],
+      "summary": "Drawer component displaying debug logs from the log store. Uses useSyncExternalStore for reactive updates, provides copy-to-clipboard functionality with fallback textarea selection, and clear logs action.",
+      "tags": ["react-component", "debugging", "logging", "drawer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:DiscoveryPane",
+      "type": "function",
+      "name": "DiscoveryPane",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [801, 884],
+      "summary": "Tab panel showing available BLE peers (for host) and rooms (for guest) with connection actions. Filters items based on UI role, displays RSSI signal strength, connection status, and provides connect/join buttons.",
+      "tags": ["react-component", "ble-discovery", "connection-ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:ConnectionCard",
+      "type": "function",
+      "name": "ConnectionCard",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [913, 956],
+      "summary": "Card component displaying connected peer info with trust badge, role label, last sync timestamp, and disconnect button. Shows connection status and provides connection termination action.",
+      "tags": ["react-component", "connection-display", "status-ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:HostFields",
+      "type": "function",
+      "name": "HostFields",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [664, 716],
+      "summary": "Form fields for host role including room name input, create room button, find guests scanning action, and connection status. Shows pending states and disables actions appropriately during BLE operations.",
+      "tags": ["react-component", "host-ui", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:GuestFields",
+      "type": "function",
+      "name": "GuestFields",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [718, 768],
+      "summary": "Form fields for guest role including room code input, find hosts scanning action, join by code button, and connection status. Shows pending states and disables actions appropriately during BLE operations.",
+      "tags": ["react-component", "guest-ui", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:RoleSwitchModal",
+      "type": "function",
+      "name": "RoleSwitchModal",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [1020, 1057],
+      "summary": "Confirmation dialog shown when switching between host and guest roles. Warns about BLE session reset, requires explicit confirmation before proceeding with role change.",
+      "tags": ["react-component", "modal", "confirmation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/renderer/main.tsx:SessionFacts",
+      "type": "function",
+      "name": "SessionFacts",
+      "filePath": "src/renderer/main.tsx",
+      "lineRange": [1059, 1086],
+      "summary": "Status footer component displaying current session facts including role, room ID, peer connection status, and pending action. Provides visual feedback on current network state.",
+      "tags": ["react-component", "status-display", "footer"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/expression.test.ts",
+      "type": "file",
+      "name": "expression.test.ts",
+      "filePath": "src/shared/expression.test.ts",
+      "summary": "Unit tests for the expression calculator utility. Validates arithmetic expression parsing and calculation correctness including basic operations and edge cases.",
+      "tags": ["test", "unit-test"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/expression.ts",
+      "type": "file",
+      "name": "expression.ts",
+      "filePath": "src/shared/expression.ts",
+      "summary": "Safe arithmetic expression evaluator supporting addition, subtraction, multiplication, division, and modulo operations. Parses infix expressions, validates input sanitization, and returns formatted decimal results.",
+      "tags": ["utility", "math", "validation", "expression-evaluator"],
+      "complexity": "simple",
+      "languageNotes": "Uses stack-based evaluation with operator precedence. No eval() - safe parsing with regex validation."
+    },
+    {
+      "id": "function:src/shared/expression.ts:calculateExpression",
+      "type": "function",
+      "name": "calculateExpression",
+      "filePath": "src/shared/expression.ts",
+      "lineRange": [1, 47],
+      "summary": "Parses and evaluates arithmetic expressions with operators +, -, *, /, %. Sanitizes input, validates format, applies operator precedence, and returns formatted decimal result or throws on error.",
+      "tags": ["math", "expression-evaluator", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/expression.ts:applyOp",
+      "type": "function",
+      "name": "applyOp",
+      "filePath": "src/shared/expression.ts",
+      "lineRange": [49, 77],
+      "summary": "Applies a single arithmetic operation to two number values. Handles division by zero, modulo by zero, and returns the result pushed back onto the values stack.",
+      "tags": ["math", "utility", "operation"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/renderer/browser-calculator.ts",
+      "target": "function:src/renderer/browser-calculator.ts:createBrowserCalculatorApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/browser-calculator.ts",
+      "target": "function:src/renderer/browser-calculator.ts:createBrowserCalculatorApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/browser-calculator.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/browser-calculator.ts",
+      "target": "file:src/shared/expression.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/browser-calculator.ts",
+      "target": "function:src/shared/expression.ts:calculateExpression",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/log-store.ts",
+      "target": "class:src/renderer/log-store.ts:LogStore",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/log-store.ts",
+      "target": "class:src/renderer/log-store.ts:LogStore",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "function:src/renderer/logging-calculator-api.ts:summarizeState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "function:src/renderer/logging-calculator-api.ts:describeArgs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "function:src/renderer/logging-calculator-api.ts:logStartupEnvironment",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "function:src/renderer/logging-calculator-api.ts:logStartupEnvironment",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "function:src/renderer/logging-calculator-api.ts:createLoggingCalculatorApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "function:src/renderer/logging-calculator-api.ts:createLoggingCalculatorApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "file:src/renderer/log-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/logging-calculator-api.ts",
+      "target": "class:src/renderer/log-store.ts:LogStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:App",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:LogConsole",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:DiscoveryPane",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:ConnectionCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:HostFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:GuestFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:RoleSwitchModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/main.tsx:SessionFacts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "file:src/renderer/browser-calculator.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "file:src/renderer/log-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "file:src/renderer/logging-calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "file:src/renderer/styles.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "file:src/shared/expression.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/browser-calculator.ts:createBrowserCalculatorApi",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/logging-calculator-api.ts:createLoggingCalculatorApi",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/renderer/logging-calculator-api.ts:logStartupEnvironment",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/renderer/main.tsx",
+      "target": "function:src/shared/expression.ts:calculateExpression",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/expression.test.ts",
+      "target": "file:src/shared/expression.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/expression.ts",
+      "target": "function:src/shared/expression.ts:calculateExpression",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/shared/expression.ts",
+      "target": "function:src/shared/expression.ts:calculateExpression",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/expression.ts",
+      "target": "function:src/shared/expression.ts:applyOp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "function:src/shared/expression.ts:calculateExpression",
+      "target": "function:src/shared/expression.ts:applyOp",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/expression.ts",
+      "target": "file:src/shared/expression.test.ts",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

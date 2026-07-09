@@ -1,0 +1,615 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "louvain",
+  "totalFiles": 49,
+  "totalBatches": 7,
+  "exportsByPath": {
+    ".understand-anything/.understandignore": [],
+    "crates/native/build.rs": [],
+    "crates/native/src/ble_central.rs": [
+      "scan",
+      "connect",
+      "take_notifications",
+      "is_connected",
+      "write_frames",
+      "disconnect"
+    ],
+    "crates/native/src/ble/mod.rs": [
+      "PeripheralConfig",
+      "join",
+      "room",
+      "build_join_local_name",
+      "build_room_local_name",
+      "BlePeripheral",
+      "new_peripheral"
+    ],
+    "crates/native/src/ble/peripheral_linux.rs": [
+      "LinuxPeripheral",
+      "new"
+    ],
+    "crates/native/src/ble/peripheral_macos.rs": [
+      "MacosPeripheral",
+      "new"
+    ],
+    "crates/native/src/ble/peripheral_stub.rs": [
+      "StubPeripheral",
+      "new"
+    ],
+    "crates/native/src/ble/peripheral_windows.rs": [
+      "WindowsPeripheral",
+      "new"
+    ],
+    "crates/native/src/lib.rs": [
+      "CreateRoomRequest",
+      "StartAdvertisingRequest",
+      "ConnectGuestRequest",
+      "JoinRoomRequest",
+      "SubmitCalculationRequest",
+      "get_state",
+      "create_room",
+      "start_scanning",
+      "connect_guest",
+      "scan_rooms",
+      "join_room",
+      "start_advertising",
+      "accept_host_connection",
+      "reset_ble_session",
+      "submit_calculation",
+      "get_native_runtime_status",
+      "validate_credential_bundle"
+    ],
+    "eslint.config.mjs": [],
+    "scripts/browser-visual-ui-pass.mjs": [],
+    "scripts/build-mac-arm64.command": [],
+    "scripts/build-native-optional.mjs": [],
+    "scripts/build-native.mjs": [],
+    "scripts/next-version.mjs": [],
+    "scripts/package-platforms.mjs": [],
+    "scripts/release-all.command": [],
+    "scripts/visual-ui-pass.mjs": [],
+    "scripts/visual-ui-screenshot-app.cjs": [],
+    "src/electron/main.ts": [],
+    "src/electron/native-calculator.ts": [
+      "getCalculatorApi"
+    ],
+    "src/electron/preload.ts": [],
+    "src/renderer/browser-calculator.ts": [
+      "createBrowserCalculatorApi"
+    ],
+    "src/renderer/global.d.ts": [],
+    "src/renderer/log-store.ts": [
+      "formatEntryForCopy",
+      "logStore"
+    ],
+    "src/renderer/logging-calculator-api.ts": [
+      "logStartupEnvironment",
+      "createLoggingCalculatorApi"
+    ],
+    "src/renderer/main.tsx": [],
+    "src/shared/calculator-api.ts": [
+      "calculatorChannels"
+    ],
+    "src/shared/expression.test.ts": [],
+    "src/shared/expression.ts": [
+      "calculateExpression"
+    ],
+    "vite.config.mts": [],
+    "vitest.config.mts": []
+  },
+  "batches": [
+    {
+      "batchIndex": 1,
+      "files": [
+        {
+          "path": "crates/native/src/ble/mod.rs",
+          "language": "rust",
+          "sizeLines": 210,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/src/ble/peripheral_linux.rs",
+          "language": "rust",
+          "sizeLines": 319,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/src/ble/peripheral_macos.rs",
+          "language": "rust",
+          "sizeLines": 683,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/src/ble/peripheral_stub.rs",
+          "language": "rust",
+          "sizeLines": 58,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/src/ble/peripheral_windows.rs",
+          "language": "rust",
+          "sizeLines": 256,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/src/ble_central.rs",
+          "language": "rust",
+          "sizeLines": 327,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/src/lib.rs",
+          "language": "rust",
+          "sizeLines": 2342,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "crates/native/src/ble/mod.rs": [
+          "crates/native/src/ble/peripheral_linux.rs",
+          "crates/native/src/ble/peripheral_macos.rs",
+          "crates/native/src/ble/peripheral_stub.rs",
+          "crates/native/src/ble/peripheral_windows.rs"
+        ],
+        "crates/native/src/ble/peripheral_linux.rs": [],
+        "crates/native/src/ble/peripheral_macos.rs": [],
+        "crates/native/src/ble/peripheral_stub.rs": [],
+        "crates/native/src/ble/peripheral_windows.rs": [],
+        "crates/native/src/ble_central.rs": [],
+        "crates/native/src/lib.rs": [
+          "crates/native/src/ble_central.rs",
+          "crates/native/src/ble/mod.rs"
+        ]
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 2,
+      "files": [
+        {
+          "path": "src/renderer/browser-calculator.ts",
+          "language": "typescript",
+          "sizeLines": 171,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/renderer/log-store.ts",
+          "language": "typescript",
+          "sizeLines": 85,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/renderer/logging-calculator-api.ts",
+          "language": "typescript",
+          "sizeLines": 194,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/renderer/main.tsx",
+          "language": "typescript",
+          "sizeLines": 1111,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/shared/expression.test.ts",
+          "language": "typescript",
+          "sizeLines": 20,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/shared/expression.ts",
+          "language": "typescript",
+          "sizeLines": 77,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/renderer/browser-calculator.ts": [
+          "src/shared/calculator-api.ts",
+          "src/shared/expression.ts"
+        ],
+        "src/renderer/log-store.ts": [],
+        "src/renderer/logging-calculator-api.ts": [
+          "src/renderer/log-store.ts",
+          "src/shared/calculator-api.ts"
+        ],
+        "src/renderer/main.tsx": [
+          "src/renderer/browser-calculator.ts",
+          "src/renderer/log-store.ts",
+          "src/renderer/logging-calculator-api.ts",
+          "src/renderer/styles.css",
+          "src/shared/calculator-api.ts",
+          "src/shared/expression.ts"
+        ],
+        "src/shared/expression.test.ts": [
+          "src/shared/expression.ts"
+        ],
+        "src/shared/expression.ts": []
+      },
+      "neighborMap": {
+        "src/renderer/browser-calculator.ts": [
+          {
+            "path": "src/shared/calculator-api.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "calculatorChannels"
+            ]
+          }
+        ],
+        "src/renderer/logging-calculator-api.ts": [
+          {
+            "path": "src/shared/calculator-api.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "calculatorChannels"
+            ]
+          }
+        ],
+        "src/renderer/main.tsx": [
+          {
+            "path": "src/renderer/styles.css",
+            "batchIndex": 7,
+            "symbols": []
+          },
+          {
+            "path": "src/shared/calculator-api.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "calculatorChannels"
+            ]
+          }
+        ],
+        "src/shared/expression.ts": [
+          {
+            "path": "src/electron/native-calculator.ts",
+            "batchIndex": 3,
+            "symbols": [
+              "getCalculatorApi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 3,
+      "files": [
+        {
+          "path": "src/electron/main.ts",
+          "language": "typescript",
+          "sizeLines": 80,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/electron/native-calculator.ts",
+          "language": "typescript",
+          "sizeLines": 225,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/electron/preload.ts",
+          "language": "typescript",
+          "sizeLines": 41,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/renderer/global.d.ts",
+          "language": "typescript",
+          "sizeLines": 9,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/shared/calculator-api.ts",
+          "language": "typescript",
+          "sizeLines": 130,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/electron/main.ts": [
+          "src/electron/native-calculator.ts",
+          "src/shared/calculator-api.ts"
+        ],
+        "src/electron/native-calculator.ts": [
+          "src/shared/calculator-api.ts",
+          "src/shared/expression.ts"
+        ],
+        "src/electron/preload.ts": [
+          "src/shared/calculator-api.ts"
+        ],
+        "src/renderer/global.d.ts": [
+          "src/shared/calculator-api.ts"
+        ],
+        "src/shared/calculator-api.ts": []
+      },
+      "neighborMap": {
+        "src/electron/native-calculator.ts": [
+          {
+            "path": "src/shared/expression.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "calculateExpression"
+            ]
+          }
+        ],
+        "src/shared/calculator-api.ts": [
+          {
+            "path": "src/renderer/browser-calculator.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "createBrowserCalculatorApi"
+            ]
+          },
+          {
+            "path": "src/renderer/logging-calculator-api.ts",
+            "batchIndex": 2,
+            "symbols": [
+              "logStartupEnvironment",
+              "createLoggingCalculatorApi"
+            ]
+          },
+          {
+            "path": "src/renderer/main.tsx",
+            "batchIndex": 2,
+            "symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "batchIndex": 4,
+      "files": [
+        {
+          "path": ".github/workflows/release.yml",
+          "language": "yaml",
+          "sizeLines": 110,
+          "fileCategory": "infra"
+        }
+      ],
+      "batchImportData": {
+        ".github/workflows/release.yml": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 5,
+      "files": [
+        {
+          "path": "README.md",
+          "language": "markdown",
+          "sizeLines": 77,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "electron-builder.yml",
+          "language": "yaml",
+          "sizeLines": 43,
+          "fileCategory": "config"
+        },
+        {
+          "path": "evolve-calculator-theme.md",
+          "language": "markdown",
+          "sizeLines": 269,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "index.html",
+          "language": "html",
+          "sizeLines": 16,
+          "fileCategory": "markup"
+        },
+        {
+          "path": "package.json",
+          "language": "json",
+          "sizeLines": 49,
+          "fileCategory": "config"
+        },
+        {
+          "path": "tsconfig.json",
+          "language": "json",
+          "sizeLines": 21,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        "README.md": [],
+        "electron-builder.yml": [],
+        "evolve-calculator-theme.md": [],
+        "index.html": [],
+        "package.json": [],
+        "tsconfig.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 6,
+      "files": [
+        {
+          "path": "docs/calculator-architecture.md",
+          "language": "markdown",
+          "sizeLines": 1005,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/developer-onboarding.md",
+          "language": "markdown",
+          "sizeLines": 177,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/runtime-native-and-security.md",
+          "language": "markdown",
+          "sizeLines": 607,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "docs/ui-layout-and-visual-pass.md",
+          "language": "markdown",
+          "sizeLines": 190,
+          "fileCategory": "docs"
+        }
+      ],
+      "batchImportData": {
+        "docs/calculator-architecture.md": [],
+        "docs/developer-onboarding.md": [],
+        "docs/runtime-native-and-security.md": [],
+        "docs/ui-layout-and-visual-pass.md": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 7,
+      "files": [
+        {
+          "path": ".understand-anything/.understandignore",
+          "language": "unknown",
+          "sizeLines": 30,
+          "fileCategory": "code"
+        },
+        {
+          "path": "artifacts/browser-visual-ui-pass/report.json",
+          "language": "json",
+          "sizeLines": 847,
+          "fileCategory": "config"
+        },
+        {
+          "path": "crates/native/build.rs",
+          "language": "rust",
+          "sizeLines": 3,
+          "fileCategory": "code"
+        },
+        {
+          "path": "crates/native/Cargo.toml",
+          "language": "toml",
+          "sizeLines": 58,
+          "fileCategory": "config"
+        },
+        {
+          "path": "crates/native/README.md",
+          "language": "markdown",
+          "sizeLines": 19,
+          "fileCategory": "docs"
+        },
+        {
+          "path": "eslint.config.mjs",
+          "language": "javascript",
+          "sizeLines": 68,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/browser-visual-ui-pass.mjs",
+          "language": "javascript",
+          "sizeLines": 372,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/build-mac-arm64.command",
+          "language": "command",
+          "sizeLines": 65,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/build-native-optional.mjs",
+          "language": "javascript",
+          "sizeLines": 35,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/build-native.mjs",
+          "language": "javascript",
+          "sizeLines": 32,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/next-version.mjs",
+          "language": "javascript",
+          "sizeLines": 87,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/package-platforms.mjs",
+          "language": "javascript",
+          "sizeLines": 319,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/release-all.bat",
+          "language": "batch",
+          "sizeLines": 92,
+          "fileCategory": "script"
+        },
+        {
+          "path": "scripts/release-all.command",
+          "language": "command",
+          "sizeLines": 104,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/visual-ui-pass.mjs",
+          "language": "javascript",
+          "sizeLines": 102,
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/visual-ui-screenshot-app.cjs",
+          "language": "javascript",
+          "sizeLines": 160,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/renderer/index.html",
+          "language": "html",
+          "sizeLines": 16,
+          "fileCategory": "markup"
+        },
+        {
+          "path": "src/renderer/styles.css",
+          "language": "css",
+          "sizeLines": 1392,
+          "fileCategory": "markup"
+        },
+        {
+          "path": "vite.config.mts",
+          "language": "mts",
+          "sizeLines": 17,
+          "fileCategory": "code"
+        },
+        {
+          "path": "vitest.config.mts",
+          "language": "mts",
+          "sizeLines": 8,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        ".understand-anything/.understandignore": [],
+        "artifacts/browser-visual-ui-pass/report.json": [],
+        "crates/native/build.rs": [],
+        "crates/native/Cargo.toml": [],
+        "crates/native/README.md": [],
+        "eslint.config.mjs": [],
+        "scripts/browser-visual-ui-pass.mjs": [],
+        "scripts/build-mac-arm64.command": [],
+        "scripts/build-native-optional.mjs": [],
+        "scripts/build-native.mjs": [],
+        "scripts/next-version.mjs": [],
+        "scripts/package-platforms.mjs": [],
+        "scripts/release-all.bat": [],
+        "scripts/release-all.command": [],
+        "scripts/visual-ui-pass.mjs": [],
+        "scripts/visual-ui-screenshot-app.cjs": [],
+        "src/renderer/index.html": [],
+        "src/renderer/styles.css": [],
+        "vite.config.mts": [],
+        "vitest.config.mts": []
+      },
+      "neighborMap": {
+        "src/renderer/styles.css": [
+          {
+            "path": "src/renderer/main.tsx",
+            "batchIndex": 2,
+            "symbols": []
+          }
+        ]
+      }
+    }
+  ]
+}

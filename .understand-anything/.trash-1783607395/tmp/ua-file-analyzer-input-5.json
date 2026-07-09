@@ -1,0 +1,19 @@
+{
+  "projectRoot": "/Users/mellon/GIthubLocal/Ble-calculator",
+  "batchFiles": [
+    {"path": "README.md", "language": "markdown", "sizeLines": 77, "fileCategory": "docs"},
+    {"path": "electron-builder.yml", "language": "yaml", "sizeLines": 43, "fileCategory": "config"},
+    {"path": "evolve-calculator-theme.md", "language": "markdown", "sizeLines": 269, "fileCategory": "docs"},
+    {"path": "index.html", "language": "html", "sizeLines": 16, "fileCategory": "markup"},
+    {"path": "package.json", "language": "json", "sizeLines": 49, "fileCategory": "config"},
+    {"path": "tsconfig.json", "language": "json", "sizeLines": 21, "fileCategory": "config"}
+  ],
+  "batchImportData": {
+    "README.md": [],
+    "electron-builder.yml": [],
+    "evolve-calculator-theme.md": [],
+    "index.html": [],
+    "package.json": [],
+    "tsconfig.json": []
+  }
+}

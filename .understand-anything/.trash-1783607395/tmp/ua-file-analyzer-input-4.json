@@ -1,0 +1,9 @@
+{
+  "projectRoot": "/Users/mellon/GIthubLocal/Ble-calculator",
+  "batchFiles": [
+    {"path": ".github/workflows/release.yml", "language": "yaml", "sizeLines": 110, "fileCategory": "infra"}
+  ],
+  "batchImportData": {
+    ".github/workflows/release.yml": []
+  }
+}

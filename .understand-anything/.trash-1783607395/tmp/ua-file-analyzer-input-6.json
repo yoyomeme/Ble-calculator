@@ -1,0 +1,15 @@
+{
+  "projectRoot": "/Users/mellon/GIthubLocal/Ble-calculator",
+  "batchFiles": [
+    {"path": "docs/calculator-architecture.md", "language": "markdown", "sizeLines": 1005, "fileCategory": "docs"},
+    {"path": "docs/developer-onboarding.md", "language": "markdown", "sizeLines": 177, "fileCategory": "docs"},
+    {"path": "docs/runtime-native-and-security.md", "language": "markdown", "sizeLines": 607, "fileCategory": "docs"},
+    {"path": "docs/ui-layout-and-visual-pass.md", "language": "markdown", "sizeLines": 190, "fileCategory": "docs"}
+  ],
+  "batchImportData": {
+    "docs/calculator-architecture.md": [],
+    "docs/developer-onboarding.md": [],
+    "docs/runtime-native-and-security.md": [],
+    "docs/ui-layout-and-visual-pass.md": []
+  }
+}

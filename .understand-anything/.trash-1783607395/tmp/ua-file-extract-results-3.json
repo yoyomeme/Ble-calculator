@@ -1,0 +1,458 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 5,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "src/electron/main.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 80,
+      "nonEmptyLines": 72,
+      "functions": [
+        {
+          "name": "registerCalculatorIpc",
+          "startLine": 15,
+          "endLine": 38,
+          "params": []
+        },
+        {
+          "name": "createWindow",
+          "startLine": 40,
+          "endLine": 63,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "getCalculatorApi",
+          "lineNumber": 16
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 18
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.getState",
+          "lineNumber": 18
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 19
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.createRoom",
+          "lineNumber": 20
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 22
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.startScanning",
+          "lineNumber": 22
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 23
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.connectGuest",
+          "lineNumber": 24
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 26
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.scanRooms",
+          "lineNumber": 26
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 27
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.joinRoom",
+          "lineNumber": 28
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 30
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.startAdvertising",
+          "lineNumber": 31
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 33
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.acceptHostConnection",
+          "lineNumber": 33
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 34
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.resetBleSession",
+          "lineNumber": 34
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "ipcMain.handle",
+          "lineNumber": 35
+        },
+        {
+          "caller": "registerCalculatorIpc",
+          "callee": "api.submitCalculation",
+          "lineNumber": 36
+        },
+        {
+          "caller": "createWindow",
+          "callee": "path.join",
+          "lineNumber": 49
+        },
+        {
+          "caller": "createWindow",
+          "callee": "mainWindow.loadURL",
+          "lineNumber": 58
+        },
+        {
+          "caller": "createWindow",
+          "callee": "mainWindow.webContents.openDevTools",
+          "lineNumber": 59
+        },
+        {
+          "caller": "createWindow",
+          "callee": "mainWindow.loadFile",
+          "lineNumber": 61
+        },
+        {
+          "caller": "createWindow",
+          "callee": "path.join",
+          "lineNumber": 61
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/electron/native-calculator.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 225,
+      "nonEmptyLines": 210,
+      "functions": [
+        {
+          "name": "getCalculatorApi",
+          "startLine": 26,
+          "endLine": 33,
+          "params": []
+        },
+        {
+          "name": "loadNativeApi",
+          "startLine": 35,
+          "endLine": 51,
+          "params": []
+        },
+        {
+          "name": "isNativeCalculatorApi",
+          "startLine": 53,
+          "endLine": 66,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isMissingModuleError",
+          "startLine": 68,
+          "endLine": 74,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "createMockCalculatorApi",
+          "startLine": 76,
+          "endLine": 221,
+          "params": []
+        },
+        {
+          "name": "cloneState",
+          "startLine": 223,
+          "endLine": 225,
+          "params": [
+            "state"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getCalculatorApi",
+          "line": 26,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getCalculatorApi",
+          "callee": "loadNativeApi",
+          "lineNumber": 31
+        },
+        {
+          "caller": "getCalculatorApi",
+          "callee": "createMockCalculatorApi",
+          "lineNumber": 31
+        },
+        {
+          "caller": "loadNativeApi",
+          "callee": "requireNative",
+          "lineNumber": 38
+        },
+        {
+          "caller": "loadNativeApi",
+          "callee": "isNativeCalculatorApi",
+          "lineNumber": 40
+        },
+        {
+          "caller": "loadNativeApi",
+          "callee": "isMissingModuleError",
+          "lineNumber": 44
+        },
+        {
+          "caller": "loadNativeApi",
+          "callee": "console.warn",
+          "lineNumber": 45
+        },
+        {
+          "caller": "createMockCalculatorApi",
+          "callee": "randomUUID",
+          "lineNumber": 77
+        },
+        {
+          "caller": "getState",
+          "callee": "cloneState",
+          "lineNumber": 93
+        },
+        {
+          "caller": "createRoom",
+          "callee": "randomUUID().slice",
+          "lineNumber": 96
+        },
+        {
+          "caller": "createRoom",
+          "callee": "randomUUID",
+          "lineNumber": 96
+        },
+        {
+          "caller": "createRoom",
+          "callee": "request.roomName.trim",
+          "lineNumber": 97
+        },
+        {
+          "caller": "createRoom",
+          "callee": "cloneState",
+          "lineNumber": 103
+        },
+        {
+          "caller": "startScanning",
+          "callee": "state.peers.push",
+          "lineNumber": 110
+        },
+        {
+          "caller": "startScanning",
+          "callee": "new Date().toISOString",
+          "lineNumber": 117
+        },
+        {
+          "caller": "startScanning",
+          "callee": "cloneState",
+          "lineNumber": 120
+        },
+        {
+          "caller": "connectGuest",
+          "callee": "state.peers.map",
+          "lineNumber": 123
+        },
+        {
+          "caller": "connectGuest",
+          "callee": "cloneState",
+          "lineNumber": 126
+        },
+        {
+          "caller": "scanRooms",
+          "callee": "new Date().toISOString",
+          "lineNumber": 141
+        },
+        {
+          "caller": "scanRooms",
+          "callee": "cloneState",
+          "lineNumber": 145
+        },
+        {
+          "caller": "joinRoom",
+          "callee": "state.rooms?.find",
+          "lineNumber": 148
+        },
+        {
+          "caller": "joinRoom",
+          "callee": "new Date().toISOString",
+          "lineNumber": 163
+        },
+        {
+          "caller": "joinRoom",
+          "callee": "cloneState",
+          "lineNumber": 166
+        },
+        {
+          "caller": "startAdvertising",
+          "callee": "request.roomCode.trim",
+          "lineNumber": 169
+        },
+        {
+          "caller": "startAdvertising",
+          "callee": "cloneState",
+          "lineNumber": 175
+        },
+        {
+          "caller": "acceptHostConnection",
+          "callee": "new Date().toISOString",
+          "lineNumber": 187
+        },
+        {
+          "caller": "acceptHostConnection",
+          "callee": "cloneState",
+          "lineNumber": 190
+        },
+        {
+          "caller": "resetBleSession",
+          "callee": "cloneState",
+          "lineNumber": 201
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "request.expression.trim",
+          "lineNumber": 204
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "cloneState",
+          "lineNumber": 206
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "state.history.unshift",
+          "lineNumber": 209
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "randomUUID",
+          "lineNumber": 210
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "calculateExpression",
+          "lineNumber": 213
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "new Date().toISOString",
+          "lineNumber": 215
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "cloneState",
+          "lineNumber": 218
+        },
+        {
+          "caller": "cloneState",
+          "callee": "JSON.parse",
+          "lineNumber": 224
+        },
+        {
+          "caller": "cloneState",
+          "callee": "JSON.stringify",
+          "lineNumber": 224
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/electron/preload.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 38,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/renderer/global.d.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 9,
+      "nonEmptyLines": 7,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/calculator-api.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 130,
+      "nonEmptyLines": 114,
+      "exports": [
+        {
+          "name": "calculatorChannels",
+          "line": 119,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    }
+  ]
+}

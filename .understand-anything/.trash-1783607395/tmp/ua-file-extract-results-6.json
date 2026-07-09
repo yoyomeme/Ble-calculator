@@ -1,0 +1,531 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 4,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "docs/calculator-architecture.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 1005,
+      "nonEmptyLines": 757,
+      "sections": [
+        {
+          "heading": "Evolve Calc Developer Guide",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Product Summary",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Language and Framework Choices",
+          "level": 2,
+          "line": 23
+        },
+        {
+          "heading": "Repository Map",
+          "level": 2,
+          "line": 38
+        },
+        {
+          "heading": "Runtime Architecture",
+          "level": 2,
+          "line": 78
+        },
+        {
+          "heading": "Process and State Ownership",
+          "level": 2,
+          "line": 114
+        },
+        {
+          "heading": "Electron Main Process",
+          "level": 2,
+          "line": 130
+        },
+        {
+          "heading": "Preload Bridge",
+          "level": 2,
+          "line": 165
+        },
+        {
+          "heading": "Shared API Contract",
+          "level": 2,
+          "line": 188
+        },
+        {
+          "heading": "Command Behavior Table",
+          "level": 3,
+          "line": 240
+        },
+        {
+          "heading": "Renderer UI",
+          "level": 2,
+          "line": 254
+        },
+        {
+          "heading": "Main UI Areas",
+          "level": 3,
+          "line": 262
+        },
+        {
+          "heading": "React Component Map",
+          "level": 3,
+          "line": 280
+        },
+        {
+          "heading": "Host Bench",
+          "level": 3,
+          "line": 310
+        },
+        {
+          "heading": "Calculator Surface",
+          "level": 3,
+          "line": 330
+        },
+        {
+          "heading": "Right Drawer",
+          "level": 3,
+          "line": 374
+        },
+        {
+          "heading": "Browser Mock API",
+          "level": 3,
+          "line": 383
+        },
+        {
+          "heading": "Styling and Responsive Rules",
+          "level": 2,
+          "line": 395
+        },
+        {
+          "heading": "Layout Invariants",
+          "level": 3,
+          "line": 420
+        },
+        {
+          "heading": "Calculator Expression Logic",
+          "level": 2,
+          "line": 442
+        },
+        {
+          "heading": "TypeScript Evaluator Details",
+          "level": 3,
+          "line": 478
+        },
+        {
+          "heading": "TypeScript Mock Native Adapter",
+          "level": 2,
+          "line": 521
+        },
+        {
+          "heading": "Adapter Loading Rules",
+          "level": 3,
+          "line": 552
+        },
+        {
+          "heading": "Rust Native Module",
+          "level": 2,
+          "line": 565
+        },
+        {
+          "heading": "Rust State and Command Logic",
+          "level": 3,
+          "line": 605
+        },
+        {
+          "heading": "Native Implementation Status",
+          "level": 3,
+          "line": 635
+        },
+        {
+          "heading": "Planned Rust Responsibilities",
+          "level": 3,
+          "line": 664
+        },
+        {
+          "heading": "BLE Role Model",
+          "level": 2,
+          "line": 684
+        },
+        {
+          "heading": "Planned BLE Message Flow",
+          "level": 3,
+          "line": 723
+        },
+        {
+          "heading": "End-to-End User Flows",
+          "level": 2,
+          "line": 750
+        },
+        {
+          "heading": "Load App",
+          "level": 3,
+          "line": 752
+        },
+        {
+          "heading": "Host Creates Room",
+          "level": 3,
+          "line": 761
+        },
+        {
+          "heading": "Host Finds and Approves Guest",
+          "level": 3,
+          "line": 774
+        },
+        {
+          "heading": "Guest Finds and Joins Room",
+          "level": 3,
+          "line": 788
+        },
+        {
+          "heading": "Reset BLE Session",
+          "level": 3,
+          "line": 805
+        },
+        {
+          "heading": "Submit Calculation",
+          "level": 3,
+          "line": 820
+        },
+        {
+          "heading": "Error Flow",
+          "level": 3,
+          "line": 831
+        },
+        {
+          "heading": "Security Boundaries",
+          "level": 2,
+          "line": 842
+        },
+        {
+          "heading": "High-Assurance Backend Option",
+          "level": 3,
+          "line": 880
+        },
+        {
+          "heading": "Build and Development Commands",
+          "level": 2,
+          "line": 892
+        },
+        {
+          "heading": "Visual UI Pass",
+          "level": 2,
+          "line": 944
+        },
+        {
+          "heading": "Known Current Limitations",
+          "level": 2,
+          "line": 981
+        },
+        {
+          "heading": "Suggested Next Development Steps",
+          "level": 2,
+          "line": 992
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 43
+      }
+    },
+    {
+      "path": "docs/developer-onboarding.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 177,
+      "nonEmptyLines": 133,
+      "sections": [
+        {
+          "heading": "Developer Onboarding",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "What This App Is",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Read These First",
+          "level": 2,
+          "line": 22
+        },
+        {
+          "heading": "Main Code Paths",
+          "level": 2,
+          "line": 32
+        },
+        {
+          "heading": "Run Locally",
+          "level": 2,
+          "line": 46
+        },
+        {
+          "heading": "Validate Changes",
+          "level": 2,
+          "line": 72
+        },
+        {
+          "heading": "Current Feature Set",
+          "level": 2,
+          "line": 109
+        },
+        {
+          "heading": "Important Boundaries",
+          "level": 2,
+          "line": 126
+        },
+        {
+          "heading": "Common Development Tasks",
+          "level": 2,
+          "line": 139
+        },
+        {
+          "heading": "Prototype Limitations",
+          "level": 2,
+          "line": 168
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 10
+      }
+    },
+    {
+      "path": "docs/runtime-native-and-security.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 607,
+      "nonEmptyLines": 467,
+      "sections": [
+        {
+          "heading": "Runtime, Native Core, and Security Notes",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Runtime Path",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Electron Security Settings",
+          "level": 2,
+          "line": 32
+        },
+        {
+          "heading": "IPC Channels",
+          "level": 2,
+          "line": 62
+        },
+        {
+          "heading": "Native Adapter Loading",
+          "level": 2,
+          "line": 80
+        },
+        {
+          "heading": "Mock Adapter Behavior",
+          "level": 2,
+          "line": 97
+        },
+        {
+          "heading": "Rust Native Scaffold",
+          "level": 2,
+          "line": 113
+        },
+        {
+          "heading": "Cross-Platform BLE Peripheral Backends",
+          "level": 2,
+          "line": 194
+        },
+        {
+          "heading": "macOS CoreBluetooth Backend Notes",
+          "level": 3,
+          "line": 232
+        },
+        {
+          "heading": "Linux BlueZ Backend Notes",
+          "level": 3,
+          "line": 248
+        },
+        {
+          "heading": "Windows GattServiceProvider Backend Notes",
+          "level": 3,
+          "line": 267
+        },
+        {
+          "heading": "Native Build",
+          "level": 2,
+          "line": 290
+        },
+        {
+          "heading": "Desktop Packaging",
+          "level": 2,
+          "line": 328
+        },
+        {
+          "heading": "One-Click All-Platform Release",
+          "level": 3,
+          "line": 374
+        },
+        {
+          "heading": "Planned Native Architecture",
+          "level": 2,
+          "line": 408
+        },
+        {
+          "heading": "BLE Roles",
+          "level": 2,
+          "line": 429
+        },
+        {
+          "heading": "Secure Storage Plan",
+          "level": 2,
+          "line": 456
+        },
+        {
+          "heading": "SQLite Plan",
+          "level": 2,
+          "line": 468
+        },
+        {
+          "heading": "Credential and Trust Plan",
+          "level": 2,
+          "line": 483
+        },
+        {
+          "heading": "Request Validation Needed",
+          "level": 2,
+          "line": 497
+        },
+        {
+          "heading": "Failure Handling Needed",
+          "level": 2,
+          "line": 510
+        },
+        {
+          "heading": "Outstanding Work (TODO)",
+          "level": 2,
+          "line": 527
+        },
+        {
+          "heading": "BLE peripheral backends",
+          "level": 3,
+          "line": 533
+        },
+        {
+          "heading": "Receive-side GATT transport (shared across all three backends)",
+          "level": 3,
+          "line": 553
+        },
+        {
+          "heading": "Credential trust (still fail-closed)",
+          "level": 3,
+          "line": 577
+        },
+        {
+          "heading": "Build / packaging / CI",
+          "level": 3,
+          "line": 593
+        },
+        {
+          "heading": "Boundary hardening (pre-production)",
+          "level": 3,
+          "line": 602
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 27
+      }
+    },
+    {
+      "path": "docs/ui-layout-and-visual-pass.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 190,
+      "nonEmptyLines": 131,
+      "sections": [
+        {
+          "heading": "UI Layout and Visual Pass",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Design Goal",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Primary Files",
+          "level": 2,
+          "line": 15
+        },
+        {
+          "heading": "Layout Model",
+          "level": 2,
+          "line": 25
+        },
+        {
+          "heading": "Fixed Dimensions",
+          "level": 2,
+          "line": 56
+        },
+        {
+          "heading": "Overflow Rules",
+          "level": 2,
+          "line": 70
+        },
+        {
+          "heading": "Component Responsibilities",
+          "level": 2,
+          "line": 82
+        },
+        {
+          "heading": "Browser Mock",
+          "level": 2,
+          "line": 96
+        },
+        {
+          "heading": "Visual Screenshot Pass",
+          "level": 2,
+          "line": 110
+        },
+        {
+          "heading": "Scenarios",
+          "level": 2,
+          "line": 131
+        },
+        {
+          "heading": "Overlap Detection",
+          "level": 2,
+          "line": 159
+        },
+        {
+          "heading": "When Changing UI",
+          "level": 2,
+          "line": 180
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 12
+      }
+    }
+  ]
+}

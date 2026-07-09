@@ -1,0 +1,732 @@
+{
+  "nodes": [
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "config",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Configures the Understand-Anything knowledge graph tool by excluding generated artifacts, build outputs, and test files from analysis.",
+      "tags": ["configuration", "tools", "exclusions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:artifacts/browser-visual-ui-pass/report.json",
+      "type": "file",
+      "name": "report.json",
+      "filePath": "artifacts/browser-visual-ui-pass/report.json",
+      "summary": "Test artifact containing visual regression test results from the browser-based UI pass verification script.",
+      "tags": ["artifact", "test-report", "visual-regression"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:crates/native/build.rs",
+      "type": "file",
+      "name": "build.rs",
+      "filePath": "crates/native/build.rs",
+      "summary": "Rust build script that invokes napi-build to configure the napi-rs native module compilation.",
+      "tags": ["build-script", "rust", "napi-rs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:crates/native/Cargo.toml",
+      "type": "config",
+      "name": "Cargo.toml",
+      "filePath": "crates/native/Cargo.toml",
+      "summary": "Rust package configuration defining the napi-rs native module with platform-specific BLE dependencies (Core Bluetooth on macOS, WinRT on Windows, BlueZ on Linux).",
+      "tags": ["configuration", "rust", "dependencies", "ble"],
+      "complexity": "moderate",
+      "languageNotes": "Conditional dependencies per target OS (macos/windows/linux) for platform-specific BLE implementations."
+    },
+    {
+      "id": "document:crates/native/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "crates/native/README.md",
+      "summary": "Documents the Rust napi-rs module scope, including current scaffold (mock BLE data) and planned native responsibilities (BLE flows, chunking, keychain, SQLite, cryptography).",
+      "tags": ["documentation", "rust", "architecture", "ble"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:eslint.config.mjs",
+      "type": "config",
+      "name": "eslint.config.mjs",
+      "filePath": "eslint.config.mjs",
+      "summary": "ESLint flat configuration enabling TypeScript, React Hooks rules, and consistent-type-imports enforcement across the codebase.",
+      "tags": ["configuration", "linting", "typescript", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/browser-visual-ui-pass.mjs",
+      "type": "file",
+      "name": "browser-visual-ui-pass.mjs",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "summary": "Visual regression testing script that launches Chrome with CDP, captures screenshots, applies scenario scripts, and computes element overlap metrics.",
+      "tags": ["testing", "visual-regression", "cdp", "automation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:scripts/build-mac-arm64.command",
+      "type": "file",
+      "name": "build-mac-arm64.command",
+      "filePath": "scripts/build-mac-arm64.command",
+      "summary": "Shell script that builds the native Rust module for macOS arm64 target using cargo, then restores the .node artifact to the project root.",
+      "tags": ["build-script", "macos", "rust", "native-module"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/build-native-optional.mjs",
+      "type": "file",
+      "name": "build-native-optional.mjs",
+      "filePath": "scripts/build-native-optional.mjs",
+      "summary": "Conditional native module build script that only runs cargo build if the .node artifact is missing, skipping build for prebuilt artifacts.",
+      "tags": ["build-script", "rust", "native-module", "conditional-build"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/build-native.mjs",
+      "type": "file",
+      "name": "build-native.mjs",
+      "filePath": "scripts/build-native.mjs",
+      "summary": "Native module build script that invokes cargo with napi-rs to compile the Rust core into a Node.js addon.",
+      "tags": ["build-script", "rust", "napi-rs", "native-module"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/next-version.mjs",
+      "type": "file",
+      "name": "next-version.mjs",
+      "filePath": "scripts/next-version.mjs",
+      "summary": "Version bumping utility that queries GitHub for the latest release tag and prints the next development version number.",
+      "tags": ["script", "versioning", "github", "release"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/package-platforms.mjs",
+      "type": "file",
+      "name": "package-platforms.mjs",
+      "filePath": "scripts/package-platforms.mjs",
+      "summary": "Cross-platform packaging orchestrator that builds native modules for multiple targets, runs electron-builder, and manages Rust toolchain installation per target.",
+      "tags": ["build-script", "packaging", "cross-platform", "electron", "rust"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:scripts/release-all.bat",
+      "type": "file",
+      "name": "release-all.bat",
+      "filePath": "scripts/release-all.bat",
+      "summary": "Windows batch script that builds the native module, installs dependencies, and runs the cross-platform packaging script for all platforms.",
+      "tags": ["build-script", "windows", "packaging", "release"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/release-all.command",
+      "type": "file",
+      "name": "release-all.command",
+      "filePath": "scripts/release-all.command",
+      "summary": "macOS command script that builds the native module, installs dependencies, and runs the cross-platform packaging script for all platforms.",
+      "tags": ["build-script", "macos", "packaging", "release"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/visual-ui-pass.mjs",
+      "type": "file",
+      "name": "visual-ui-pass.mjs",
+      "filePath": "scripts/visual-ui-pass.mjs",
+      "summary": "Electron-based visual UI verification script that waits for the dev server, applies scenario scripts, and captures screenshots for regression testing.",
+      "tags": ["testing", "visual-regression", "electron", "screenshot"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/visual-ui-screenshot-app.cjs",
+      "type": "file",
+      "name": "visual-ui-screenshot-app.cjs",
+      "filePath": "scripts/visual-ui-screenshot-app.cjs",
+      "summary": "Electron app launcher for visual testing that loads the renderer, executes scenario scripts via CDP, captures screenshots, and computes element overlap metrics.",
+      "tags": ["testing", "electron", "screenshot", "cdp"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/renderer/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "src/renderer/index.html",
+      "summary": "HTML entry point for the renderer process with strict CSP and a root div where React mounts.",
+      "tags": ["entry-point", "html", "renderer", "csp"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/renderer/styles.css",
+      "type": "file",
+      "name": "styles.css",
+      "filePath": "src/renderer/styles.css",
+      "summary": "Global stylesheet for the renderer UI defining layout, typography, and component styles.",
+      "tags": ["styles", "css", "ui", "renderer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:vite.config.mts",
+      "type": "config",
+      "name": "vite.config.mts",
+      "filePath": "vite.config.mts",
+      "summary": "Vite configuration for the renderer dev server with React plugin, custom root, and strict port binding.",
+      "tags": ["configuration", "vite", "dev-server", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:vitest.config.mts",
+      "type": "config",
+      "name": "vitest.config.mts",
+      "filePath": "vitest.config.mts",
+      "summary": "Vitest configuration defining test file patterns and excluding build artifacts from the test run.",
+      "tags": ["configuration", "vitest", "testing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [28, 134],
+      "summary": "Main test orchestrator that launches Chrome, connects via CDP, runs visual scenarios, captures screenshots, and writes overlap reports.",
+      "tags": ["orchestrator", "testing", "cdp", "screenshot"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:scenarioScript",
+      "type": "function",
+      "name": "scenarioScript",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [149, 184],
+      "summary": "Constructs a CDP script that evaluates a user action (type or click) on a DOM element during visual testing.",
+      "tags": ["testing", "cdp", "scenario", "dom"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:metricsScript",
+      "type": "function",
+      "name": "metricsScript",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [186, 228],
+      "summary": "Constructs a CDP script that queries element positions and sizes to compute overlap metrics for visual regression detection.",
+      "tags": ["testing", "metrics", "overlap", "visual-regression"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:getOverlaps",
+      "type": "function",
+      "name": "getOverlaps",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [230, 248],
+      "summary": "Computes overlapping areas between rectangle pairs to detect UI element collisions.",
+      "tags": ["utility", "geometry", "overlap", "metrics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:waitForLoad",
+      "type": "function",
+      "name": "waitForLoad",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [250, 262],
+      "summary": "Waits for a page load event via CDP with timeout and cleanup support.",
+      "tags": ["utility", "cdp", "async", "timeout"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:waitForHttp",
+      "type": "function",
+      "name": "waitForHttp",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [264, 275],
+      "summary": "Polls an HTTP URL until it responds successfully or times out.",
+      "tags": ["utility", "http", "polling", "timeout"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/browser-visual-ui-pass.mjs:fetchText",
+      "type": "function",
+      "name": "fetchText",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [285, 304],
+      "summary": "Performs an HTTP GET request using Node's http module and returns the response body as text.",
+      "tags": ["utility", "http", "network", "fetch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:scripts/browser-visual-ui-pass.mjs:CdpClient",
+      "type": "class",
+      "name": "CdpClient",
+      "filePath": "scripts/browser-visual-ui-pass.mjs",
+      "lineRange": [306, 370],
+      "summary": "WebSocket-based Chrome DevTools Protocol client that sends commands, handles responses via promises, and emits event notifications.",
+      "tags": ["cdp", "websocket", "client", "async"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/next-version.mjs:latestTag",
+      "type": "function",
+      "name": "latestTag",
+      "filePath": "scripts/next-version.mjs",
+      "lineRange": [42, 54],
+      "summary": "Queries GitHub for all tags, filters for semver format, sorts them, and returns the latest version tag.",
+      "tags": ["utility", "git", "versioning", "github"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:buildNativeForTarget",
+      "type": "function",
+      "name": "buildNativeForTarget",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [103, 123],
+      "summary": "Builds the Rust native module for a specific target triple, ensuring the Rust target is installed first.",
+      "tags": ["build", "rust", "cross-platform", "native-module"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:expandTargets",
+      "type": "function",
+      "name": "expandTargets",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [125, 141],
+      "summary": "Expands shorthand target names (macos, windows, linux) into full target triples for each architecture.",
+      "tags": ["utility", "targets", "cross-platform", "parsing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:currentTargetKey",
+      "type": "function",
+      "name": "currentTargetKey",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [154, 170],
+      "summary": "Detects the current host platform and architecture to return the corresponding target triple key.",
+      "tags": ["utility", "platform-detection", "target", "host"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:ensureRustTargetInstalled",
+      "type": "function",
+      "name": "ensureRustTargetInstalled",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [179, 199],
+      "summary": "Checks if a Rust target is installed via rustup and adds it if missing.",
+      "tags": ["utility", "rust", "rustup", "toolchain"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:buildEnvWithRustupCargo",
+      "type": "function",
+      "name": "buildEnvWithRustupCargo",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [210, 229],
+      "summary": "Builds an environment object for spawning processes, adding the rustup cargo bin directory to PATH for native module builds.",
+      "tags": ["utility", "rust", "environment", "cargo"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:run",
+      "type": "function",
+      "name": "run",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [231, 247],
+      "summary": "Spawns a command synchronously and throws an error if the exit code is non-zero.",
+      "tags": ["utility", "process", "spawn", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:stashNativeArtifacts",
+      "type": "function",
+      "name": "stashNativeArtifacts",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [249, 271],
+      "summary": "Moves compiled .node artifacts to a staging directory to prevent them from being overwritten during cross-platform builds.",
+      "tags": ["utility", "build", "artifacts", "staging"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/package-platforms.mjs:printPlan",
+      "type": "function",
+      "name": "printPlan",
+      "filePath": "scripts/package-platforms.mjs",
+      "lineRange": [282, 293],
+      "summary": "Prints a formatted summary of the build plan including targets and Electron platform groups.",
+      "tags": ["utility", "logging", "build-plan", "output"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/visual-ui-pass.mjs:waitForServer",
+      "type": "function",
+      "name": "waitForServer",
+      "filePath": "scripts/visual-ui-pass.mjs",
+      "lineRange": [76, 87],
+      "summary": "Polls a server URL until it becomes reachable, with timeout and retry logic.",
+      "tags": ["utility", "async", "polling", "timeout"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/visual-ui-pass.mjs:canReach",
+      "type": "function",
+      "name": "canReach",
+      "filePath": "scripts/visual-ui-pass.mjs",
+      "lineRange": [89, 102],
+      "summary": "Attempts an HTTP GET request with a short timeout to check if a URL is reachable.",
+      "tags": ["utility", "http", "network", "connectivity"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/visual-ui-screenshot-app.cjs:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/visual-ui-screenshot-app.cjs",
+      "lineRange": [15, 75],
+      "summary": "Electron app launcher that creates a window, loads the renderer, executes scenario scripts, captures screenshots, and saves overlap reports.",
+      "tags": ["orchestrator", "electron", "testing", "screenshot"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/visual-ui-screenshot-app.cjs:applyScenarioScript",
+      "type": "function",
+      "name": "applyScenarioScript",
+      "filePath": "scripts/visual-ui-screenshot-app.cjs",
+      "lineRange": [86, 97],
+      "summary": "Constructs a script string that applies a user action (type or click) to a DOM element for scenario testing.",
+      "tags": ["testing", "scenario", "dom", "scripting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/visual-ui-screenshot-app.cjs:metricsScript",
+      "type": "function",
+      "name": "metricsScript",
+      "filePath": "scripts/visual-ui-screenshot-app.cjs",
+      "lineRange": [99, 140],
+      "summary": "Constructs a script that queries element metrics to compute overlaps for visual regression detection.",
+      "tags": ["testing", "metrics", "overlap", "visual-regression"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/visual-ui-screenshot-app.cjs:getOverlaps",
+      "type": "function",
+      "name": "getOverlaps",
+      "filePath": "scripts/visual-ui-screenshot-app.cjs",
+      "lineRange": [142, 160],
+      "summary": "Computes overlapping rectangle areas to detect UI element collisions.",
+      "tags": ["utility", "geometry", "overlap", "metrics"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:scenarioScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:metricsScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:getOverlaps",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:waitForLoad",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:waitForHttp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "function:scripts/browser-visual-ui-pass.mjs:fetchText",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "class:scripts/browser-visual-ui-pass.mjs:CdpClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/browser-visual-ui-pass.mjs",
+      "target": "file:artifacts/browser-visual-ui-pass/report.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/next-version.mjs",
+      "target": "function:scripts/next-version.mjs:latestTag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:buildNativeForTarget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:expandTargets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:currentTargetKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:ensureRustTargetInstalled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:buildEnvWithRustupCargo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:stashNativeArtifacts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "function:scripts/package-platforms.mjs:printPlan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/package-platforms.mjs",
+      "target": "file:scripts/build-native.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/release-all.bat",
+      "target": "file:scripts/build-native.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/release-all.bat",
+      "target": "file:scripts/package-platforms.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/release-all.command",
+      "target": "file:scripts/build-native.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/release-all.command",
+      "target": "file:scripts/package-platforms.mjs",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/visual-ui-pass.mjs",
+      "target": "function:scripts/visual-ui-pass.mjs:waitForServer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/visual-ui-pass.mjs",
+      "target": "function:scripts/visual-ui-pass.mjs:canReach",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/visual-ui-screenshot-app.cjs",
+      "target": "function:scripts/visual-ui-screenshot-app.cjs:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/visual-ui-screenshot-app.cjs",
+      "target": "function:scripts/visual-ui-screenshot-app.cjs:applyScenarioScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/visual-ui-screenshot-app.cjs",
+      "target": "function:scripts/visual-ui-screenshot-app.cjs:metricsScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/visual-ui-screenshot-app.cjs",
+      "target": "function:scripts/visual-ui-screenshot-app.cjs:getOverlaps",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:scripts/visual-ui-screenshot-app.cjs",
+      "target": "file:src/renderer/index.html",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:vite.config.mts",
+      "target": "file:src/renderer/index.html",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:crates/native/Cargo.toml",
+      "target": "file:crates/native/build.rs",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:vite.config.mts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:scripts/browser-visual-ui-pass.mjs",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:scripts/next-version.mjs",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:scripts/package-platforms.mjs",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:scripts/visual-ui-pass.mjs",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:scripts/visual-ui-screenshot-app.cjs",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:crates/native/README.md",
+      "target": "config:crates/native/Cargo.toml",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/renderer/index.html",
+      "target": "file:src/renderer/styles.css",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/renderer/index.html",
+      "target": "file:src/renderer/main.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:vitest.config.mts",
+      "target": "file:vite.config.mts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:scripts/build-mac-arm64.command",
+      "target": "config:crates/native/Cargo.toml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:scripts/build-native-optional.mjs",
+      "target": "file:scripts/build-native.mjs",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:scripts/build-native.mjs",
+      "target": "config:crates/native/Cargo.toml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

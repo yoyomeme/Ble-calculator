@@ -1,0 +1,268 @@
+{
+  "nodes": [
+    {
+      "id": "document:docs/calculator-architecture.md",
+      "type": "document",
+      "name": "calculator-architecture.md",
+      "filePath": "docs/calculator-architecture.md",
+      "summary": "Comprehensive architecture document covering the Electron+React+Rust calculator app, including runtime architecture, UI behavior, native module boundaries, BLE roles, security boundaries, end-to-end user flows, and planned development steps.",
+      "tags": ["documentation", "architecture", "development", "entry-point"],
+      "complexity": "complex",
+      "languageNotes": "43-section markdown with extensive diagrams, tables, and cross-references to source files."
+    },
+    {
+      "id": "document:docs/developer-onboarding.md",
+      "type": "document",
+      "name": "developer-onboarding.md",
+      "filePath": "docs/developer-onboarding.md",
+      "summary": "Concise developer onboarding guide providing the shortest path for new developers to understand the calculator app, with read-first document pointers, main code paths, local development commands, validation steps, and common development tasks.",
+      "tags": ["documentation", "onboarding", "development", "entry-point"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/runtime-native-and-security.md",
+      "type": "document",
+      "name": "runtime-native-and-security.md",
+      "filePath": "docs/runtime-native-and-security.md",
+      "summary": "Technical deep-dive on Electron security settings, IPC channels, native adapter loading, Rust scaffold, cross-platform BLE peripheral backends (macOS CoreBluetooth, Linux BlueZ, Windows GattServiceProvider), secure storage planning, and outstanding security work.",
+      "tags": ["documentation", "security", "infrastructure", "development"],
+      "complexity": "complex",
+      "languageNotes": "27 sections covering platform-specific BLE backends and security boundary planning."
+    },
+    {
+      "id": "document:docs/ui-layout-and-visual-pass.md",
+      "type": "document",
+      "name": "ui-layout-and-visual-pass.md",
+      "filePath": "docs/ui-layout-and-visual-pass.md",
+      "summary": "UI layout documentation explaining the grid-based layout model, fixed calculator dimensions (420px x 620px), overflow rules, component responsibilities, browser mock for visual review, and automated screenshot testing via Chrome DevTools Protocol.",
+      "tags": ["documentation", "ui", "testing", "development"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "document:docs/calculator-architecture.md",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "document:docs/runtime-native-and-security.md",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "document:docs/ui-layout-and-visual-pass.md",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/renderer/main.tsx",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/renderer/styles.css",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/renderer/browser-calculator.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/shared/expression.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/electron/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/electron/preload.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:src/electron/native-calculator.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:crates/native/src/lib.rs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/developer-onboarding.md",
+      "target": "file:scripts/browser-visual-ui-pass.mjs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/runtime-native-and-security.md",
+      "target": "file:src/electron/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/runtime-native-and-security.md",
+      "target": "file:src/electron/preload.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/runtime-native-and-security.md",
+      "target": "file:src/electron/native-calculator.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/runtime-native-and-security.md",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/runtime-native-and-security.md",
+      "target": "file:crates/native/src/lib.rs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/ui-layout-and-visual-pass.md",
+      "target": "file:src/renderer/main.tsx",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/ui-layout-and-visual-pass.md",
+      "target": "file:src/renderer/styles.css",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/ui-layout-and-visual-pass.md",
+      "target": "file:src/renderer/browser-calculator.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/ui-layout-and-visual-pass.md",
+      "target": "file:scripts/browser-visual-ui-pass.mjs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/electron/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/electron/preload.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/electron/native-calculator.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/renderer/main.tsx",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/renderer/browser-calculator.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/shared/calculator-api.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:src/shared/expression.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:crates/native/src/lib.rs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:scripts/build-native.mjs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/calculator-architecture.md",
+      "target": "file:scripts/browser-visual-ui-pass.mjs",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

@@ -1,0 +1,1750 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 6,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "src/renderer/browser-calculator.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 171,
+      "nonEmptyLines": 165,
+      "functions": [
+        {
+          "name": "createBrowserCalculatorApi",
+          "startLine": 12,
+          "endLine": 163,
+          "params": []
+        },
+        {
+          "name": "cloneState",
+          "startLine": 165,
+          "endLine": 167,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "randomId",
+          "startLine": 169,
+          "endLine": 171,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "createBrowserCalculatorApi",
+          "line": 12,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "createBrowserCalculatorApi",
+          "callee": "randomId",
+          "lineNumber": 13
+        },
+        {
+          "caller": "getState",
+          "callee": "cloneState",
+          "lineNumber": 29
+        },
+        {
+          "caller": "createRoom",
+          "callee": "randomId().slice",
+          "lineNumber": 32
+        },
+        {
+          "caller": "createRoom",
+          "callee": "randomId",
+          "lineNumber": 32
+        },
+        {
+          "caller": "createRoom",
+          "callee": "request.roomName.trim",
+          "lineNumber": 33
+        },
+        {
+          "caller": "createRoom",
+          "callee": "cloneState",
+          "lineNumber": 39
+        },
+        {
+          "caller": "startScanning",
+          "callee": "state.peers.push",
+          "lineNumber": 46
+        },
+        {
+          "caller": "startScanning",
+          "callee": "new Date().toISOString",
+          "lineNumber": 53
+        },
+        {
+          "caller": "startScanning",
+          "callee": "cloneState",
+          "lineNumber": 57
+        },
+        {
+          "caller": "connectGuest",
+          "callee": "state.peers.map",
+          "lineNumber": 60
+        },
+        {
+          "caller": "connectGuest",
+          "callee": "cloneState",
+          "lineNumber": 66
+        },
+        {
+          "caller": "scanRooms",
+          "callee": "new Date().toISOString",
+          "lineNumber": 81
+        },
+        {
+          "caller": "scanRooms",
+          "callee": "cloneState",
+          "lineNumber": 86
+        },
+        {
+          "caller": "joinRoom",
+          "callee": "state.rooms?.find",
+          "lineNumber": 89
+        },
+        {
+          "caller": "joinRoom",
+          "callee": "new Date().toISOString",
+          "lineNumber": 104
+        },
+        {
+          "caller": "joinRoom",
+          "callee": "cloneState",
+          "lineNumber": 108
+        },
+        {
+          "caller": "startAdvertising",
+          "callee": "request.roomCode.trim",
+          "lineNumber": 111
+        },
+        {
+          "caller": "startAdvertising",
+          "callee": "cloneState",
+          "lineNumber": 117
+        },
+        {
+          "caller": "acceptHostConnection",
+          "callee": "new Date().toISOString",
+          "lineNumber": 129
+        },
+        {
+          "caller": "acceptHostConnection",
+          "callee": "cloneState",
+          "lineNumber": 132
+        },
+        {
+          "caller": "resetBleSession",
+          "callee": "cloneState",
+          "lineNumber": 143
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "request.expression.trim",
+          "lineNumber": 146
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "cloneState",
+          "lineNumber": 148
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "state.history.unshift",
+          "lineNumber": 151
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "randomId",
+          "lineNumber": 152
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "calculateExpression",
+          "lineNumber": 155
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "new Date().toISOString",
+          "lineNumber": 157
+        },
+        {
+          "caller": "submitCalculation",
+          "callee": "cloneState",
+          "lineNumber": 160
+        },
+        {
+          "caller": "cloneState",
+          "callee": "JSON.parse",
+          "lineNumber": 166
+        },
+        {
+          "caller": "cloneState",
+          "callee": "JSON.stringify",
+          "lineNumber": 166
+        },
+        {
+          "caller": "randomId",
+          "callee": "globalThis.crypto?.randomUUID",
+          "lineNumber": 170
+        },
+        {
+          "caller": "randomId",
+          "callee": "Math.random().toString(36).slice",
+          "lineNumber": 170
+        },
+        {
+          "caller": "randomId",
+          "callee": "Math.random().toString",
+          "lineNumber": 170
+        },
+        {
+          "caller": "randomId",
+          "callee": "Math.random",
+          "lineNumber": 170
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/renderer/log-store.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 85,
+      "nonEmptyLines": 71,
+      "functions": [
+        {
+          "name": "formatEntryForCopy",
+          "startLine": 73,
+          "endLine": 83,
+          "params": [
+            "entry"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "LogStore",
+          "startLine": 21,
+          "endLine": 71,
+          "methods": [
+            "push",
+            "clear",
+            "toText",
+            "emit"
+          ],
+          "properties": [
+            "entries",
+            "listeners",
+            "nextId",
+            "subscribe",
+            "getSnapshot"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "formatEntryForCopy",
+          "line": 73,
+          "isDefault": false
+        },
+        {
+          "name": "logStore",
+          "line": 85,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "push",
+          "callee": "new Date().toISOString",
+          "lineNumber": 40
+        },
+        {
+          "caller": "push",
+          "callee": "this.entries.concat",
+          "lineNumber": 47
+        },
+        {
+          "caller": "push",
+          "callee": "next.slice",
+          "lineNumber": 49
+        },
+        {
+          "caller": "push",
+          "callee": "this.emit",
+          "lineNumber": 50
+        },
+        {
+          "caller": "clear",
+          "callee": "this.emit",
+          "lineNumber": 58
+        },
+        {
+          "caller": "toText",
+          "callee": "this.entries.map(formatEntryForCopy).join",
+          "lineNumber": 63
+        },
+        {
+          "caller": "toText",
+          "callee": "this.entries.map",
+          "lineNumber": 63
+        },
+        {
+          "caller": "emit",
+          "callee": "listener",
+          "lineNumber": 68
+        },
+        {
+          "caller": "formatEntryForCopy",
+          "callee": "entry.level.toUpperCase().padEnd",
+          "lineNumber": 74
+        },
+        {
+          "caller": "formatEntryForCopy",
+          "callee": "entry.level.toUpperCase",
+          "lineNumber": 74
+        },
+        {
+          "caller": "formatEntryForCopy",
+          "callee": "entry.scope.padEnd",
+          "lineNumber": 74
+        },
+        {
+          "caller": "formatEntryForCopy",
+          "callee": "entry.detail\n    .split(\"\\n\")\n    .map((line) => `    ${line}`)\n    .join",
+          "lineNumber": 78
+        },
+        {
+          "caller": "formatEntryForCopy",
+          "callee": "entry.detail\n    .split(\"\\n\")\n    .map",
+          "lineNumber": 78
+        },
+        {
+          "caller": "formatEntryForCopy",
+          "callee": "entry.detail\n    .split",
+          "lineNumber": 78
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/renderer/logging-calculator-api.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 194,
+      "nonEmptyLines": 179,
+      "functions": [
+        {
+          "name": "shorten",
+          "startLine": 19,
+          "endLine": 21,
+          "params": [
+            "value",
+            "keep"
+          ]
+        },
+        {
+          "name": "summarizeState",
+          "startLine": 23,
+          "endLine": 42,
+          "params": [
+            "state"
+          ]
+        },
+        {
+          "name": "describeArgs",
+          "startLine": 44,
+          "endLine": 53,
+          "params": [
+            "args"
+          ]
+        },
+        {
+          "name": "logStartupEnvironment",
+          "startLine": 61,
+          "endLine": 75,
+          "params": [
+            "hasNativeBridge"
+          ]
+        },
+        {
+          "name": "createLoggingCalculatorApi",
+          "startLine": 86,
+          "endLine": 194,
+          "params": [
+            "api"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "logStartupEnvironment",
+          "line": 61,
+          "isDefault": false
+        },
+        {
+          "name": "createLoggingCalculatorApi",
+          "line": 86,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "shorten",
+          "callee": "value.slice",
+          "lineNumber": 20
+        },
+        {
+          "caller": "summarizeState",
+          "callee": "state.peers.filter",
+          "lineNumber": 24
+        },
+        {
+          "caller": "summarizeState",
+          "callee": "lines.push",
+          "lineNumber": 32
+        },
+        {
+          "caller": "summarizeState",
+          "callee": "lines.push",
+          "lineNumber": 37
+        },
+        {
+          "caller": "summarizeState",
+          "callee": "shorten",
+          "lineNumber": 38
+        },
+        {
+          "caller": "summarizeState",
+          "callee": "lines.join",
+          "lineNumber": 41
+        },
+        {
+          "caller": "describeArgs",
+          "callee": "JSON.stringify",
+          "lineNumber": 49
+        },
+        {
+          "caller": "logStartupEnvironment",
+          "callee": "logStore.push",
+          "lineNumber": 69
+        },
+        {
+          "caller": "logStartupEnvironment",
+          "callee": "detailLines.join",
+          "lineNumber": 73
+        },
+        {
+          "caller": "processResult",
+          "callee": "logStore.push",
+          "lineNumber": 96
+        },
+        {
+          "caller": "processResult",
+          "callee": "Math.round",
+          "lineNumber": 99
+        },
+        {
+          "caller": "processResult",
+          "callee": "summarizeState",
+          "lineNumber": 100
+        },
+        {
+          "caller": "processResult",
+          "callee": "processDiagnostics",
+          "lineNumber": 102
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "logStore.push",
+          "lineNumber": 108
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "JSON.stringify",
+          "lineNumber": 112
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "loggedWarnings.has",
+          "lineNumber": 117
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "loggedWarnings.add",
+          "lineNumber": 118
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "logStore.push",
+          "lineNumber": 119
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "logStore.push",
+          "lineNumber": 127
+        },
+        {
+          "caller": "processDiagnostics",
+          "callee": "logStore.push",
+          "lineNumber": 129
+        },
+        {
+          "caller": "logged",
+          "callee": "performance.now",
+          "lineNumber": 139
+        },
+        {
+          "caller": "logged",
+          "callee": "logStore.push",
+          "lineNumber": 140
+        },
+        {
+          "caller": "logged",
+          "callee": "describeArgs",
+          "lineNumber": 140
+        },
+        {
+          "caller": "logged",
+          "callee": "run",
+          "lineNumber": 142
+        },
+        {
+          "caller": "logged",
+          "callee": "processResult",
+          "lineNumber": 143
+        },
+        {
+          "caller": "logged",
+          "callee": "performance.now",
+          "lineNumber": 143
+        },
+        {
+          "caller": "logged",
+          "callee": "logStore.push",
+          "lineNumber": 148
+        },
+        {
+          "caller": "logged",
+          "callee": "Math.round",
+          "lineNumber": 151
+        },
+        {
+          "caller": "logged",
+          "callee": "performance.now",
+          "lineNumber": 151
+        },
+        {
+          "caller": "pollState",
+          "callee": "api.getState",
+          "lineNumber": 159
+        },
+        {
+          "caller": "pollState",
+          "callee": "processDiagnostics",
+          "lineNumber": 160
+        },
+        {
+          "caller": "pollState",
+          "callee": "loggedPollErrors.has",
+          "lineNumber": 166
+        },
+        {
+          "caller": "pollState",
+          "callee": "loggedPollErrors.add",
+          "lineNumber": 167
+        },
+        {
+          "caller": "pollState",
+          "callee": "logStore.push",
+          "lineNumber": 168
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 175
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.getState",
+          "lineNumber": 175
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 178
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.createRoom",
+          "lineNumber": 178
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 179
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.startScanning",
+          "lineNumber": 179
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 181
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.connectGuest",
+          "lineNumber": 181
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 182
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.scanRooms",
+          "lineNumber": 182
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 184
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.joinRoom",
+          "lineNumber": 184
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 186
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.startAdvertising",
+          "lineNumber": 186
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 188
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.acceptHostConnection",
+          "lineNumber": 188
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 190
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.resetBleSession",
+          "lineNumber": 190
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "logged",
+          "lineNumber": 192
+        },
+        {
+          "caller": "createLoggingCalculatorApi",
+          "callee": "api.submitCalculation",
+          "lineNumber": 192
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 5,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/renderer/main.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 1111,
+      "nonEmptyLines": 1034,
+      "functions": [
+        {
+          "name": "canFitBothDrawers",
+          "startLine": 98,
+          "endLine": 100,
+          "params": []
+        },
+        {
+          "name": "App",
+          "startLine": 102,
+          "endLine": 502,
+          "params": []
+        },
+        {
+          "name": "LogConsole",
+          "startLine": 504,
+          "endLine": 611,
+          "params": [
+            "{ open, onToggle }"
+          ]
+        },
+        {
+          "name": "PanelHeader",
+          "startLine": 613,
+          "endLine": 620,
+          "params": [
+            "{ eyebrow, title }"
+          ]
+        },
+        {
+          "name": "StatusPill",
+          "startLine": 622,
+          "endLine": 629,
+          "params": [
+            "{ icon, label }"
+          ]
+        },
+        {
+          "name": "RoleSwitcher",
+          "startLine": 631,
+          "endLine": 662,
+          "params": [
+            "{\n  value,\n  disabled,\n  onSelect\n}"
+          ]
+        },
+        {
+          "name": "HostFields",
+          "startLine": 664,
+          "endLine": 716,
+          "params": [
+            "{\n  roomName,\n  onRoomNameChange,\n  roomCreated,\n  scanning,\n  isConnected,\n  pending,\n  onCreateRoom,\n  onFindGuests\n}"
+          ]
+        },
+        {
+          "name": "GuestFields",
+          "startLine": 718,
+          "endLine": 768,
+          "params": [
+            "{\n  roomCode,\n  onRoomCodeChange,\n  scanning,\n  isConnected,\n  pending,\n  onFindHosts,\n  onJoinByCode\n}"
+          ]
+        },
+        {
+          "name": "NetworkTabs",
+          "startLine": 770,
+          "endLine": 799,
+          "params": [
+            "{\n  value,\n  onChange\n}"
+          ]
+        },
+        {
+          "name": "DiscoveryPane",
+          "startLine": 801,
+          "endLine": 884,
+          "params": [
+            "{\n  uiRole,\n  scanning,\n  rooms,\n  peers,\n  connectedPeer,\n  pending,\n  onConnectGuest,\n  onJoinRoom,\n  onDisconnect\n}"
+          ]
+        },
+        {
+          "name": "DiscoveryRow",
+          "startLine": 886,
+          "endLine": 911,
+          "params": [
+            "{\n  icon,\n  title,\n  subtitle,\n  rssi,\n  disabled,\n  onClick\n}"
+          ]
+        },
+        {
+          "name": "ConnectionCard",
+          "startLine": 913,
+          "endLine": 956,
+          "params": [
+            "{\n  peer,\n  pending,\n  onDisconnect\n}"
+          ]
+        },
+        {
+          "name": "TrustBadge",
+          "startLine": 958,
+          "endLine": 960,
+          "params": [
+            "{ status }"
+          ]
+        },
+        {
+          "name": "RssiIndicator",
+          "startLine": 962,
+          "endLine": 983,
+          "params": [
+            "{ rssi }"
+          ]
+        },
+        {
+          "name": "rssiToBars",
+          "startLine": 985,
+          "endLine": 996,
+          "params": [
+            "rssi"
+          ]
+        },
+        {
+          "name": "HistoryPane",
+          "startLine": 998,
+          "endLine": 1018,
+          "params": [
+            "{ history }"
+          ]
+        },
+        {
+          "name": "RoleSwitchModal",
+          "startLine": 1020,
+          "endLine": 1057,
+          "params": [
+            "{\n  target,\n  pending,\n  onConfirm,\n  onCancel\n}"
+          ]
+        },
+        {
+          "name": "SessionFacts",
+          "startLine": 1059,
+          "endLine": 1086,
+          "params": [
+            "{\n  state,\n  pendingAction\n}"
+          ]
+        },
+        {
+          "name": "StatusBeacon",
+          "startLine": 1088,
+          "endLine": 1095,
+          "params": [
+            "{ status }"
+          ]
+        },
+        {
+          "name": "shortId",
+          "startLine": 1097,
+          "endLine": 1099,
+          "params": [
+            "id"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "App",
+          "callee": "useMemo",
+          "lineNumber": 103
+        },
+        {
+          "caller": "App",
+          "callee": "createLoggingCalculatorApi",
+          "lineNumber": 104
+        },
+        {
+          "caller": "App",
+          "callee": "createBrowserCalculatorApi",
+          "lineNumber": 104
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 107
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 108
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 109
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 110
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 111
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 112
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 113
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 114
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 115
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 116
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 117
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 121
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 122
+        },
+        {
+          "caller": "App",
+          "callee": "useState",
+          "lineNumber": 123
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 125
+        },
+        {
+          "caller": "App",
+          "callee": "setPendingAction",
+          "lineNumber": 127
+        },
+        {
+          "caller": "App",
+          "callee": "setError",
+          "lineNumber": 128
+        },
+        {
+          "caller": "App",
+          "callee": "setState",
+          "lineNumber": 130
+        },
+        {
+          "caller": "App",
+          "callee": "action",
+          "lineNumber": 130
+        },
+        {
+          "caller": "App",
+          "callee": "setError",
+          "lineNumber": 132
+        },
+        {
+          "caller": "App",
+          "callee": "setPendingAction",
+          "lineNumber": 134
+        },
+        {
+          "caller": "App",
+          "callee": "useEffect",
+          "lineNumber": 140
+        },
+        {
+          "caller": "App",
+          "callee": "logStartupEnvironment",
+          "lineNumber": 141
+        },
+        {
+          "caller": "App",
+          "callee": "Boolean",
+          "lineNumber": 141
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 142
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.getState",
+          "lineNumber": 142
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 145
+        },
+        {
+          "caller": "App",
+          "callee": "setLogOpen",
+          "lineNumber": 145
+        },
+        {
+          "caller": "App",
+          "callee": "useEffect",
+          "lineNumber": 147
+        },
+        {
+          "caller": "updateDrawerCapacity",
+          "callee": "setCanOpenBothDrawers",
+          "lineNumber": 149
+        },
+        {
+          "caller": "updateDrawerCapacity",
+          "callee": "canFitBothDrawers",
+          "lineNumber": 149
+        },
+        {
+          "caller": "App",
+          "callee": "updateDrawerCapacity",
+          "lineNumber": 152
+        },
+        {
+          "caller": "App",
+          "callee": "window.addEventListener",
+          "lineNumber": 153
+        },
+        {
+          "caller": "App",
+          "callee": "window.removeEventListener",
+          "lineNumber": 156
+        },
+        {
+          "caller": "App",
+          "callee": "useEffect",
+          "lineNumber": 160
+        },
+        {
+          "caller": "App",
+          "callee": "setHistoryOpen",
+          "lineNumber": 166
+        },
+        {
+          "caller": "App",
+          "callee": "setHostOpen",
+          "lineNumber": 168
+        },
+        {
+          "caller": "App",
+          "callee": "useMemo",
+          "lineNumber": 172
+        },
+        {
+          "caller": "App",
+          "callee": "state.peers.find",
+          "lineNumber": 173
+        },
+        {
+          "caller": "App",
+          "callee": "useMemo",
+          "lineNumber": 176
+        },
+        {
+          "caller": "App",
+          "callee": "state.peers.filter",
+          "lineNumber": 177
+        },
+        {
+          "caller": "App",
+          "callee": "useEffect",
+          "lineNumber": 189
+        },
+        {
+          "caller": "App",
+          "callee": "window.setInterval",
+          "lineNumber": 193
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi\n        .pollState()\n        .then((next) =>\n          setState((previous) =>\n            JSON.stringify(previous) === JSON.stringify(next) ? previous : next\n          )\n        )\n        .catch",
+          "lineNumber": 194
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi\n        .pollState()\n        .then",
+          "lineNumber": 194
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi\n        .pollState",
+          "lineNumber": 194
+        },
+        {
+          "caller": "App",
+          "callee": "setState",
+          "lineNumber": 197
+        },
+        {
+          "caller": "App",
+          "callee": "JSON.stringify",
+          "lineNumber": 198
+        },
+        {
+          "caller": "App",
+          "callee": "JSON.stringify",
+          "lineNumber": 198
+        },
+        {
+          "caller": "App",
+          "callee": "window.clearInterval",
+          "lineNumber": 205
+        },
+        {
+          "caller": "App",
+          "callee": "useMemo",
+          "lineNumber": 208
+        },
+        {
+          "caller": "App",
+          "callee": "calculateExpression",
+          "lineNumber": 208
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 211
+        },
+        {
+          "caller": "App",
+          "callee": "setRoleSwitchTarget",
+          "lineNumber": 217
+        },
+        {
+          "caller": "App",
+          "callee": "setUiRole",
+          "lineNumber": 220
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 225
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 230
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.resetBleSession",
+          "lineNumber": 230
+        },
+        {
+          "caller": "App",
+          "callee": "setUiRole",
+          "lineNumber": 231
+        },
+        {
+          "caller": "App",
+          "callee": "setRoleSwitchTarget",
+          "lineNumber": 232
+        },
+        {
+          "caller": "App",
+          "callee": "setNetworkTab",
+          "lineNumber": 233
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 236
+        },
+        {
+          "caller": "App",
+          "callee": "setRoleSwitchTarget",
+          "lineNumber": 236
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 238
+        },
+        {
+          "caller": "App",
+          "callee": "setExpression",
+          "lineNumber": 242
+        },
+        {
+          "caller": "App",
+          "callee": "setExpression",
+          "lineNumber": 247
+        },
+        {
+          "caller": "App",
+          "callee": "current.slice",
+          "lineNumber": 247
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 251
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.submitCalculation",
+          "lineNumber": 252
+        },
+        {
+          "caller": "App",
+          "callee": "setExpression",
+          "lineNumber": 257
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 262
+        },
+        {
+          "caller": "App",
+          "callee": "setHostOpen",
+          "lineNumber": 263
+        },
+        {
+          "caller": "App",
+          "callee": "setLastOpenedDrawer",
+          "lineNumber": 266
+        },
+        {
+          "caller": "App",
+          "callee": "setHistoryOpen",
+          "lineNumber": 268
+        },
+        {
+          "caller": "App",
+          "callee": "useCallback",
+          "lineNumber": 275
+        },
+        {
+          "caller": "App",
+          "callee": "setHistoryOpen",
+          "lineNumber": 276
+        },
+        {
+          "caller": "App",
+          "callee": "setLastOpenedDrawer",
+          "lineNumber": 279
+        },
+        {
+          "caller": "App",
+          "callee": "setHostOpen",
+          "lineNumber": 281
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 331
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.createRoom",
+          "lineNumber": 331
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 334
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.startScanning",
+          "lineNumber": 334
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 345
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.scanRooms",
+          "lineNumber": 345
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 348
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.startAdvertising",
+          "lineNumber": 349
+        },
+        {
+          "caller": "App",
+          "callee": "setExpression",
+          "lineNumber": 382
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 385
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.submitCalculation",
+          "lineNumber": 386
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 396
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.submitCalculation",
+          "lineNumber": 397
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorKeys.map",
+          "lineNumber": 408
+        },
+        {
+          "caller": "App",
+          "callee": "handleKeyPress",
+          "lineNumber": 416
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 460
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.connectGuest",
+          "lineNumber": 461
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 465
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.joinRoom",
+          "lineNumber": 465
+        },
+        {
+          "caller": "App",
+          "callee": "runAction",
+          "lineNumber": 468
+        },
+        {
+          "caller": "App",
+          "callee": "calculatorApi.resetBleSession",
+          "lineNumber": 468
+        },
+        {
+          "caller": "App",
+          "callee": "confirmRoleSwitch",
+          "lineNumber": 494
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "useSyncExternalStore",
+          "lineNumber": 505
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "useRef",
+          "lineNumber": 506
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "useState",
+          "lineNumber": 507
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "useMemo",
+          "lineNumber": 509
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "useEffect",
+          "lineNumber": 523
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "useCallback",
+          "lineNumber": 529
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "logStore.toText",
+          "lineNumber": 530
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "navigator.clipboard.writeText",
+          "lineNumber": 532
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "document.createElement",
+          "lineNumber": 535
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "document.body.appendChild",
+          "lineNumber": 539
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "textarea.select",
+          "lineNumber": 540
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "document.execCommand",
+          "lineNumber": 542
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "document.body.removeChild",
+          "lineNumber": 544
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "setCopied",
+          "lineNumber": 547
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "window.setTimeout",
+          "lineNumber": 548
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "setCopied",
+          "lineNumber": 548
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "handleCopy",
+          "lineNumber": 577
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "logStore.clear",
+          "lineNumber": 584
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "entries.map",
+          "lineNumber": 598
+        },
+        {
+          "caller": "LogConsole",
+          "callee": "entry.timestamp.slice",
+          "lineNumber": 600
+        },
+        {
+          "caller": "RoleSwitcher",
+          "callee": "onSelect",
+          "lineNumber": 645
+        },
+        {
+          "caller": "RoleSwitcher",
+          "callee": "onSelect",
+          "lineNumber": 654
+        },
+        {
+          "caller": "HostFields",
+          "callee": "onRoomNameChange",
+          "lineNumber": 690
+        },
+        {
+          "caller": "HostFields",
+          "callee": "roomName.trim",
+          "lineNumber": 700
+        },
+        {
+          "caller": "GuestFields",
+          "callee": "onRoomCodeChange",
+          "lineNumber": 753
+        },
+        {
+          "caller": "GuestFields",
+          "callee": "roomCode.trim",
+          "lineNumber": 759
+        },
+        {
+          "caller": "NetworkTabs",
+          "callee": "onChange",
+          "lineNumber": 784
+        },
+        {
+          "caller": "NetworkTabs",
+          "callee": "onChange",
+          "lineNumber": 793
+        },
+        {
+          "caller": "DiscoveryPane",
+          "callee": "peers.filter",
+          "lineNumber": 829
+        },
+        {
+          "caller": "DiscoveryPane",
+          "callee": "guests.map",
+          "lineNumber": 836
+        },
+        {
+          "caller": "DiscoveryPane",
+          "callee": "onConnectGuest",
+          "lineNumber": 844
+        },
+        {
+          "caller": "DiscoveryPane",
+          "callee": "rooms.map",
+          "lineNumber": 860
+        },
+        {
+          "caller": "DiscoveryPane",
+          "callee": "shortId",
+          "lineNumber": 865
+        },
+        {
+          "caller": "DiscoveryPane",
+          "callee": "onJoinRoom",
+          "lineNumber": 868
+        },
+        {
+          "caller": "RssiIndicator",
+          "callee": "rssiToBars",
+          "lineNumber": 972
+        },
+        {
+          "caller": "RssiIndicator",
+          "callee": "[1, 2, 3, 4].map",
+          "lineNumber": 977
+        },
+        {
+          "caller": "HistoryPane",
+          "callee": "history.map",
+          "lineNumber": 1005
+        },
+        {
+          "caller": "SessionFacts",
+          "callee": "shortId",
+          "lineNumber": 1070
+        },
+        {
+          "caller": "SessionFacts",
+          "callee": "state.peers.some",
+          "lineNumber": 1082
+        },
+        {
+          "caller": "shortId",
+          "callee": "id.slice",
+          "lineNumber": 1098
+        },
+        {
+          "caller": "shortId",
+          "callee": "id.slice",
+          "lineNumber": 1098
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 0,
+        "functionCount": 20,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/expression.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 20,
+      "nonEmptyLines": 16,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/expression.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 77,
+      "nonEmptyLines": 67,
+      "functions": [
+        {
+          "name": "calculateExpression",
+          "startLine": 1,
+          "endLine": 47,
+          "params": [
+            "expression"
+          ]
+        },
+        {
+          "name": "applyOp",
+          "startLine": 49,
+          "endLine": 77,
+          "params": [
+            "values",
+            "op"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "calculateExpression",
+          "line": 1,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "calculateExpression",
+          "callee": "expression.replace",
+          "lineNumber": 2
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "/^-?\\d+(\\.\\d+)?([+\\-*/%]-?\\d+(\\.\\d+)?)*$/.test",
+          "lineNumber": 3
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "sanitized.match",
+          "lineNumber": 7
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "applyOp",
+          "lineNumber": 29
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "ops.pop",
+          "lineNumber": 29
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "ops.push",
+          "lineNumber": 31
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "values.push",
+          "lineNumber": 33
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "Number",
+          "lineNumber": 33
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "applyOp",
+          "lineNumber": 38
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "ops.pop",
+          "lineNumber": 38
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "Number.isFinite",
+          "lineNumber": 46
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "String",
+          "lineNumber": 46
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "Number",
+          "lineNumber": 46
+        },
+        {
+          "caller": "calculateExpression",
+          "callee": "result.toFixed",
+          "lineNumber": 46
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.pop",
+          "lineNumber": 50
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.pop",
+          "lineNumber": 51
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 54
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 60
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 63
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 66
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 69
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 72
+        },
+        {
+          "caller": "applyOp",
+          "callee": "values.push",
+          "lineNumber": 75
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    }
+  ]
+}

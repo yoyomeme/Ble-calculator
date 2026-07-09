@@ -1,0 +1,325 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 6,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 77,
+      "nonEmptyLines": 57,
+      "sections": [
+        {
+          "heading": "BLE Calculator Desktop",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Commands",
+          "level": 2,
+          "line": 23
+        },
+        {
+          "heading": "Visual UI Pass",
+          "level": 2,
+          "line": 40
+        },
+        {
+          "heading": "Native Core",
+          "level": 2,
+          "line": 54
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 4
+      }
+    },
+    {
+      "path": "electron-builder.yml",
+      "language": "yaml",
+      "fileCategory": "config",
+      "totalLines": 43,
+      "nonEmptyLines": 37,
+      "sections": [
+        {
+          "heading": "appId",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "productName",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "copyright",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "directories",
+          "level": 1,
+          "line": 5
+        },
+        {
+          "heading": "files",
+          "level": 1,
+          "line": 8
+        },
+        {
+          "heading": "asarUnpack",
+          "level": 1,
+          "line": 20
+        },
+        {
+          "heading": "mac",
+          "level": 1,
+          "line": 23
+        },
+        {
+          "heading": "win",
+          "level": 1,
+          "line": 35
+        },
+        {
+          "heading": "linux",
+          "level": 1,
+          "line": 39
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 9
+      }
+    },
+    {
+      "path": "evolve-calculator-theme.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 269,
+      "nonEmptyLines": 211,
+      "sections": [
+        {
+          "heading": "Evolve-Inspired Desktop Calculator Theme",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Extracted Website Theme",
+          "level": 2,
+          "line": 5
+        },
+        {
+          "heading": "Core Palette",
+          "level": 3,
+          "line": 9
+        },
+        {
+          "heading": "Type System",
+          "level": 3,
+          "line": 24
+        },
+        {
+          "heading": "Visual Traits",
+          "level": 3,
+          "line": 32
+        },
+        {
+          "heading": "Calculator Theme Direction",
+          "level": 2,
+          "line": 43
+        },
+        {
+          "heading": "Desktop Layout",
+          "level": 2,
+          "line": 51
+        },
+        {
+          "heading": "Window",
+          "level": 3,
+          "line": 53
+        },
+        {
+          "heading": "Header",
+          "level": 3,
+          "line": 61
+        },
+        {
+          "heading": "Display Area",
+          "level": 3,
+          "line": 69
+        },
+        {
+          "heading": "Keypad",
+          "level": 3,
+          "line": 81
+        },
+        {
+          "heading": "Key Roles",
+          "level": 2,
+          "line": 89
+        },
+        {
+          "heading": "Number Keys",
+          "level": 3,
+          "line": 91
+        },
+        {
+          "heading": "Operator Keys",
+          "level": 3,
+          "line": 98
+        },
+        {
+          "heading": "Equals Key",
+          "level": 3,
+          "line": 105
+        },
+        {
+          "heading": "Clear and Delete",
+          "level": 3,
+          "line": 112
+        },
+        {
+          "heading": "Memory and Utility Keys",
+          "level": 3,
+          "line": 118
+        },
+        {
+          "heading": "Suggested CSS Tokens",
+          "level": 2,
+          "line": 123
+        },
+        {
+          "heading": "Component CSS Sketch",
+          "level": 2,
+          "line": 151
+        },
+        {
+          "heading": "Interaction Notes",
+          "level": 2,
+          "line": 254
+        },
+        {
+          "heading": "What Not To Copy From The Site",
+          "level": 2,
+          "line": 262
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 21
+      }
+    },
+    {
+      "path": "index.html",
+      "language": "html",
+      "fileCategory": "markup",
+      "totalLines": 16,
+      "nonEmptyLines": 16,
+      "metrics": {}
+    },
+    {
+      "path": "package.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 49,
+      "nonEmptyLines": 49,
+      "sections": [
+        {
+          "heading": "name",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "version",
+          "level": 1,
+          "line": 3
+        },
+        {
+          "heading": "description",
+          "level": 1,
+          "line": 4
+        },
+        {
+          "heading": "private",
+          "level": 1,
+          "line": 5
+        },
+        {
+          "heading": "author",
+          "level": 1,
+          "line": 6
+        },
+        {
+          "heading": "main",
+          "level": 1,
+          "line": 10
+        },
+        {
+          "heading": "scripts",
+          "level": 1,
+          "line": 11
+        },
+        {
+          "heading": "dependencies",
+          "level": 1,
+          "line": 25
+        },
+        {
+          "heading": "devDependencies",
+          "level": 1,
+          "line": 30
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 9
+      }
+    },
+    {
+      "path": "tsconfig.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 21,
+      "nonEmptyLines": 21,
+      "sections": [
+        {
+          "heading": "compilerOptions",
+          "level": 1,
+          "line": 2
+        },
+        {
+          "heading": "include",
+          "level": 1,
+          "line": 19
+        },
+        {
+          "heading": "exclude",
+          "level": 1,
+          "line": 20
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 3
+      }
+    }
+  ]
+}
