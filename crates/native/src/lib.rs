@@ -35,6 +35,16 @@ const BLE_CHUNK_PAYLOAD_SIZE: usize = 180;
 /// must stay under this. `BLE_CHUNK_PAYLOAD_SIZE` is sized to leave headroom;
 /// `frame_event_for_ble` asserts it and `worst_case_frame_fits_mtu_budget` tests it.
 const BLE_MAX_FRAME_BYTES: usize = 512;
+/// Notify frame budget used while the subscribed host's real
+/// `maximumUpdateValueLength` is still unknown (frames queued before a host
+/// subscribes). Unlike write-with-response, notifications get **no** automatic
+/// fragmentation, so this matches the small limit seen on conservative BLE
+/// 4.x links; a known larger limit replaces it in `deliver_event_to_host`.
+const BLE_CONSERVATIVE_NOTIFY_FRAME_BYTES: usize = 182;
+/// Worst-case byte overhead of one serialized `BleTransportChunk` frame around
+/// its base64 payload (JSON keys, a UUID message id, and 5-digit counters).
+/// `chunk_frame_overhead_is_not_underestimated` keeps this honest.
+const BLE_CHUNK_FRAME_OVERHEAD_BYTES: usize = 100;
 /// Cap on concurrently-reassembling inbound messages, so a peer that streams
 /// incomplete chunk sets cannot grow the reassembly buffer without bound.
 const BLE_MAX_INFLIGHT_MESSAGES: usize = 64;
@@ -299,22 +309,41 @@ pub fn get_state() -> Result<Value> {
 /// holder-binding-verified, and appended to history. This is the receive half
 /// that closes the two end-to-end gaps (host->guest #1 and guest->host).
 fn process_incoming_ble(state: &mut RoomState) {
-    let role = state.session_role.as_deref();
+    let role = state.session_role.clone();
+    let role = role.as_deref();
 
     let mut frames: Vec<Vec<u8>> = Vec::new();
     let mut host_subscribed = false;
+    // Asynchronous transport failures (failed advertising, undeliverable or
+    // dropped notify frames, drain errors) surface here on every poll instead
+    // of being swallowed inside the backends.
+    let mut transport_error: Option<String> = None;
+    let mut peripheral_advertising = state.advertising;
 
     match role {
         Some("guest") => {
             if let Ok(mut peripheral) = PERIPHERAL.lock() {
                 frames.extend(peripheral.take_inbound());
                 host_subscribed = peripheral.has_subscriber();
+                transport_error = peripheral.take_last_error();
+                peripheral_advertising = peripheral.is_advertising();
             }
         }
-        Some("host") => {
-            frames.extend(ble_central::take_notifications());
-        }
+        Some("host") => match ble_central::take_notifications() {
+            Ok(notified) => frames.extend(notified),
+            Err(error) => transport_error = Some(error),
+        },
         _ => return,
+    }
+
+    if let Some(error) = transport_error {
+        state.native_status.last_ble_error = Some(error);
+        // Reconcile the optimistic advertising flag with the backend's
+        // delegate-confirmed state (e.g. didStartAdvertising failed after
+        // `join_room` already returned Ok).
+        if role == Some("guest") {
+            state.advertising = peripheral_advertising;
+        }
     }
 
     let received = ingest_ble_frames(frames, &mut state.native_warnings);
@@ -908,7 +937,7 @@ fn deliver_event_to_guest(
         return;
     }
 
-    let frames = match frame_event_for_ble(entry.id.clone(), envelope) {
+    let frames = match frame_event_for_ble(entry.id.clone(), envelope, BLE_MAX_FRAME_BYTES) {
         Ok(frames) => frames,
         Err(error) => {
             state.native_status.last_ble_error = Some(error);
@@ -935,16 +964,19 @@ fn deliver_event_to_host(
         return;
     }
 
-    let frames = match frame_event_for_ble(entry.id.clone(), envelope) {
-        Ok(frames) => frames,
-        Err(error) => {
-            state.native_status.last_ble_error = Some(error);
-            return;
-        }
-    };
-
     let result = match PERIPHERAL.lock() {
-        Ok(mut peripheral) => peripheral.notify(&frames),
+        Ok(mut peripheral) => {
+            // Notifications are never fragmented by Core Bluetooth, so size each
+            // frame to the subscribed host's actual `maximumUpdateValueLength`.
+            // Before a host subscribes that limit is unknown; use the
+            // conservative budget so queued frames stay deliverable on any link.
+            let frame_budget = peripheral
+                .max_notify_frame_len()
+                .unwrap_or(BLE_CONSERVATIVE_NOTIFY_FRAME_BYTES)
+                .min(BLE_MAX_FRAME_BYTES);
+            frame_event_for_ble(entry.id.clone(), envelope, frame_budget)
+                .and_then(|frames| peripheral.notify(&frames))
+        }
         Err(_) => Err("BLE peripheral backend lock was poisoned".to_string()),
     };
     match result {
@@ -953,24 +985,34 @@ fn deliver_event_to_host(
     }
 }
 
-/// Serialize a signed envelope, chunk it, and frame each chunk for BLE transport.
-/// Shared by the host->guest write and guest->host notify paths. Asserts each
-/// frame stays within the write-with-response budget (finding #4).
+/// Serialize a signed envelope, chunk it to fit `frame_budget`, and frame each
+/// chunk for BLE transport. Shared by the host->guest write path (budget =
+/// `BLE_MAX_FRAME_BYTES`, Core Bluetooth long-write) and the guest->host notify
+/// path (budget = the subscriber's `maximumUpdateValueLength`, since
+/// notifications are never fragmented).
 fn frame_event_for_ble(
     message_id: String,
     envelope: &SignedEnvelope,
+    frame_budget: usize,
 ) -> std::result::Result<Vec<Vec<u8>>, String> {
+    let chunk_size = chunk_payload_size_for_frame_budget(frame_budget).ok_or_else(|| {
+        format!("BLE frame budget of {frame_budget} bytes is too small to carry chunked events")
+    })?;
     let payload_json = serde_json::to_vec(envelope)
         .map_err(|error| format!("Failed to serialize calculation event for BLE: {error}"))?;
-    let chunks = chunk_payload(message_id, &payload_json);
+    let chunks = chunk_payload_sized(message_id, &payload_json, chunk_size);
     let frames: std::result::Result<Vec<Vec<u8>>, _> =
         chunks.iter().map(serde_json::to_vec).collect();
     let frames =
         frames.map_err(|error| format!("Failed to frame calculation chunks for BLE: {error}"))?;
-    debug_assert!(
-        frames.iter().all(|frame| frame.len() <= BLE_MAX_FRAME_BYTES),
-        "framed BLE chunk exceeds the {BLE_MAX_FRAME_BYTES}-byte write-with-response budget"
-    );
+    // Real check (not just a debug assert): an oversized frame would be
+    // truncated or rejected by the transport, so refuse to send it at all.
+    if let Some(oversized) = frames.iter().find(|frame| frame.len() > frame_budget) {
+        return Err(format!(
+            "Framed BLE chunk is {} bytes, exceeding the {frame_budget}-byte transport budget",
+            oversized.len()
+        ));
+    }
     Ok(frames)
 }
 
@@ -1610,7 +1652,11 @@ fn consume_sync_outbox(state: &mut RoomState, storage: &NativeStorage) {
         storage.pending_outbox_count(&mut state.native_warnings);
 }
 
-fn chunk_payload(message_id: String, payload: &[u8]) -> Vec<BleTransportChunk> {
+fn chunk_payload_sized(
+    message_id: String,
+    payload: &[u8],
+    chunk_size: usize,
+) -> Vec<BleTransportChunk> {
     if payload.is_empty() {
         return vec![BleTransportChunk {
             message_id,
@@ -1620,13 +1666,10 @@ fn chunk_payload(message_id: String, payload: &[u8]) -> Vec<BleTransportChunk> {
         }];
     }
 
-    let total = payload
-        .chunks(BLE_CHUNK_PAYLOAD_SIZE)
-        .count()
-        .min(u16::MAX as usize) as u16;
+    let total = payload.chunks(chunk_size).count().min(u16::MAX as usize) as u16;
 
     payload
-        .chunks(BLE_CHUNK_PAYLOAD_SIZE)
+        .chunks(chunk_size)
         .take(total as usize)
         .enumerate()
         .map(|(index, chunk)| BleTransportChunk {
@@ -1636,6 +1679,21 @@ fn chunk_payload(message_id: String, payload: &[u8]) -> Vec<BleTransportChunk> {
             payload_b64: URL_SAFE_NO_PAD.encode(chunk),
         })
         .collect()
+}
+
+/// How many raw payload bytes fit in one chunk whose serialized frame must stay
+/// within `frame_budget` bytes: budget minus the JSON envelope overhead, scaled
+/// down by the 4/3 base64 inflation. `None` when the budget cannot fit even a
+/// single payload byte.
+fn chunk_payload_size_for_frame_budget(frame_budget: usize) -> Option<usize> {
+    let b64_budget = frame_budget.checked_sub(BLE_CHUNK_FRAME_OVERHEAD_BYTES)?;
+    // (b64_budget / 4) * 3 raw bytes encode to a multiple of 4 base64 chars
+    // that never exceeds b64_budget.
+    let raw = (b64_budget / 4) * 3;
+    if raw == 0 {
+        return None;
+    }
+    Some(raw.min(BLE_CHUNK_PAYLOAD_SIZE))
 }
 
 #[allow(dead_code)] // Used by unit tests and the guest-side reassembly follow-up.
@@ -2029,11 +2087,12 @@ fn is_database_path(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        calculate_expression, chunk_payload, identity_from_signing_key, is_database_path,
-        merge_discovered_peers, parse_local_name_advertisement, peer_from_advertisement,
+        calculate_expression, chunk_payload_sized, frame_event_for_ble, identity_from_signing_key,
+        is_database_path, merge_discovered_peers, parse_local_name_advertisement,
+        peer_from_advertisement,
         reassemble_chunks, room_from_advertisement, sign_calculation_event,
         verify_received_calculation_event, CalculationEntry, PeerSummary, SigningKey,
-        BLE_CHUNK_PAYLOAD_SIZE, BLE_MAX_FRAME_BYTES,
+        BLE_CHUNK_FRAME_OVERHEAD_BYTES, BLE_CHUNK_PAYLOAD_SIZE, BLE_MAX_FRAME_BYTES,
     };
     use rand_core::OsRng;
     use std::path::Path;
@@ -2189,7 +2248,7 @@ mod tests {
         // frame we ever put on the wire; it must stay within the 512-byte budget.
         let message_id = "123e4567-e89b-12d3-a456-426614174000".to_string();
         let payload = vec![0xABu8; BLE_CHUNK_PAYLOAD_SIZE];
-        let chunks = chunk_payload(message_id, &payload);
+        let chunks = chunk_payload_sized(message_id, &payload, BLE_CHUNK_PAYLOAD_SIZE);
         assert_eq!(chunks.len(), 1);
         for chunk in &chunks {
             let frame = serde_json::to_vec(chunk).expect("frame");
@@ -2202,9 +2261,79 @@ mod tests {
     }
 
     #[test]
+    fn rejects_frames_over_the_transport_budget() {
+        // The payload is chunked to 180 bytes, so the only way a frame can
+        // exceed the budget is per-frame overhead — an oversized message id
+        // simulates that. Must be a hard error in release builds, not a
+        // debug-only assert.
+        let identity = test_identity();
+        let entry = test_entry(&identity);
+        let envelope = sign_calculation_event(&identity, &entry).expect("sign");
+
+        let oversized_message_id = "x".repeat(BLE_MAX_FRAME_BYTES);
+        let error = frame_event_for_ble(oversized_message_id, &envelope, BLE_MAX_FRAME_BYTES)
+            .expect_err("oversized frames must be rejected");
+        assert!(
+            error.contains("transport budget"),
+            "unexpected error: {error}"
+        );
+
+        // Sanity: a normal UUID message id frames fine.
+        frame_event_for_ble(entry.id.clone(), &envelope, BLE_MAX_FRAME_BYTES)
+            .expect("normal frames fit");
+    }
+
+    #[test]
+    fn chunk_frame_overhead_is_not_underestimated() {
+        // Worst-case envelope: UUID-length message id, 5-digit counters, empty
+        // payload. Everything but the base64 payload must fit in the overhead
+        // constant, or `chunk_payload_size_for_frame_budget` over-fills frames.
+        let chunk = super::BleTransportChunk {
+            message_id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
+            index: u16::MAX,
+            total: u16::MAX,
+            payload_b64: String::new(),
+        };
+        let frame = serde_json::to_vec(&chunk).expect("frame");
+        assert!(
+            frame.len() <= BLE_CHUNK_FRAME_OVERHEAD_BYTES,
+            "empty-payload frame is {} bytes, over the {BLE_CHUNK_FRAME_OVERHEAD_BYTES}-byte overhead allowance",
+            frame.len()
+        );
+    }
+
+    #[test]
+    fn budget_sized_frames_fit_small_notify_limits() {
+        // Notifications are never fragmented, so framing must adapt to small
+        // `maximumUpdateValueLength` values, not just the 512-byte write budget.
+        let identity = test_identity();
+        let entry = test_entry(&identity);
+        let envelope = sign_calculation_event(&identity, &entry).expect("sign");
+
+        for budget in [super::BLE_CONSERVATIVE_NOTIFY_FRAME_BYTES, 120, 256, 512] {
+            let frames = frame_event_for_ble(entry.id.clone(), &envelope, budget)
+                .unwrap_or_else(|error| panic!("framing failed for budget {budget}: {error}"));
+            assert!(!frames.is_empty());
+            for frame in &frames {
+                assert!(
+                    frame.len() <= budget,
+                    "frame is {} bytes, over the {budget}-byte budget",
+                    frame.len()
+                );
+            }
+        }
+
+        // A budget too small for even one payload byte must fail loudly.
+        let error = frame_event_for_ble(entry.id.clone(), &envelope, 100)
+            .expect_err("tiny budgets must be rejected");
+        assert!(error.contains("too small"), "unexpected error: {error}");
+    }
+
+    #[test]
     fn reassembles_ble_chunks() {
         let payload = b"calculation event payload that is longer than a single tiny test chunk";
-        let chunks = chunk_payload("event-1".to_string(), payload);
+        let chunks =
+            chunk_payload_sized("event-1".to_string(), payload, BLE_CHUNK_PAYLOAD_SIZE);
         let reassembled = reassemble_chunks(&chunks).expect("chunks should reassemble");
 
         assert_eq!(reassembled, payload);

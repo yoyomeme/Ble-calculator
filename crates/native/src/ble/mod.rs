@@ -136,6 +136,21 @@ pub trait BlePeripheral: Send {
     /// Whether a central (host) is currently subscribed to the TX characteristic.
     /// Lets a guest surface an active host link in its UI.
     fn has_subscriber(&self) -> bool;
+
+    /// Drain the most recent asynchronous backend error, if any (failed
+    /// advertising confirmation, undeliverable notification, dropped frames).
+    /// Take-once semantics: polling callers surface each error a single time.
+    fn take_last_error(&mut self) -> Option<String> {
+        None
+    }
+
+    /// The subscribed central's maximum notification size in bytes (macOS:
+    /// `maximumUpdateValueLength`), or `None` while no subscriber has been
+    /// observed. Callers size notify frames with this — notifications are never
+    /// fragmented by the platform, unlike long writes.
+    fn max_notify_frame_len(&self) -> Option<usize> {
+        None
+    }
 }
 
 /// Construct the peripheral backend for the current platform.

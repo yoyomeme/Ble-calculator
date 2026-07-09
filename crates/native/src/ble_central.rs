@@ -234,18 +234,16 @@ pub fn connect(
 /// Drain any guest -> host notification frames received since the last call.
 /// Non-blocking: returns only the frames already buffered by the OS stack.
 /// Each item is a raw framed transport chunk for the caller to reassemble.
-pub fn take_notifications() -> Vec<Vec<u8>> {
-    let Ok(rt) = runtime() else {
-        return Vec::new();
-    };
-    let Ok(mut inner) = lock() else {
-        return Vec::new();
-    };
+/// Errors (runtime unavailable, poisoned lock) are returned rather than
+/// silently reported as "no frames", so pollers can surface them.
+pub fn take_notifications() -> Result<Vec<Vec<u8>>, String> {
+    let rt = runtime()?;
+    let mut inner = lock()?;
     let Some(stream) = inner.notifications.as_mut() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
 
-    rt.block_on(async {
+    Ok(rt.block_on(async {
         let mut frames = Vec::new();
         // `now_or_never` polls the stream once; loop drains everything currently
         // ready without awaiting new notifications (keeps the poll non-blocking).
@@ -253,7 +251,7 @@ pub fn take_notifications() -> Vec<Vec<u8>> {
             frames.push(notification.value);
         }
         frames
-    })
+    }))
 }
 
 /// True while the retained peripheral reports an active connection. Used to keep

@@ -92,6 +92,9 @@ const calculatorKeys: CalculatorKey[] = [
 
 const BOTH_DRAWERS_MIN_VIEWPORT_WIDTH = 1126;
 
+/** How often the background receive pump drains incoming BLE data. */
+const BLE_POLL_INTERVAL_MS = 1200;
+
 function canFitBothDrawers(): boolean {
   return window.innerWidth >= BOTH_DRAWERS_MIN_VIEWPORT_WIDTH;
 }
@@ -178,6 +181,29 @@ function App() {
   // A session is "active" once anything BLE-related is in flight or established.
   const sessionActive =
     state.roomId !== null || state.advertising || state.scanning || isConnected;
+
+  // Background receive pump. Incoming BLE data (remote calculations, connection
+  // drops, async advertising failures) is only processed inside the native
+  // getState call, so poll while a session is live — otherwise a received
+  // event stays invisible until the local user presses a button.
+  useEffect(() => {
+    if (!sessionActive || pendingAction !== null) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      void calculatorApi
+        .pollState()
+        .then((next) =>
+          setState((previous) =>
+            JSON.stringify(previous) === JSON.stringify(next) ? previous : next
+          )
+        )
+        .catch(() => {
+          // Already logged by the api wrapper; keep polling on the next tick.
+        });
+    }, BLE_POLL_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [calculatorApi, sessionActive, pendingAction]);
 
   const previewResult = useMemo(() => calculateExpression(expression), [expression]);
   const hasValidPreview = previewResult !== "Invalid expression";
