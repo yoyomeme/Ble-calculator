@@ -114,7 +114,7 @@ function App() {
   const [state, setState] = useState<RoomState>(emptyState);
   const [logOpen, setLogOpen] = useState(false);
   const [roomName, setRoomName] = useState("Desk Calculator");
-  const [roomCode, setRoomCode] = useState("DESK-01");
+  const [roomCode, setRoomCode] = useState("");
   const [expression, setExpression] = useState("7 + 5 * 2");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -370,6 +370,7 @@ function App() {
               roomName={roomName}
               onRoomNameChange={setRoomName}
               roomCreated={roomCreated}
+              roomId={state.roomId}
               scanning={state.scanning}
               isConnected={isConnected}
               pending={pending}
@@ -711,6 +712,7 @@ function HostFields({
   roomName,
   onRoomNameChange,
   roomCreated,
+  roomId,
   scanning,
   isConnected,
   pending,
@@ -720,6 +722,7 @@ function HostFields({
   roomName: string;
   onRoomNameChange: (value: string) => void;
   roomCreated: boolean;
+  roomId: string | null;
   scanning: boolean;
   isConnected: boolean;
   pending: boolean;
@@ -748,6 +751,12 @@ function HostFields({
         <Radio size={17} aria-hidden="true" />
         {roomCreated ? "Room Created" : "Create Room"}
       </button>
+      {roomCreated && roomId ? (
+        <div className="control-group" aria-label="Room code">
+          <label htmlFor="host-room-code">Room code — share with guests</label>
+          <input id="host-room-code" value={roomId} readOnly spellCheck={false} />
+        </div>
+      ) : null}
       <button
         type="button"
         className="primary-action"
@@ -797,6 +806,8 @@ function GuestFields({
             id="room-code"
             value={roomCode}
             onChange={(event) => onRoomCodeChange(event.target.value)}
+            placeholder="Code from the host, e.g. r-a1b2c3"
+            maxLength={20}
             spellCheck={false}
           />
           <button

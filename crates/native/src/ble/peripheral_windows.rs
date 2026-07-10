@@ -17,8 +17,8 @@
 //!
 //! Known limitation: `GattServiceProviderAdvertisingParameters` only controls
 //! `IsConnectable` / `IsDiscoverable` — it advertises the service UUID but
-//! cannot carry the custom `EvolveCalc:JOIN:<room>:<label>` local name that the
-//! host scan parser reads for room/label metadata. Carrying that metadata needs
+//! cannot carry the custom `EVC:J:<room>` local name that the
+//! host scan parser reads for room metadata. Carrying that metadata needs
 //! a separate `BluetoothLEAdvertisementPublisher`, or a host-side rule that
 //! treats a bare calculator-service-UUID match as a discoverable guest. Until
 //! then a Windows guest is connectable but not fully self-describing.

@@ -217,8 +217,11 @@ crates/native/src/ble/
 | Peripheral, Windows | `windows` crate `GattServiceProvider` | implemented (unverified in CI; see local-name limitation) |
 
 The **wire contract is identical on every platform** — the calculator service
-UUID (`7c14f94a-…a601`), the `EvolveCalc:JOIN:<room>:<label>` advertisement
-`local_name`, and the chunk framing. That is what lets a Linux guest be
+UUID (`7c14f94a-…a601`), the `EVC:J:<room>` advertisement `local_name`
+(deliberately short: the whole name must fit the 29-byte BLE scan-response
+budget or it is truncated on air; the legacy 4-field
+`EvolveCalc:JOIN:<room>:<label>` format is still parsed for compatibility), and
+the chunk framing. That is what lets a Linux guest be
 discovered by a macOS host and vice versa. The macOS backend advertises the
 exact `local_name` format that the existing host scan parser
 (`parse_local_name_advertisement`) already understands.
@@ -279,8 +282,8 @@ on this operating system" error instead of silently pretending to advertise).
   validated on a Windows host separately.
 - **Local-name limitation (important):** `GattServiceProviderAdvertisingParameters`
   only controls `IsConnectable` / `IsDiscoverable`. It advertises the calculator
-  **service UUID** but cannot set the custom `EvolveCalc:JOIN:<room>:<label>`
-  local name that the host scan parser reads for room/label metadata. So a
+  **service UUID** but cannot set the custom `EVC:J:<room>`
+  local name that the host scan parser reads for room metadata. So a
   Windows guest is connectable and matches a service-UUID scan, but is not fully
   self-describing. Carrying the JOIN metadata needs a separate
   `BluetoothLEAdvertisementPublisher`, or a host-side rule that treats a bare
@@ -448,10 +451,12 @@ Keep that model intact when replacing the mock with real BLE code.
 
 For the data link the host is always the central. On top of that, `create_room`
 also advertises a lightweight **ROOM discovery beacon**
-(`EvolveCalc:ROOM:<room>:<name>`, best-effort) so a guest running `scan_rooms`
+(`EVC:R:<room>`) so a guest running `scan_rooms`
 can find the host by name before switching to the canonical JOIN flow (guest
-advertises `EvolveCalc:JOIN:...`, host scans and connects). Without that beacon
-the ROOM scan path had no producer and could never return a result.
+advertises `EVC:J:<room>`, host scans and connects). Without that beacon
+the ROOM scan path had no producer and could never return a result. Beacon
+failures surface as `lastBleError` (the room stays reachable by typing the
+room code, which is the room id itself).
 
 ## Secure Storage Plan
 
@@ -533,7 +538,7 @@ environment** (needs specific OS/hardware), `[ ]` not started.
 ### BLE peripheral backends
 
 - `[x]` Peripheral abstraction (`ble::BlePeripheral` trait, `PeripheralConfig`,
-  platform factory, `EvolveCalc:JOIN:...` advertisement builder). Unit-tested.
+  platform factory, `EVC:J:<room>` advertisement builder). Unit-tested.
 - `[~]` macOS CoreBluetooth `CBPeripheralManager` backend — compiles on macOS;
   runtime needs two Macs, granted Bluetooth permission, and the
   `NSBluetoothAlwaysUsageDescription` Info.plist key (added). A notarized
@@ -544,7 +549,7 @@ environment** (needs specific OS/hardware), `[ ]` not started.
 - `[~]` Windows WinRT `GattServiceProvider` backend — **never compiled here**;
   the `windows` crate is Windows-only. Builds/runs only on a Windows host.
 - `[ ]` **Windows local-name limitation:** `GattServiceProvider` advertises the
-  service UUID but cannot set the custom `EvolveCalc:JOIN:<room>:<label>` local
+  service UUID but cannot set the custom `EVC:J:<room>` local
   name the host parser reads. Add a `BluetoothLEAdvertisementPublisher` to carry
   the JOIN payload, or add a host-side rule that treats a bare
   calculator-service-UUID match as a discoverable guest. See "Windows

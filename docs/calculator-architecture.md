@@ -653,7 +653,7 @@ Still pending (the authoritative, consolidated roadmap lives in
 `docs/runtime-native-and-security.md` → "Outstanding Work (TODO)"; the summary
 below mirrors it):
 
-- Windows guest advertising carries only the service UUID: WinRT `GattServiceProvider` cannot set the custom `EvolveCalc:JOIN:<room>:<label>` local name, so a Windows guest is connectable but not fully self-describing until a `BluetoothLEAdvertisementPublisher` (or a host-side service-UUID-only rule) is added.
+- Windows guest advertising carries only the service UUID: WinRT `GattServiceProvider` cannot set the custom `EVC:J:<room>` local name, so a Windows guest is connectable but not fully self-describing until a `BluetoothLEAdvertisementPublisher` (or a host-side service-UUID-only rule) is added.
 - Full receive-side GATT transport: the macOS/Linux/Windows peripherals buffer inbound host writes, but reassembly + signature/holder verification of received events and TX notify delivery are not wired end-to-end yet.
 - On-device validation of all three peripheral backends: macOS CoreBluetooth (two machines + Bluetooth permission), Linux `bluer` (a Linux host with `bluetoothd`), and Windows `GattServiceProvider` (a Windows host). None can be compiled on the other OSes.
 - Marking SQLite outbox rows delivered after real cross-device transport succeeds.
