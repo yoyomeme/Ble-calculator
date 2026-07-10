@@ -11,3 +11,4 @@ crates/native/index.js
 index.*.node
 index.d.ts
 index.js
+.gstack/

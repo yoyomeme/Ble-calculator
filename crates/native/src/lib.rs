@@ -546,12 +546,10 @@ pub fn start_scanning() -> Result<Value> {
 
         match scan_ble_join_requests(state.room_id.as_deref()) {
             Ok(peers) => {
+                // An empty result is a normal outcome (no guest is advertising a
+                // JOIN yet), not a BLE error — the renderer keeps re-running the
+                // one-shot scan until a guest appears, so stay quiet here.
                 state.peers = merge_discovered_peers(&state.peers, peers);
-                if state.peers.is_empty() {
-                    state.native_status.last_ble_error = Some(
-                        "No Evolve Calc join advertisements were found for this room.".to_string(),
-                    );
-                }
             }
             Err(error) => {
                 state.native_status.last_ble_error = Some(error.clone());
@@ -652,11 +650,11 @@ pub fn scan_rooms() -> Result<Value> {
 
         match scan_ble_rooms() {
             Ok(rooms) => {
+                // An empty result is a normal outcome (no host is advertising a
+                // ROOM beacon in range yet), not a BLE error — the renderer keeps
+                // re-running the one-shot scan until a room appears, so stay
+                // quiet here.
                 state.rooms = merge_discovered_rooms(&state.rooms, rooms);
-                if state.rooms.is_empty() {
-                    state.native_status.last_ble_error =
-                        Some("No Evolve Calc host room advertisements were found.".to_string());
-                }
             }
             Err(error) => {
                 state.native_status.last_ble_error = Some(error.clone());

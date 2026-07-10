@@ -95,6 +95,13 @@ const BOTH_DRAWERS_MIN_VIEWPORT_WIDTH = 1126;
 /** How often the background receive pump drains incoming BLE data. */
 const BLE_POLL_INTERVAL_MS = 1200;
 
+/**
+ * How often discovery re-runs the one-shot native scan (~2.2s window) while
+ * it is active and nothing has been found/joined yet — the host rescanning
+ * for guest JOIN advertisements, or the guest rescanning for host rooms.
+ */
+const DISCOVERY_RESCAN_INTERVAL_MS = 3000;
+
 function canFitBothDrawers(): boolean {
   return window.innerWidth >= BOTH_DRAWERS_MIN_VIEWPORT_WIDTH;
 }
@@ -204,6 +211,45 @@ function App() {
     }, BLE_POLL_INTERVAL_MS);
     return () => window.clearInterval(timer);
   }, [calculatorApi, sessionActive, pendingAction]);
+
+  // Discovery rescan pump. The native scan ("Find Guests" / "Find Hosts") is
+  // a one-shot ~2.2s window, but the UI stays in "Scanning" until the session
+  // advances — so keep re-running the scan until a guest connects (host), a
+  // room is joined (guest, which sets scanning=false), or the session resets.
+  useEffect(() => {
+    if (!state.scanning || isConnected || pendingAction !== null) {
+      return;
+    }
+    const rescan =
+      state.sessionRole === "host"
+        ? calculatorApi.rescanGuests
+        : state.sessionRole === "guest"
+          ? calculatorApi.rescanRooms
+          : null;
+    if (!rescan) {
+      return;
+    }
+    let rescanInFlight = false;
+    const timer = window.setInterval(() => {
+      if (rescanInFlight) {
+        return;
+      }
+      rescanInFlight = true;
+      void rescan()
+        .then((next) =>
+          setState((previous) =>
+            JSON.stringify(previous) === JSON.stringify(next) ? previous : next
+          )
+        )
+        .catch(() => {
+          // Already logged by the api wrapper; retry on the next tick.
+        })
+        .finally(() => {
+          rescanInFlight = false;
+        });
+    }, DISCOVERY_RESCAN_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [calculatorApi, state.scanning, state.sessionRole, isConnected, pendingAction]);
 
   const previewResult = useMemo(() => calculateExpression(expression), [expression]);
   const hasValidPreview = previewResult !== "Invalid expression";
