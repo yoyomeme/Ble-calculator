@@ -25,7 +25,13 @@ const DEFAULT_HISTORY_LIMIT: usize = 100;
 const KEYCHAIN_SERVICE: &str = "io.evolve.ble-calculator";
 const KEYCHAIN_USER: &str = "device-signing-key-v1";
 const CALCULATOR_SERVICE_UUID: &str = "7c14f94a-77dd-4a65-9f04-6f7ac8d2a601";
-const ADVERTISEMENT_PREFIX: &str = "EvolveCalc";
+/// Current advertisement prefix (`EVC:<kind>:<room>`). Terse on purpose: the
+/// whole local name must fit the 29-byte scan-response budget or CoreBluetooth
+/// truncates it and the room id is corrupted. Kept in sync with `ble/mod.rs`.
+const ADVERTISEMENT_PREFIX: &str = "EVC";
+/// Prefix of the original 4-field `EvolveCalc:<KIND>:<room>:<label>` format.
+/// Still parsed so builds that predate the short format stay discoverable.
+const LEGACY_ADVERTISEMENT_PREFIX: &str = "EvolveCalc";
 const JOIN_ADVERTISEMENT_KIND: &str = "JOIN";
 const ROOM_ADVERTISEMENT_KIND: &str = "ROOM";
 const BLE_CHUNK_PAYLOAD_SIZE: usize = 180;
@@ -329,10 +335,21 @@ fn process_incoming_ble(state: &mut RoomState) {
                 peripheral_advertising = peripheral.is_advertising();
             }
         }
-        Some("host") => match ble_central::take_notifications() {
-            Ok(notified) => frames.extend(notified),
-            Err(error) => transport_error = Some(error),
-        },
+        Some("host") => {
+            // The host also runs the peripheral backend (ROOM discovery
+            // beacon), and its advertising confirms asynchronously — a beacon
+            // that failed after `create_room` returned would otherwise fail
+            // silently and no guest could ever discover this room.
+            if let Ok(mut peripheral) = PERIPHERAL.lock() {
+                if let Some(error) = peripheral.take_last_error() {
+                    transport_error = Some(format!("Room discovery beacon error: {error}"));
+                }
+            }
+            match ble_central::take_notifications() {
+                Ok(notified) => frames.extend(notified),
+                Err(error) => transport_error = Some(error),
+            }
+        }
         _ => return,
     }
 
@@ -505,10 +522,10 @@ fn refresh_connection_state(state: &mut RoomState) {
 pub fn create_room(request: CreateRoomRequest) -> Result<Value> {
     with_state_json(|state| {
         let room_name = trim_or_default(&request.room_name, "Calculator Room");
-        let room_id = format!(
-            "room-{}",
-            Uuid::new_v4().simple().to_string()[..8].to_string()
-        );
+        // Short on purpose: this id rides the BLE advertisement local name
+        // (`EVC:R:<id>`, 29-byte scan-response budget) and doubles as the join
+        // code a guest types by hand.
+        let room_id = format!("r-{}", &Uuid::new_v4().simple().to_string()[..6]);
         state.room_id = Some(room_id.clone());
         state.room_name = Some(room_name.clone());
         state.session_role = Some("host".to_string());
@@ -520,15 +537,16 @@ pub fn create_room(request: CreateRoomRequest) -> Result<Value> {
         state.native_status.last_ble_error = None;
 
         // Advertise a ROOM discovery beacon so guests scanning for hosts
-        // (`scan_rooms`) can find this room. Best-effort and non-fatal: the host
-        // stays the BLE central for the data link, and the canonical flow (guest
-        // advertises JOIN, host scans + connects) still works without it. This
-        // gives `ROOM` advertisements a real producer (finding #1).
-        if let Err(error) = start_room_advertising(&room_id, &room_name) {
-            push_warning_once(
-                &mut state.native_warnings,
-                format!("Room discovery beacon could not start: {error}"),
-            );
+        // (`scan_rooms`) can find this room. Non-fatal here, but the failure is
+        // surfaced as `lastBleError` (not just a warning): without the beacon a
+        // guest can only reach this room by typing the join code, so the host
+        // must see that discovery is degraded. Late/async failures (advertising
+        // confirms after this returns) surface via the host-role
+        // `take_last_error` poll in `process_incoming_ble`.
+        if let Err(error) = start_room_advertising(&room_id) {
+            let message = format!("Room discovery beacon could not start: {error}");
+            state.native_status.last_ble_error = Some(message.clone());
+            push_warning_once(&mut state.native_warnings, message);
         }
 
         Ok(state.clone())
@@ -545,11 +563,22 @@ pub fn start_scanning() -> Result<Value> {
         state.native_status.last_ble_error = None;
 
         match scan_ble_join_requests(state.room_id.as_deref()) {
-            Ok(peers) => {
+            Ok(scan) => {
                 // An empty result is a normal outcome (no guest is advertising a
                 // JOIN yet), not a BLE error — the renderer keeps re-running the
-                // one-shot scan until a guest appears, so stay quiet here.
-                state.peers = merge_discovered_peers(&state.peers, peers);
+                // one-shot scan until a guest appears, so stay quiet here. But
+                // "devices seen, none usable" is worth flagging: it means a
+                // nearby advertiser matched the calculator service UUID while
+                // its name failed to parse or named a different room.
+                // Stable text (no device count) so `push_warning_once` dedups
+                // across the renderer's 3 s rescan pump.
+                if scan.items.is_empty() && scan.raw_device_count > 0 {
+                    push_warning_once(
+                        &mut state.native_warnings,
+                        "BLE scan saw nearby device(s) advertising the calculator service, but none matched a joinable guest for this room.",
+                    );
+                }
+                state.peers = merge_discovered_peers(&state.peers, scan.items);
             }
             Err(error) => {
                 state.native_status.last_ble_error = Some(error.clone());
@@ -649,12 +678,21 @@ pub fn scan_rooms() -> Result<Value> {
         state.native_status.last_ble_error = None;
 
         match scan_ble_rooms() {
-            Ok(rooms) => {
+            Ok(scan) => {
                 // An empty result is a normal outcome (no host is advertising a
                 // ROOM beacon in range yet), not a BLE error — the renderer keeps
                 // re-running the one-shot scan until a room appears, so stay
-                // quiet here.
-                state.rooms = merge_discovered_rooms(&state.rooms, rooms);
+                // quiet here. "Devices seen, none usable" is flagged though: it
+                // points at an unparseable or non-ROOM advertisement nearby.
+                // Stable text (no device count) so `push_warning_once` dedups
+                // across the renderer's 3 s rescan pump.
+                if scan.items.is_empty() && scan.raw_device_count > 0 {
+                    push_warning_once(
+                        &mut state.native_warnings,
+                        "BLE scan saw nearby device(s) advertising the calculator service, but none advertised a joinable room.",
+                    );
+                }
+                state.rooms = merge_discovered_rooms(&state.rooms, scan.items);
             }
             Err(error) => {
                 state.native_status.last_ble_error = Some(error.clone());
@@ -672,9 +710,23 @@ pub fn scan_rooms() -> Result<Value> {
 #[napi]
 pub fn join_room(request: JoinRoomRequest) -> Result<Value> {
     with_state_json(|state| {
-        let room_id = request.room_id.trim().to_string();
+        // Normalize hand-typed join codes: ids are generated lowercase and the
+        // advertisement builder lowercases too, so case must never matter.
+        let room_id = request.room_id.trim().to_ascii_lowercase();
         if room_id.is_empty() {
             push_warning_once(&mut state.native_warnings, "Cannot join an empty room id.");
+            return Ok(state.clone());
+        }
+        // An oversized code would overflow the 29-byte scan-response budget and
+        // be truncated on air, so the host could never match it. Reject it
+        // up front instead of advertising a corrupted id.
+        if room_id.len() > ble::MAX_ROOM_ID_BYTES {
+            let message = format!(
+                "Room code {room_id:?} is too long to advertise over BLE (max {} characters).",
+                ble::MAX_ROOM_ID_BYTES
+            );
+            state.native_status.last_ble_error = Some(message.clone());
+            push_warning_once(&mut state.native_warnings, message);
             return Ok(state.clone());
         }
 
@@ -705,8 +757,7 @@ pub fn join_room(request: JoinRoomRequest) -> Result<Value> {
             rssi: None,
         }];
 
-        let label = guest_advertising_label(state);
-        match start_guest_advertising(&room_id, &label) {
+        match start_guest_advertising(&room_id) {
             Ok(()) => {
                 state.native_status.last_ble_error = None;
             }
@@ -724,28 +775,18 @@ pub fn join_room(request: JoinRoomRequest) -> Result<Value> {
     })
 }
 
-fn guest_advertising_label(state: &RoomState) -> String {
-    let fingerprint = &state.native_status.public_key_fingerprint;
-    let suffix = fingerprint.get(..6).unwrap_or(fingerprint);
-    if suffix.is_empty() {
-        "Evolve Guest".to_string()
-    } else {
-        format!("Evolve Guest {suffix}")
-    }
-}
-
-fn start_guest_advertising(room_id: &str, label: &str) -> std::result::Result<(), String> {
-    let config = ble::PeripheralConfig::join(room_id, label);
+fn start_guest_advertising(room_id: &str) -> std::result::Result<(), String> {
+    let config = ble::PeripheralConfig::join(room_id);
     let mut peripheral = PERIPHERAL
         .lock()
         .map_err(|_| "BLE peripheral backend lock was poisoned".to_string())?;
     peripheral.start_advertising(&config)
 }
 
-/// Advertise a host ROOM discovery beacon (`EvolveCalc:ROOM:<room>:<name>`) via
-/// the peripheral backend so guests scanning for rooms can find this host.
-fn start_room_advertising(room_id: &str, room_name: &str) -> std::result::Result<(), String> {
-    let config = ble::PeripheralConfig::room(room_id, room_name);
+/// Advertise a host ROOM discovery beacon (`EVC:R:<room>`) via the peripheral
+/// backend so guests scanning for rooms can find this host.
+fn start_room_advertising(room_id: &str) -> std::result::Result<(), String> {
+    let config = ble::PeripheralConfig::room(room_id);
     let mut peripheral = PERIPHERAL
         .lock()
         .map_err(|_| "BLE peripheral backend lock was poisoned".to_string())?;
@@ -1737,42 +1778,63 @@ struct BleAdvertisementPayload {
     label: Option<String>,
 }
 
-fn scan_ble_join_requests(
-    room_filter: Option<&str>,
-) -> std::result::Result<Vec<PeerSummary>, String> {
-    let advertisements = scan_ble_calculator_advertisements()?;
-    Ok(advertisements
-        .into_iter()
-        .filter_map(|(address, payload, rssi)| {
-            peer_from_advertisement(address, payload, rssi, room_filter)
-        })
-        .collect())
+/// Outcome of one discovery scan: the summaries that survived parsing and
+/// filtering, plus how many devices the radio actually saw. The count lets
+/// callers distinguish "nothing on air" from "seen but unparseable/filtered"
+/// when `items` comes back empty.
+struct ScanOutcome<T> {
+    items: Vec<T>,
+    raw_device_count: usize,
 }
 
-fn scan_ble_rooms() -> std::result::Result<Vec<RoomSummary>, String> {
-    let advertisements = scan_ble_calculator_advertisements()?;
-    Ok(advertisements
-        .into_iter()
-        .filter_map(|(address, payload, rssi)| room_from_advertisement(address, payload, rssi))
-        .collect())
+fn scan_ble_join_requests(
+    room_filter: Option<&str>,
+) -> std::result::Result<ScanOutcome<PeerSummary>, String> {
+    let scan = scan_ble_calculator_advertisements()?;
+    Ok(ScanOutcome {
+        items: scan
+            .items
+            .into_iter()
+            .filter_map(|(address, payload, rssi)| {
+                peer_from_advertisement(address, payload, rssi, room_filter)
+            })
+            .collect(),
+        raw_device_count: scan.raw_device_count,
+    })
+}
+
+fn scan_ble_rooms() -> std::result::Result<ScanOutcome<RoomSummary>, String> {
+    let scan = scan_ble_calculator_advertisements()?;
+    Ok(ScanOutcome {
+        items: scan
+            .items
+            .into_iter()
+            .filter_map(|(address, payload, rssi)| room_from_advertisement(address, payload, rssi))
+            .collect(),
+        raw_device_count: scan.raw_device_count,
+    })
 }
 
 /// Service-filtered scan via the persistent central. Each result carries the
 /// device address, the parsed calculator advertisement, and the RSSI (dBm).
 fn scan_ble_calculator_advertisements(
-) -> std::result::Result<Vec<(String, BleAdvertisementPayload, Option<i16>)>, String> {
+) -> std::result::Result<ScanOutcome<(String, BleAdvertisementPayload, Option<i16>)>, String> {
     let service_uuid = Uuid::parse_str(CALCULATOR_SERVICE_UUID)
         .map_err(|error| format!("Invalid calculator service UUID: {error}"))?;
 
     let properties = ble_central::scan(service_uuid, 2200)?;
-    Ok(properties
-        .into_iter()
-        .filter_map(|props| {
-            let address = props.address.to_string();
-            let rssi = props.rssi;
-            parse_calculator_advertisement(&props).map(|payload| (address, payload, rssi))
-        })
-        .collect())
+    let raw_device_count = properties.len();
+    Ok(ScanOutcome {
+        items: properties
+            .into_iter()
+            .filter_map(|props| {
+                let address = props.address.to_string();
+                let rssi = props.rssi;
+                parse_calculator_advertisement(&props).map(|payload| (address, payload, rssi))
+            })
+            .collect(),
+        raw_device_count,
+    })
 }
 
 fn connect_ble_peer(peer_id: &str) -> std::result::Result<(), String> {
@@ -1806,14 +1868,22 @@ fn parse_calculator_advertisement(
         .and_then(|name| parse_local_name_advertisement(name))
 }
 
+/// Parse both advertisement generations: the current 3-field `EVC:<K>:<room>`
+/// (kinds `J`/`R`) and the legacy 4-field `EvolveCalc:<KIND>:<room>:<label>`
+/// (kinds `JOIN`/`ROOM`, label optional because scan responses truncated it).
 fn parse_local_name_advertisement(name: &str) -> Option<BleAdvertisementPayload> {
     let mut parts = name.splitn(4, ':');
     let prefix = parts.next()?;
-    if prefix != ADVERTISEMENT_PREFIX {
+    if prefix != ADVERTISEMENT_PREFIX && prefix != LEGACY_ADVERTISEMENT_PREFIX {
         return None;
     }
 
-    let kind = parts.next()?.trim().to_string();
+    let kind = match parts.next()?.trim() {
+        "J" => JOIN_ADVERTISEMENT_KIND,
+        "R" => ROOM_ADVERTISEMENT_KIND,
+        other => other,
+    }
+    .to_string();
     let room_id = parts
         .next()
         .map(str::trim)
@@ -1846,7 +1916,12 @@ fn peer_from_advertisement(
 
     if let (Some(expected_room), Some(advertised_room)) = (room_filter, payload.room_id.as_deref())
     {
-        if expected_room != advertised_room {
+        // Join codes are typed by hand on the guest, so compare them
+        // whitespace- and case-insensitively.
+        if !expected_room
+            .trim()
+            .eq_ignore_ascii_case(advertised_room.trim())
+        {
             return None;
         }
     }
@@ -2148,7 +2223,31 @@ mod tests {
     }
 
     #[test]
-    fn parses_join_request_local_name() {
+    fn parses_short_join_local_name() {
+        let payload = parse_local_name_advertisement("EVC:J:r-abc123")
+            .expect("advertisement should parse");
+        let peer = peer_from_advertisement("AA-BB".to_string(), payload, Some(-58), Some("r-abc123"))
+            .expect("join request should become a peer");
+
+        assert_eq!(peer.id, "ble-AA-BB");
+        assert_eq!(peer.rssi, Some(-58));
+        assert_eq!(peer.session_role, "guest");
+    }
+
+    #[test]
+    fn matches_room_filter_ignoring_case_and_whitespace() {
+        // The join code is typed by hand on the guest; the host filter must
+        // still match when the case or surrounding whitespace differs.
+        let payload = parse_local_name_advertisement("EVC:J:r-abc123")
+            .expect("advertisement should parse");
+        let peer =
+            peer_from_advertisement("AA-BB".to_string(), payload, None, Some(" R-ABC123 "));
+
+        assert!(peer.is_some());
+    }
+
+    #[test]
+    fn parses_legacy_join_request_local_name() {
         let payload = parse_local_name_advertisement("EvolveCalc:JOIN:room-123:MacBook Guest")
             .expect("advertisement should parse");
         let peer = peer_from_advertisement("AA-BB".to_string(), payload, Some(-58), Some("room-123"))
@@ -2161,6 +2260,18 @@ mod tests {
     }
 
     #[test]
+    fn parses_legacy_join_local_name_with_truncated_label() {
+        // A 29-byte scan response cut the legacy label off; the peer must still
+        // be discoverable with a synthesized label.
+        let payload = parse_local_name_advertisement("EvolveCalc:JOIN:room-123")
+            .expect("truncated advertisement should parse");
+        let peer = peer_from_advertisement("AA-BB".to_string(), payload, None, Some("room-123"))
+            .expect("join request should become a peer");
+
+        assert_eq!(peer.label, "Evolve Calc Guest AA-BB");
+    }
+
+    #[test]
     fn rejects_join_request_for_another_room() {
         let payload = parse_local_name_advertisement("EvolveCalc:JOIN:room-abc:Guest")
             .expect("advertisement should parse");
@@ -2170,7 +2281,21 @@ mod tests {
     }
 
     #[test]
-    fn parses_room_local_name() {
+    fn parses_short_room_local_name() {
+        let payload = parse_local_name_advertisement("EVC:R:r-abc123")
+            .expect("advertisement should parse");
+        let room = room_from_advertisement("AA-BB".to_string(), payload, Some(-61))
+            .expect("room advertisement should become a room");
+
+        assert_eq!(room.id, "r-abc123");
+        assert_eq!(room.rssi, Some(-61));
+        // No label travels on the wire; the display name is synthesized.
+        assert_eq!(room.name, "Room r-abc123");
+        assert_eq!(room.host_device_id, "ble-AA-BB");
+    }
+
+    #[test]
+    fn parses_legacy_room_local_name() {
         let payload = parse_local_name_advertisement("EvolveCalc:ROOM:room-abc:Desk Calculator")
             .expect("advertisement should parse");
         let room = room_from_advertisement("AA-BB".to_string(), payload, Some(-61))
@@ -2180,6 +2305,12 @@ mod tests {
         assert_eq!(room.rssi, Some(-61));
         assert_eq!(room.name, "Desk Calculator");
         assert_eq!(room.host_device_id, "ble-AA-BB");
+    }
+
+    #[test]
+    fn rejects_unrelated_local_name() {
+        assert!(parse_local_name_advertisement("SomeHeadphones").is_none());
+        assert!(parse_local_name_advertisement("EVCX:J:r-abc123").is_none());
     }
 
     fn test_identity() -> super::NativeIdentity {

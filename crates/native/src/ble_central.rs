@@ -23,8 +23,8 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use btleplug::api::{
-    Central, CharPropFlags, Characteristic, Manager as _, Peripheral as _, PeripheralProperties,
-    ScanFilter, ValueNotification, WriteType,
+    Central, CentralState, CharPropFlags, Characteristic, Manager as _, Peripheral as _,
+    PeripheralProperties, ScanFilter, ValueNotification, WriteType,
 };
 use btleplug::platform::{Adapter, Manager, Peripheral};
 use futures::stream::{Stream, StreamExt};
@@ -55,6 +55,11 @@ struct CentralInner {
     /// Created lazily on first use and reused so the connection stays bound to
     /// the same adapter/backend instance.
     adapter: Option<Adapter>,
+    /// Whether a scan has already waited out the powered-on grace period. The
+    /// ~1.5 s startup poll runs once per process; every later scan does a
+    /// single instant state check, so the renderer's 3 s rescan pump is not
+    /// slowed while Bluetooth stays off or unauthorized.
+    state_grace_spent: bool,
     /// The currently connected guest peripheral and the RX characteristic the
     /// host writes calculation events into. `None` when disconnected.
     connected: Option<(Peripheral, Characteristic)>,
@@ -67,6 +72,7 @@ struct CentralInner {
 static CENTRAL: Lazy<Mutex<CentralInner>> = Lazy::new(|| {
     Mutex::new(CentralInner {
         adapter: None,
+        state_grace_spent: false,
         connected: None,
         notifications: None,
     })
@@ -110,6 +116,40 @@ fn ensure_adapter(
     Ok(adapter)
 }
 
+/// Fail fast when the adapter cannot scan, instead of letting every scan
+/// "succeed" with zero results forever. A denied macOS Bluetooth permission
+/// surfaces as `CBManagerState::Unauthorized`, which btleplug maps to
+/// `CentralState::Unknown`; Bluetooth switched off maps to `PoweredOff`. The
+/// state is polled briefly because a freshly created central starts in
+/// `Unknown` while CoreBluetooth is still powering on — but that grace period
+/// is paid only on the first scan (`grace_spent`); later calls check once and
+/// return immediately.
+async fn ensure_powered_on(adapter: &Adapter, grace_spent: bool) -> Result<(), String> {
+    let attempts = if grace_spent { 1 } else { 15 };
+    let mut state = CentralState::Unknown;
+    for attempt in 0..attempts {
+        state = adapter
+            .adapter_state()
+            .await
+            .map_err(|error| format!("BLE adapter state unavailable: {error}"))?;
+        if state == CentralState::PoweredOn {
+            return Ok(());
+        }
+        if attempt + 1 < attempts {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+    }
+
+    Err(match state {
+        CentralState::PoweredOff => {
+            "Bluetooth is turned off. Turn Bluetooth on to discover Evolve Calc peers.".to_string()
+        }
+        _ => "Bluetooth is unavailable — the app may have been denied Bluetooth permission. \
+              Check System Settings > Privacy & Security > Bluetooth."
+            .to_string(),
+    })
+}
+
 /// Scan for peripherals advertising `service_uuid` for `duration_ms` and return
 /// their advertisement properties (address, local name, and RSSI). Filtering by
 /// service UUID at the radio level is the professional default (review gap #4);
@@ -118,8 +158,11 @@ pub fn scan(service_uuid: Uuid, duration_ms: u64) -> Result<Vec<PeripheralProper
     let rt = runtime()?;
     let mut inner = lock()?;
     let adapter = ensure_adapter(rt, &mut inner)?;
+    let grace_spent = inner.state_grace_spent;
+    inner.state_grace_spent = true;
 
     rt.block_on(async {
+        ensure_powered_on(&adapter, grace_spent).await?;
         adapter
             .start_scan(ScanFilter {
                 services: vec![service_uuid],
