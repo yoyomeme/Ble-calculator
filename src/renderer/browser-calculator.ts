@@ -9,8 +9,18 @@ import type {
 } from "../shared/calculator-api";
 import { calculateExpression } from "../shared/expression";
 
+/**
+ * Number of scan passes before the mock "discovers" a device. Simulates a
+ * peer that only starts advertising after discovery began, so the renderer's
+ * background rescan pump (main.tsx) is exercised in browser-mock mode instead
+ * of everything appearing on the first scan.
+ */
+const SCAN_PASSES_BEFORE_DISCOVERY = 3;
+
 export function createBrowserCalculatorApi(): NativeCalculatorApi {
   const localDeviceId = `browser-${randomId()}`;
+  let guestScanPasses = 0;
+  let roomScanPasses = 0;
   const state: RoomState = {
     localDeviceId,
     roomId: null,
@@ -42,7 +52,8 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
       state.sessionRole = "host";
       state.bleRole = "central";
       state.scanning = true;
-      if (state.peers.length === 0) {
+      guestScanPasses += 1;
+      if (state.peers.length === 0 && guestScanPasses >= SCAN_PASSES_BEFORE_DISCOVERY) {
         state.peers.push({
           id: "guest-browser-linux",
           label: "Linux Calculator",
@@ -70,7 +81,11 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
       state.bleRole = "central";
       state.scanning = true;
       state.advertising = false;
-      if (!state.rooms || state.rooms.length === 0) {
+      roomScanPasses += 1;
+      if (
+        (!state.rooms || state.rooms.length === 0) &&
+        roomScanPasses >= SCAN_PASSES_BEFORE_DISCOVERY
+      ) {
         state.rooms = [
           {
             id: "room-browser-desk",
@@ -132,6 +147,8 @@ export function createBrowserCalculatorApi(): NativeCalculatorApi {
       return cloneState(state);
     },
     async resetBleSession() {
+      guestScanPasses = 0;
+      roomScanPasses = 0;
       state.roomId = null;
       state.roomName = null;
       state.sessionRole = null;

@@ -81,6 +81,17 @@ export type LoggingCalculatorApi = NativeCalculatorApi & {
    * (new warnings, BLE error transitions) — so a ~1s poll stays quiet.
    */
   pollState(): Promise<RoomState>;
+  /**
+   * `startScanning` for the background discovery rescan pump. Like `pollState`
+   * it does not log the call itself — only diagnostics that changed — so the
+   * repeated scans stay quiet while waiting for a guest to appear.
+   */
+  rescanGuests(): Promise<RoomState>;
+  /**
+   * `scanRooms` for the background discovery rescan pump — the guest-side
+   * mirror of `rescanGuests`, equally quiet.
+   */
+  rescanRooms(): Promise<RoomState>;
 };
 
 export function createLoggingCalculatorApi(
@@ -171,9 +182,28 @@ export function createLoggingCalculatorApi(
     }
   }
 
+  async function quietRescan(run: () => Promise<RoomState>): Promise<RoomState> {
+    try {
+      const state = await run();
+      processDiagnostics(state);
+      return state;
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "Unexpected native bridge error";
+      // Log each distinct rescan failure once, not on every tick.
+      if (!loggedPollErrors.has(message)) {
+        loggedPollErrors.add(message);
+        logStore.push("error", "action", `✗ background rescan failed: ${message}`);
+      }
+      throw caught;
+    }
+  }
+
   return {
     getState: () => logged("getState", undefined, () => api.getState()),
     pollState,
+    rescanGuests: () => quietRescan(() => api.startScanning()),
+    rescanRooms: () => quietRescan(() => api.scanRooms()),
     createRoom: (request: CreateRoomRequest) =>
       logged("createRoom", request, () => api.createRoom(request)),
     startScanning: () => logged("startScanning", undefined, () => api.startScanning()),
