@@ -47,7 +47,7 @@ instead of failing silently. What each one means:
 | `Bluetooth is turned off…` | Radio off | Turn Bluetooth on |
 | `Room discovery beacon could not start / beacon error: …` (host) | The host's ROOM advertisement failed, so guests cannot discover the room by scanning | Fix the reported cause; guests can still join by typing the room code |
 | `Guest BLE advertising could not start: …` (guest) | The guest's JOIN advertisement failed, so the host cannot discover the guest | Fix the reported cause and re-join |
-| `BLE scan saw N device(s) advertising the calculator service, but none …` | Something nearby advertises the calculator service UUID but its name did not parse as a room/guest for this session — usually a stale/old-format build or a room-code mismatch | Use current builds on both Macs; verify the guest typed the exact room code shown on the host |
+| `BLE scan saw device(s) advertising the calculator service, but none … Seen names: …` | Something nearby advertises the calculator service UUID but its name did not parse as a room/guest for this session — a stale/old-format build, a room-code mismatch, or an unexpected name wrapping | Read the listed names: the expected payload looks like `EVC:R:r-xxxxxx` (possibly wrapped as `Device Name [EVC:R:r-xxxxxx]`, which is parsed). Use current builds on both Macs; verify the guest typed the exact room code shown on the host |
 | Empty list, no warnings at all | Nothing matching is on air: the other side isn't advertising yet, is backgrounded, or is out of range | Check the other Mac's step completed without errors and its window is foreground |
 
 ## Why two Macs

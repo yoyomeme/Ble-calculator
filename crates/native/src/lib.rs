@@ -570,12 +570,16 @@ pub fn start_scanning() -> Result<Value> {
                 // "devices seen, none usable" is worth flagging: it means a
                 // nearby advertiser matched the calculator service UUID while
                 // its name failed to parse or named a different room.
-                // Stable text (no device count) so `push_warning_once` dedups
-                // across the renderer's 3 s rescan pump.
+                // Names are included so a failed E2E shows exactly what was on
+                // air; `push_warning_once` still dedups because the visible
+                // device set is stable across the renderer's 3 s rescan pump.
                 if scan.items.is_empty() && scan.raw_device_count > 0 {
                     push_warning_once(
                         &mut state.native_warnings,
-                        "BLE scan saw nearby device(s) advertising the calculator service, but none matched a joinable guest for this room.",
+                        format!(
+                            "BLE scan saw device(s) advertising the calculator service, but none matched a joinable guest for this room. Seen names: {}",
+                            format_seen_device_names(&scan.raw_device_names)
+                        ),
                     );
                 }
                 state.peers = merge_discovered_peers(&state.peers, scan.items);
@@ -684,12 +688,16 @@ pub fn scan_rooms() -> Result<Value> {
                 // re-running the one-shot scan until a room appears, so stay
                 // quiet here. "Devices seen, none usable" is flagged though: it
                 // points at an unparseable or non-ROOM advertisement nearby.
-                // Stable text (no device count) so `push_warning_once` dedups
-                // across the renderer's 3 s rescan pump.
+                // Names are included so a failed E2E shows exactly what was on
+                // air; `push_warning_once` still dedups because the visible
+                // device set is stable across the renderer's 3 s rescan pump.
                 if scan.items.is_empty() && scan.raw_device_count > 0 {
                     push_warning_once(
                         &mut state.native_warnings,
-                        "BLE scan saw nearby device(s) advertising the calculator service, but none advertised a joinable room.",
+                        format!(
+                            "BLE scan saw device(s) advertising the calculator service, but none advertised a joinable room. Seen names: {}",
+                            format_seen_device_names(&scan.raw_device_names)
+                        ),
                     );
                 }
                 state.rooms = merge_discovered_rooms(&state.rooms, scan.items);
@@ -1779,12 +1787,20 @@ struct BleAdvertisementPayload {
 }
 
 /// Outcome of one discovery scan: the summaries that survived parsing and
-/// filtering, plus how many devices the radio actually saw. The count lets
+/// filtering, plus what the radio actually saw. The raw count and names let
 /// callers distinguish "nothing on air" from "seen but unparseable/filtered"
-/// when `items` comes back empty.
+/// when `items` comes back empty — and show exactly which names failed.
 struct ScanOutcome<T> {
     items: Vec<T>,
     raw_device_count: usize,
+    /// Advertised names of every raw device (`<unnamed>` when absent),
+    /// truncated for log hygiene. Diagnostic only.
+    raw_device_names: Vec<String>,
+}
+
+/// Render the raw device names for a diagnostic warning.
+fn format_seen_device_names(names: &[String]) -> String {
+    names.join(", ")
 }
 
 fn scan_ble_join_requests(
@@ -1800,6 +1816,7 @@ fn scan_ble_join_requests(
             })
             .collect(),
         raw_device_count: scan.raw_device_count,
+        raw_device_names: scan.raw_device_names,
     })
 }
 
@@ -1812,6 +1829,7 @@ fn scan_ble_rooms() -> std::result::Result<ScanOutcome<RoomSummary>, String> {
             .filter_map(|(address, payload, rssi)| room_from_advertisement(address, payload, rssi))
             .collect(),
         raw_device_count: scan.raw_device_count,
+        raw_device_names: scan.raw_device_names,
     })
 }
 
@@ -1824,6 +1842,13 @@ fn scan_ble_calculator_advertisements(
 
     let properties = ble_central::scan(service_uuid, 2200)?;
     let raw_device_count = properties.len();
+    let raw_device_names = properties
+        .iter()
+        .map(|props| match props.local_name.as_deref() {
+            Some(name) => name.chars().take(64).collect(),
+            None => "<unnamed>".to_string(),
+        })
+        .collect();
     Ok(ScanOutcome {
         items: properties
             .into_iter()
@@ -1834,6 +1859,7 @@ fn scan_ble_calculator_advertisements(
             })
             .collect(),
         raw_device_count,
+        raw_device_names,
     })
 }
 
@@ -1868,11 +1894,34 @@ fn parse_calculator_advertisement(
         .and_then(|name| parse_local_name_advertisement(name))
 }
 
+/// Locate the calculator advertisement payload inside a scanned device name.
+///
+/// The payload is usually the whole name, but btleplug's CoreBluetooth backend
+/// merges the GAP device name with the advertised local name into
+/// `"<device name> [<local name>]"` (btleplug `internal.rs`,
+/// `on_discovered_peripheral`) — so a Mac beacon arrives as e.g.
+/// `"Sofia's MacBook Pro [EVC:R:r-790b50]"`. Find the payload wherever it
+/// starts and drop a trailing `]` from that wrapping.
+fn extract_advertisement_payload(name: &str) -> Option<&str> {
+    for prefix in [ADVERTISEMENT_PREFIX, LEGACY_ADVERTISEMENT_PREFIX] {
+        let marker = format!("{prefix}:");
+        if let Some(start) = name.find(&marker) {
+            let payload = &name[start..];
+            let payload = payload.strip_suffix(']').unwrap_or(payload);
+            return Some(payload.trim());
+        }
+    }
+    None
+}
+
 /// Parse both advertisement generations: the current 3-field `EVC:<K>:<room>`
 /// (kinds `J`/`R`) and the legacy 4-field `EvolveCalc:<KIND>:<room>:<label>`
 /// (kinds `JOIN`/`ROOM`, label optional because scan responses truncated it).
+/// The payload may be embedded in a btleplug-merged device name — see
+/// [`extract_advertisement_payload`].
 fn parse_local_name_advertisement(name: &str) -> Option<BleAdvertisementPayload> {
-    let mut parts = name.splitn(4, ':');
+    let payload = extract_advertisement_payload(name)?;
+    let mut parts = payload.splitn(4, ':');
     let prefix = parts.next()?;
     if prefix != ADVERTISEMENT_PREFIX && prefix != LEGACY_ADVERTISEMENT_PREFIX {
         return None;
@@ -2308,9 +2357,41 @@ mod tests {
     }
 
     #[test]
+    fn parses_payload_embedded_in_btleplug_merged_name() {
+        // btleplug's CoreBluetooth backend reports "<device name> [<local
+        // name>]" when a peripheral has both, so a Mac beacon arrives wrapped
+        // in the computer name. Both directions must still parse.
+        let payload =
+            parse_local_name_advertisement("Sofia's MacBook Pro [EVC:R:r-790b50]")
+                .expect("merged room advertisement should parse");
+        let room = room_from_advertisement("AA-BB".to_string(), payload, None)
+            .expect("room advertisement should become a room");
+        assert_eq!(room.id, "r-790b50");
+
+        let payload = parse_local_name_advertisement("Guest MacBook [EVC:J:r-790b50]")
+            .expect("merged join advertisement should parse");
+        let peer = peer_from_advertisement("AA-BB".to_string(), payload, None, Some("r-790b50"));
+        assert!(peer.is_some());
+    }
+
+    #[test]
+    fn parses_legacy_payload_embedded_in_btleplug_merged_name() {
+        let payload = parse_local_name_advertisement(
+            "MacBook Pro [EvolveCalc:JOIN:room-123:MacBook Guest]",
+        )
+        .expect("merged legacy advertisement should parse");
+        let peer = peer_from_advertisement("AA-BB".to_string(), payload, None, Some("room-123"))
+            .expect("join request should become a peer");
+        // Only the merged-name wrapping `]` is stripped, not label content.
+        assert_eq!(peer.label, "MacBook Guest");
+    }
+
+    #[test]
     fn rejects_unrelated_local_name() {
         assert!(parse_local_name_advertisement("SomeHeadphones").is_none());
         assert!(parse_local_name_advertisement("EVCX:J:r-abc123").is_none());
+        // A bare device name with no embedded payload must not parse.
+        assert!(parse_local_name_advertisement("Sofia's MacBook Pro").is_none());
     }
 
     fn test_identity() -> super::NativeIdentity {
