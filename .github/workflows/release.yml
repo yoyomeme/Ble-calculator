@@ -66,6 +66,17 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      # electron-builder names assets from package.json's version ("Evolve
+      # Calc-<version>-<arch>.<ext>"), which is only a seed value in the repo.
+      # Sync it to the release tag so the asset names auto-increment together
+      # with the Release (v0.1.7 -> "Evolve Calc-0.1.7-arm64.dmg", ...).
+      - name: Sync package version to release tag
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.version != ''
+        shell: bash
+        run: |
+          RAW="${{ github.event.inputs.version || github.ref_name }}"
+          npm version --no-git-tag-version "${RAW#v}"
+
       - name: Package installers
         # Do not attempt macOS code signing in CI; produce unsigned installers.
         env:

@@ -52,6 +52,33 @@ if [ ! -d node_modules ]; then
   echo ""
 fi
 
+# electron-builder names the installer from package.json's version, which is
+# only a seed value in the repo — git tags are the source of truth (same rule
+# as release.yml). Stamp the latest vX.Y.Z tag onto package.json just for this
+# build so the local artifact matches the release asset naming
+# ("Evolve Calc-<version>-arm64.dmg"), then restore the original files.
+echo "→ Resolving version from git tags..."
+git fetch --tags --quiet 2>/dev/null || true
+TAG="$(git tag --list --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+
+if [ -n "${TAG}" ]; then
+  PKG_BACKUP="$(mktemp)"
+  LOCK_BACKUP="$(mktemp)"
+  cp package.json "${PKG_BACKUP}"
+  cp package-lock.json "${LOCK_BACKUP}"
+  restore_pkg_version() {
+    if [ -f "${PKG_BACKUP}" ]; then mv "${PKG_BACKUP}" package.json; fi
+    if [ -f "${LOCK_BACKUP}" ]; then mv "${LOCK_BACKUP}" package-lock.json; fi
+  }
+  # Restore even if the build fails or the window is closed mid-run.
+  trap restore_pkg_version EXIT
+  echo "  Using ${TAG} → installer will be \"Evolve Calc-${TAG#v}-arm64.dmg\""
+  npm version --no-git-tag-version "${TAG#v}" >/dev/null
+else
+  echo "  ⚠ No vX.Y.Z git tags found; keeping package.json version as-is."
+fi
+
+echo ""
 echo "→ Building macOS arm64 package (target: mac-arm64)..."
 echo ""
 
@@ -59,7 +86,7 @@ echo ""
 npm run package -- mac-arm64 "$@"
 
 echo ""
-echo "✓ Done. Find the installer and app under:  dist/"
-ls -1 dist 2>/dev/null || true
+echo "✓ Done. Find the installer and app under:  release/"
+ls -1 release 2>/dev/null || true
 
 pause_and_exit 0
